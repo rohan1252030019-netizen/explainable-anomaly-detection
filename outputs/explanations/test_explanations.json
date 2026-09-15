@@ -1,0 +1,27 @@
+[
+  {
+    "row_id": 427,
+    "score": 1.0,
+    "severity": "CRITICAL"
+  },
+  {
+    "row_id": 781,
+    "score": 0.973,
+    "severity": "CRITICAL"
+  },
+  {
+    "row_id": 388,
+    "score": 0.9535,
+    "severity": "CRITICAL"
+  },
+  {
+    "row_id": 583,
+    "score": 0.9534,
+    "severity": "CRITICAL"
+  },
+  {
+    "row_id": 99,
+    "score": 0.9404,
+    "severity": "CRITICAL"
+  }
+]
