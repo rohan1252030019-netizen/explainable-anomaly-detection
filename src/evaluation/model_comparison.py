@@ -19,21 +19,19 @@ IMPORTANT:
   meant to guide selection, not to declare one model universally best.
 """
 
-import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import numpy as np
 import pandas as pd
 
 from src.detection.scoring import normalize_scores
-from src.evaluation.metrics import evaluate, supervised_metrics, unsupervised_metrics
-
+from src.evaluation.metrics import supervised_metrics, unsupervised_metrics
 
 # ── Main comparison function ───────────────────────────────────────────────────
 
 def compare_models(
-    results: Dict[str, Dict[str, Any]],
-    y_true: Optional[np.ndarray] = None,
+    results: dict[str, dict[str, Any]],
+    y_true: np.ndarray | None = None,
 ) -> pd.DataFrame:
     """
     Build a comparison table across all fitted models.
@@ -109,7 +107,7 @@ def compare_models(
     return df
 
 
-def _failed_row(model_name: str, error: str) -> Dict[str, Any]:
+def _failed_row(model_name: str, error: str) -> dict[str, Any]:
     """Return a placeholder row for a model that failed to fit."""
     return {
         "Model": model_name,
@@ -133,8 +131,8 @@ def _failed_row(model_name: str, error: str) -> Dict[str, Any]:
 # ── Model agreement ────────────────────────────────────────────────────────────
 
 def compute_model_agreement(
-    results: Dict[str, Dict[str, Any]],
-) -> Dict[str, Any]:
+    results: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
     """
     Compute agreement between models on anomaly decisions.
 
@@ -175,7 +173,7 @@ def compute_model_agreement(
         (successful[n]["predictions"] == -1).astype(int)
         for n in names
     ]
-    n_samples = len(pred_arrays[0])
+    len(pred_arrays[0])
     pred_matrix = np.vstack(pred_arrays).T  # (n_samples, n_models)
 
     # Agreement counts
@@ -221,9 +219,9 @@ def compute_model_agreement(
 def stability_test(
     model_class,
     X: np.ndarray,
-    params: Dict[str, Any],
-    seeds: List[int] = None,
-) -> Dict[str, Any]:
+    params: dict[str, Any],
+    seeds: list[int] | None = None,
+) -> dict[str, Any]:
     """
     Test how stable a model's anomaly decisions are across random seeds.
 

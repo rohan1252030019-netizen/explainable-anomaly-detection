@@ -1,0 +1,175 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.13 is what the project is developed on; 3.11 is the documented floor
+        # (requires-python = ">=3.11").
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Lint
+        run: ruff check src backend tests run.py scripts
+
+      - name: Type check
+        run: mypy src backend
+
+      - name: Verify requirements.txt matches pyproject
+        run: python scripts/check_requirements.py
+
+      - name: Run the test suite
+        run: pytest -v --cov=src --cov=backend --cov-report=term-missing --cov-report=xml
+
+      - name: Run the end-to-end pipeline demo
+        run: python run.py --demo
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.python-version }}
+          path: coverage.xml
+          if-no-files-found: ignore
+
+  package:
+    # Builds the wheel, installs it into a brand-new virtual environment, and
+    # imports the installed package from a directory that is NOT the repository.
+    # Without this job the wheel silently shipped only 6 files and
+    # `import backend.routers` failed from a clean install while every
+    # repo-relative test kept passing.
+    name: Wheel build + clean install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Build the wheel
+        run: |
+          python -m pip install --upgrade pip wheel
+          python -m pip wheel . --no-deps -w dist
+
+      - name: Verify the wheel contains every package
+        run: |
+          python - <<'PY'
+          import glob, sys, zipfile
+          wheel = glob.glob("dist/*.whl")
+          assert len(wheel) == 1, wheel
+          names = zipfile.ZipFile(wheel[0]).namelist()
+          required = [
+              "backend/__init__.py",
+              "backend/main.py",
+              "backend/state.py",
+              "backend/routers/__init__.py",
+              "backend/routers/dataset.py",
+              "src/__init__.py",
+              "src/models/__init__.py",
+              "src/models/model_manager.py",
+              "src/detection/__init__.py",
+              "src/evaluation/__init__.py",
+              "src/explainability/__init__.py",
+              "src/visualization/__init__.py",
+          ]
+          missing = [n for n in required if n not in names]
+          assert not missing, f"wheel is missing {missing}"
+          assert any("LICENSE" in n for n in names), "LICENSE not packaged"
+          py = [n for n in names if n.endswith(".py")]
+          assert len(py) >= 50, f"only {len(py)} python modules in the wheel"
+          print(f"wheel OK: {len(py)} modules, licence included")
+          PY
+
+      - name: Install into a clean virtual environment
+        run: |
+          python -m venv /tmp/wheelenv
+          /tmp/wheelenv/bin/python -m pip install --upgrade pip
+          /tmp/wheelenv/bin/pip install dist/*.whl
+
+      - name: Import the installed package outside the repo
+        working-directory: /tmp
+        run: |
+          /tmp/wheelenv/bin/python - <<'PY'
+          import src, backend.main, backend.routers, backend.state, backend.schemas
+          import src.models.model_manager, src.data.labels, src.evaluation.holdout
+          import src.evaluation.synthetic_lab, src.explainability.validation
+
+          assert src.__file__ and "wheelenv" in src.__file__, src.__file__
+          assert backend.main.app.version == src.__version__
+          # ``health_check`` returns the Pydantic ``HealthResponse`` model since
+          # Phase 5, so it is read as an attribute, not a dict key.
+          assert backend.main.health_check().version == src.__version__
+          paths = backend.main.app.openapi()["paths"]
+          assert "/api/dataset/sample" in paths, sorted(paths)
+          print(f"installed import OK: v{src.__version__}, {len(paths)} API paths")
+          PY
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Unit and component tests
+        run: npm test
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        run: npm run test:e2e
+
+      - name: Build
+        run: npm run build

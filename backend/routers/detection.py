@@ -2,12 +2,21 @@
 backend/routers/detection.py
 
 Anomaly detection workflow endpoints: model registry, pipeline execution,
-and overview analytics.
+intelligent ensemble consensus, and overview analytics.
 """
 
 from fastapi import APIRouter, HTTPException
+
+from backend.schemas import (
+    DetectionExperimentsResponse,
+    DetectionModelsResponse,
+    DetectionOverview,
+    DetectionRequest,
+    DetectionRunResponse,
+    EnsembleRunRequest,
+    EnsembleRunResponse,
+)
 from backend.state import state
-from backend.schemas import DetectionRequest
 from src.models.model_manager import DEFAULT_PARAMS
 
 router = APIRouter(prefix="/api/detection", tags=["detection"])
@@ -28,7 +37,7 @@ MODEL_METADATA = {
         "tagline": "Density-based. Detects local sparse clusters.",
         "description": "Compares local density of an observation against its k nearest neighbours. Low-density regions are flagged.",
         "best_for": "Local outliers, clusters with varying densities",
-        "complexity": "O(n²)",
+        "complexity": "O(n^2)",
         "default_params": DEFAULT_PARAMS.get("Local Outlier Factor", {}),
     },
     "One-Class SVM": {
@@ -37,7 +46,7 @@ MODEL_METADATA = {
         "tagline": "Kernel boundary. Non-linear hypersphere.",
         "description": "Learns a max-margin decision boundary enclosing the bulk of normal training points in feature space.",
         "best_for": "Non-linear distributions, novelty boundary detection",
-        "complexity": "O(n²–n³)",
+        "complexity": "O(n^2) to O(n^3)",
         "default_params": DEFAULT_PARAMS.get("One-Class SVM", {}),
     },
     "Elliptic Envelope": {
@@ -46,19 +55,55 @@ MODEL_METADATA = {
         "tagline": "Gaussian assumption. Robust Mahalanobis distance.",
         "description": "Fits a robust covariance estimate to determine Mahalanobis distances from the central cluster.",
         "best_for": "Normally distributed features, unimodal clusters",
-        "complexity": "O(n · p²)",
+        "complexity": "O(n * p^2)",
         "default_params": DEFAULT_PARAMS.get("Elliptic Envelope", {}),
+    },
+    "k-Nearest Neighbors": {
+        "icon": "Network",
+        "short": "KNN",
+        "tagline": "Proximity-based. Geometric nearest neighbor distance.",
+        "description": "Measures Euclidean distance to k-th nearest neighbor. Transparent distance interpretation without assumptions.",
+        "best_for": "Multi-cluster geometric anomalies, proximity validation",
+        "complexity": "O(n^2 * d)",
+        "default_params": DEFAULT_PARAMS.get("k-Nearest Neighbors", {}),
+    },
+    "PCA Reconstruction": {
+        "icon": "Activity",
+        "short": "PCA",
+        "tagline": "Subspace projection. Reconstruction error.",
+        "description": "Projects data onto top principal components. Anomalies failing to align with principal axes incur high reconstruction error.",
+        "best_for": "Linear subspace violations, high-dimensional correlation shifts",
+        "complexity": "O(n * d * k)",
+        "default_params": DEFAULT_PARAMS.get("PCA Reconstruction", {}),
+    },
+    "Histogram-Based Outlier Score": {
+        "icon": "BarChart2",
+        "short": "HBOS",
+        "tagline": "Ultra-fast density. Linear time complexity.",
+        "description": "Constructs univariate histograms per feature and sums inverse log densities. Ideal for high-throughput baseline screening.",
+        "best_for": "Very large datasets, real-time screening, independent features",
+        "complexity": "O(n * d)",
+        "default_params": DEFAULT_PARAMS.get("Histogram-Based Outlier Score", {}),
+    },
+    "Gaussian Mixture Model": {
+        "icon": "Layers",
+        "short": "GMM",
+        "tagline": "Multimodal density. Exact log-likelihood.",
+        "description": "Fits K Gaussian distributions to unlabelled data. Observations situated in low probability tails are flagged.",
+        "best_for": "Multimodal cluster datasets with probabilistic requirements",
+        "complexity": "O(iter * K * n * d^2)",
+        "default_params": DEFAULT_PARAMS.get("Gaussian Mixture Model", {}),
     },
 }
 
 
-@router.get("/models")
+@router.get("/models", response_model=DetectionModelsResponse)
 def get_available_models():
     """List available unsupervised detection models with metadata and default parameters."""
-    return {"models": MODEL_METADATA}
+    return DetectionModelsResponse(models=MODEL_METADATA)
 
 
-@router.post("/run")
+@router.post("/run", response_model=DetectionRunResponse)
 def run_detection(req: DetectionRequest):
     """Execute detection model and score observations."""
     try:
@@ -72,21 +117,51 @@ def run_detection(req: DetectionRequest):
             use_ensemble=req.use_ensemble,
             ensemble_weights=req.ensemble_weights,
         )
-        return {"success": True, "overview": overview}
-    except Exception as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
+    except ValueError as exc:
+        # A rejected configuration or an unavailable precondition; the caller
+        # can fix it.
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        # Detector training failure is reported as a 400 because the cause is
+        # the request's model/parameters, but the chain is preserved so the
+        # traceback still reaches the logs.
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return DetectionRunResponse(success=True, overview=DetectionOverview(**overview))
 
 
-@router.get("/results")
+@router.post("/ensemble", response_model=EnsembleRunResponse)
+def run_ensemble(req: EnsembleRunRequest):
+    """Execute intelligent multi-detector ensemble with consensus aggregation."""
+    try:
+        res = state.run_intelligent_ensemble(
+            models=req.models,
+            aggregation_method=req.aggregation_method,
+            weights=req.weights,
+            min_consensus_votes=req.min_consensus_votes,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return EnsembleRunResponse(
+        success=True,
+        ensemble=res,
+        overview=DetectionOverview(**state.get_detection_overview()),
+    )
+
+
+@router.get("/results", response_model=DetectionOverview)
 def get_results():
     """Get high-level detection results, severity breakdown, and histograms."""
     overview = state.get_detection_overview()
     if not overview.get("ready"):
-        return {"ready": False, "message": "No detection has been run yet."}
-    return overview
+        return DetectionOverview(
+            ready=False, message="No detection has been run yet."
+        )
+    return DetectionOverview(**overview)
 
 
-@router.get("/experiments")
+@router.get("/experiments", response_model=DetectionExperimentsResponse)
 def get_experiments():
     """Get history of all detection runs in this session."""
-    return {"experiments": state.experiment_history}
+    return DetectionExperimentsResponse(experiments=state.experiment_history)

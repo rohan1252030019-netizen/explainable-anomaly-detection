@@ -16,12 +16,13 @@ Charts produced:
 - Precision-Recall curve
 """
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import matplotlib
+
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -46,9 +47,9 @@ def _save_or_return(fig, save_path):
 def plot_score_distribution(
     norm_scores: np.ndarray,
     predictions: np.ndarray,
-    threshold: Optional[float] = None,
+    threshold: float | None = None,
     model_name: str = "Model",
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
 ) -> plt.Figure:
     """
     Histogram of normalised anomaly scores, coloured by normal/anomaly.
@@ -65,7 +66,7 @@ def plot_score_distribution(
     normal_scores  = norm_scores[predictions ==  1]
     anomaly_scores = norm_scores[predictions == -1]
 
-    bins = np.linspace(0, 1, 40)
+    bins = np.linspace(0, 1, 40).tolist()
 
     ax.hist(normal_scores,  bins=bins, color=PALETTE_NORMAL,  alpha=0.65,
             label=f"Normal  (n={len(normal_scores)})")
@@ -90,7 +91,7 @@ def plot_score_distribution(
 def plot_severity_distribution(
     severity: np.ndarray,
     predictions: np.ndarray,
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
 ) -> plt.Figure:
     """Donut chart of anomaly severity breakdown."""
     anomaly_severity = severity[predictions == -1]
@@ -126,7 +127,7 @@ def plot_normal_vs_anomaly_scatter(
     feature_x: str,
     feature_y: str,
     predictions: np.ndarray,
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
 ) -> plt.Figure:
     """Scatter plot of two features coloured by anomaly decision."""
     fig, ax = plt.subplots(figsize=(7, 5))
@@ -154,7 +155,7 @@ def plot_local_feature_contributions(
     norm_score: float,
     severity: str,
     row_id: Any = None,
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
 ) -> plt.Figure:
     """
     Horizontal bar chart of top feature contributions for a single anomaly.
@@ -194,7 +195,7 @@ def plot_local_feature_contributions(
         color=colors[::-1], alpha=0.8, edgecolor="white"
     )
     # Annotate with deviation
-    for bar, dev in zip(bars, deviations[::-1]):
+    for bar, dev in zip(bars, deviations[::-1], strict=False):
         ax.text(bar.get_width() + 0.01, bar.get_y() + bar.get_height() / 2,
                 str(dev), va="center", fontsize=8)
 
@@ -221,7 +222,7 @@ def plot_global_feature_importance(
     global_importance_df: pd.DataFrame,
     top_k: int = 10,
     model_name: str = "",
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
 ) -> plt.Figure:
     """Horizontal bar chart of global feature importance across anomalies."""
     if global_importance_df is None or global_importance_df.empty:
@@ -239,7 +240,7 @@ def plot_global_feature_importance(
     )
     # Frequency annotation
     if "frequency" in df.columns:
-        for bar, freq in zip(bars, df["frequency"][::-1]):
+        for bar, freq in zip(bars, df["frequency"][::-1], strict=False):
             ax.text(bar.get_width() + 0.005, bar.get_y() + bar.get_height() / 2,
                     f"n={freq}", va="center", fontsize=8)
 
@@ -257,7 +258,7 @@ def plot_global_feature_importance(
 def plot_model_comparison(
     comparison_df: pd.DataFrame,
     metric: str = "F1",
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
 ) -> plt.Figure:
     """
     Bar chart comparing models on a given metric.
@@ -285,7 +286,7 @@ def plot_model_comparison(
     colors = [PALETTE_NORMAL, PALETTE_ANOMALY, PALETTE_WARN, "#8E44AD"][:len(models)]
     bars = ax.bar(models, vals, color=colors, alpha=0.8, edgecolor="white")
 
-    for bar, val in zip(bars, vals):
+    for bar, val in zip(bars, vals, strict=False):
         ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.005,
                 f"{val:.3f}", ha="center", va="bottom", fontsize=9)
 
@@ -299,9 +300,9 @@ def plot_model_comparison(
 # ── 7. Confusion matrix ───────────────────────────────────────────────────────
 
 def plot_confusion_matrix(
-    cm: List[List[int]],
+    cm: list[list[int]],
     model_name: str = "",
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
 ) -> plt.Figure:
     """Heatmap of a 2x2 confusion matrix."""
     cm_arr = np.array(cm)
@@ -328,10 +329,10 @@ def plot_roc_curve(
     y_true: np.ndarray,
     norm_scores: np.ndarray,
     model_name: str = "",
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
 ) -> plt.Figure:
     """ROC curve with AUC annotation."""
-    from sklearn.metrics import roc_curve, roc_auc_score
+    from sklearn.metrics import roc_auc_score, roc_curve
 
     # Convert labels
     y_bin = (np.asarray(y_true) == 1).astype(int)
@@ -363,10 +364,10 @@ def plot_pr_curve(
     y_true: np.ndarray,
     norm_scores: np.ndarray,
     model_name: str = "",
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
 ) -> plt.Figure:
     """Precision-Recall curve with AP annotation."""
-    from sklearn.metrics import precision_recall_curve, average_precision_score
+    from sklearn.metrics import average_precision_score, precision_recall_curve
 
     y_bin = (np.asarray(y_true) == 1).astype(int)
     if y_bin.sum() == 0:
@@ -390,8 +391,8 @@ def plot_pr_curve(
         title += f" — {model_name}"
     ax.set_title(title, fontsize=TITLE_FONTSIZE)
     ax.legend(fontsize=9)
-    ax.set_xlim([0, 1])
-    ax.set_ylim([0, 1.05])
+    ax.set_xlim((0.0, 1.0))
+    ax.set_ylim((0.0, 1.05))
     fig.tight_layout()
     return _save_or_return(fig, save_path)
 
@@ -401,7 +402,7 @@ def plot_pr_curve(
 def plot_score_gauge(
     norm_score: float,
     severity: str,
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
 ) -> plt.Figure:
     """
     Semi-circular gauge chart showing a single anomaly score.

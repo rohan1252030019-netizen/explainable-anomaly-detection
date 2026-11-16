@@ -16,16 +16,13 @@ IMPORTANT:
 - PCA is deterministic and fast; preferred for dashboard use.
 """
 
-from typing import List, Optional, Tuple
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import numpy as np
-import pandas as pd
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
 
 PALETTE_NORMAL  = "#4A90D9"
 PALETTE_ANOMALY = "#E74C3C"
@@ -48,7 +45,7 @@ def reduce_pca(
     X: np.ndarray,
     n_components: int = 2,
     random_state: int = 42,
-) -> Tuple[np.ndarray, PCA]:
+) -> tuple[np.ndarray, PCA]:
     """
     Reduce X to ``n_components`` dimensions using PCA.
 
@@ -78,7 +75,7 @@ def reduce_tsne(
     max_iter: int = 1000,
     random_state: int = 42,
     max_samples: int = 500,
-) -> np.ndarray:
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Reduce X to ``n_components`` dimensions using t-SNE.
 
@@ -96,6 +93,8 @@ def reduce_tsne(
     Returns
     -------
     X_reduced : np.ndarray, shape (min(n_samples, max_samples), n_components)
+    idx : np.ndarray
+        The row indices of the subsample, so the caller can align labels.
     """
     from sklearn.manifold import TSNE
 
@@ -120,11 +119,11 @@ def reduce_tsne(
 def plot_pca_anomalies(
     X: np.ndarray,
     predictions: np.ndarray,
-    norm_scores: Optional[np.ndarray] = None,
-    y_true: Optional[np.ndarray] = None,
-    feature_names: Optional[List[str]] = None,
+    norm_scores: np.ndarray | None = None,
+    y_true: np.ndarray | None = None,
+    feature_names: list[str] | None = None,
     model_name: str = "",
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
 ) -> plt.Figure:
     """
     2D PCA scatter plot coloured by model anomaly predictions.
@@ -215,7 +214,7 @@ def plot_pca_anomalies(
 def plot_pca_explained_variance(
     X: np.ndarray,
     max_components: int = 10,
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
 ) -> plt.Figure:
     """Scree plot of PCA explained variance."""
     n_comp = min(max_components, X.shape[1], X.shape[0] - 1)
@@ -244,11 +243,11 @@ def plot_pca_explained_variance(
 def plot_tsne_anomalies(
     X: np.ndarray,
     predictions: np.ndarray,
-    y_true: Optional[np.ndarray] = None,
+    y_true: np.ndarray | None = None,
     model_name: str = "",
     random_state: int = 42,
     max_samples: int = 500,
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
 ) -> plt.Figure:
     """
     2D t-SNE scatter plot coloured by model anomaly predictions.

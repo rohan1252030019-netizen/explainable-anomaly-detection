@@ -24,7 +24,7 @@ sklearn's EllipticEnvelope.score_samples() returns:
 """
 
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 import numpy as np
 from sklearn.covariance import EllipticEnvelope
@@ -52,7 +52,7 @@ class EllipticEnvelopeDetector(BaseDetector):
     def __init__(
         self,
         contamination: float = 0.05,
-        support_fraction: Optional[float] = None,
+        support_fraction: float | None = None,
         random_state: int = 42,
     ):
         super().__init__()
@@ -60,8 +60,8 @@ class EllipticEnvelopeDetector(BaseDetector):
         self.support_fraction = support_fraction
         self.random_state = random_state
 
-        self._model: Optional[EllipticEnvelope] = None
-        self._fit_error: Optional[str] = None
+        self._model: EllipticEnvelope | None = None
+        self._fit_error: str | None = None
 
     # ── BaseDetector interface ─────────────────────────────────────────────────
 
@@ -161,18 +161,18 @@ class EllipticEnvelopeDetector(BaseDetector):
         """Return True if the model fitted without error."""
         return self._is_fitted and self._model is not None
 
-    def get_fit_error(self) -> Optional[str]:
+    def get_fit_error(self) -> str | None:
         """Return the fit error message, or None if fitting succeeded."""
         return self._fit_error
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         return {
             "contamination": self.contamination,
             "support_fraction": self.support_fraction,
             "random_state": self.random_state,
         }
 
-    def get_model_info(self) -> Dict[str, Any]:
+    def get_model_info(self) -> dict[str, Any]:
         info = super().get_model_info()
         info.update({
             "algorithm": "Elliptic Envelope",

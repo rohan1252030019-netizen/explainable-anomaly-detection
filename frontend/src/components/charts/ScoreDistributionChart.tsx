@@ -2,6 +2,14 @@
 
 import React, { useState } from "react";
 import { ScoreHistBin } from "@/lib/api";
+import {
+  ChartEmpty,
+  ChartFrame,
+  LegendItem,
+  SERIES,
+  TooltipCard,
+  TooltipRow,
+} from "./ChartFrame";
 
 interface ScoreDistributionChartProps {
   data: ScoreHistBin[];
@@ -14,160 +22,222 @@ export const ScoreDistributionChart: React.FC<ScoreDistributionChartProps> = ({
   threshold = 0.5,
   modelName = "",
 }) => {
-  const [hoveredBin, setHoveredBin] = useState<ScoreHistBin | null>(null);
+  const [hover, setHover] = useState<{
+    bin: ScoreHistBin;
+    x: number;
+    y: number;
+  } | null>(null);
 
   if (!data || data.length === 0) {
-    return (
-      <div className="h-64 flex items-center justify-center text-xs text-slate-400">
-        No score distribution data available.
-      </div>
-    );
+    return <ChartEmpty message="No score distribution data available." />;
   }
 
-  const width = 600;
-  const height = 240;
-  const padLeft = 40;
-  const padBottom = 30;
-  const padTop = 20;
-  const padRight = 20;
+  const width = 640;
+  const height = 260;
+  const padLeft = 44;
+  const padBottom = 38;
+  const padTop = 18;
+  const padRight = 18;
 
   const chartWidth = width - padLeft - padRight;
   const chartHeight = height - padTop - padBottom;
 
-  const maxCount = Math.max(
-    ...data.map((d) => d.normal_count + d.anomaly_count),
-    1
-  );
-
+  const maxCount = Math.max(...data.map((d) => d.normal_count + d.anomaly_count), 1);
   const binWidth = chartWidth / data.length;
   const thresholdX = padLeft + threshold * chartWidth;
 
+  const yTicks = [0, 0.25, 0.5, 0.75, 1].map((p) => ({
+    p,
+    y: padTop + chartHeight * (1 - p),
+    value: Math.round(maxCount * p),
+  }));
+
+  const anomalyTotal = data.reduce((sum, bin) => sum + bin.anomaly_count, 0);
+  const recordTotal = data.reduce(
+    (sum, bin) => sum + bin.normal_count + bin.anomaly_count,
+    0
+  );
+
   return (
-    <div className="w-full relative">
-      <div className="flex items-center justify-between mb-2">
-        <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-          Anomaly Score Histogram {modelName && `· ${modelName}`}
-        </div>
-        <div className="flex items-center gap-4 text-[11px] text-slate-400">
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded bg-blue-500/70" /> Normal
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded bg-rose-500/90" /> Anomaly
-          </span>
-          <span className="flex items-center gap-1.5 font-medium text-indigo-400">
-            <span className="w-3 h-0.5 bg-indigo-400" /> Threshold ({(threshold).toFixed(3)})
-          </span>
-        </div>
-      </div>
-
+    <ChartFrame
+      title="Anomaly score distribution"
+      subtitle={
+        modelName
+          ? `${modelName} · ${recordTotal.toLocaleString()} records, ${anomalyTotal.toLocaleString()} flagged`
+          : `${recordTotal.toLocaleString()} records`
+      }
+      legend={
+        <>
+          <LegendItem color={SERIES.normal} label="Normal" />
+          <LegendItem color={SERIES.anomaly} label="Anomaly" />
+          <LegendItem
+            color={SERIES.threshold}
+            shape="line"
+            label={`Threshold ${threshold.toFixed(3)}`}
+          />
+        </>
+      }
+    >
+      <p className="sr-only">
+        Histogram of {recordTotal} normalised anomaly scores across {data.length}{" "}
+        bins. The decision threshold is {threshold.toFixed(3)}. {anomalyTotal}{" "}
+        records are flagged as anomalous.
+      </p>
       <div className="relative">
-        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto overflow-visible">
-          {/* Grid lines */}
-          {[0, 0.25, 0.5, 0.75, 1].map((p, i) => {
-            const y = padTop + chartHeight * (1 - p);
-            const val = Math.round(maxCount * p);
-            return (
-              <g key={i}>
-                <line
-                  x1={padLeft}
-                  y1={y}
-                  x2={width - padRight}
-                  y2={y}
-                  stroke="currentColor"
-                  className="text-slate-200 dark:text-slate-800"
-                  strokeDasharray="3 3"
-                />
-                <text
-                  x={padLeft - 8}
-                  y={y + 3}
-                  textAnchor="end"
-                  className="text-[9px] fill-slate-400"
-                >
-                  {val}
-                </text>
-              </g>
-            );
-          })}
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          className="h-auto w-full"
+          role="img"
+          aria-label="Histogram of normalised anomaly scores split into normal and anomalous counts"
+          onMouseLeave={() => setHover(null)}
+        >
+          {yTicks.map((t) => (
+            <g key={t.p}>
+              <line
+                x1={padLeft}
+                y1={t.y}
+                x2={width - padRight}
+                y2={t.y}
+                stroke={SERIES.grid}
+                strokeDasharray="3 4"
+              />
+              <text
+                x={padLeft - 10}
+                y={t.y + 3}
+                textAnchor="end"
+                className="fill-ink-faint text-[9px] tabular"
+              >
+                {t.value}
+              </text>
+            </g>
+          ))}
 
-          {/* Histogram stacked bars */}
           {data.map((bin, i) => {
             const x = padLeft + i * binWidth;
             const normH = (bin.normal_count / maxCount) * chartHeight;
             const anomH = (bin.anomaly_count / maxCount) * chartHeight;
+            const active = hover?.bin === bin;
+            const barW = Math.max(1.5, binWidth - 2);
 
             return (
-              <g
-                key={i}
-                onMouseEnter={() => setHoveredBin(bin)}
-                onMouseLeave={() => setHoveredBin(null)}
-                className="cursor-pointer group"
-              >
-                {/* Normal count bar */}
+              <g key={i}>
                 {normH > 0 && (
                   <rect
                     x={x + 1}
                     y={padTop + chartHeight - normH}
-                    width={Math.max(1, binWidth - 2)}
+                    width={barW}
                     height={normH}
-                    className="fill-blue-500/60 hover:fill-blue-500/80 transition-colors"
+                    rx={Math.min(2, barW / 3)}
+                    fill={SERIES.normal}
+                    opacity={active ? 0.95 : 0.55}
+                    style={{ transition: "opacity 120ms ease" }}
                   />
                 )}
-                {/* Anomaly count bar stacked on top */}
                 {anomH > 0 && (
                   <rect
                     x={x + 1}
                     y={padTop + chartHeight - normH - anomH}
-                    width={Math.max(1, binWidth - 2)}
+                    width={barW}
                     height={anomH}
-                    className="fill-rose-500/85 hover:fill-rose-500 transition-colors"
+                    rx={Math.min(2, barW / 3)}
+                    fill={SERIES.anomaly}
+                    opacity={active ? 1 : 0.9}
+                    style={{ transition: "opacity 120ms ease" }}
                   />
                 )}
+                {/* Invisible hover target spanning the full column height */}
+                <rect
+                  x={x}
+                  y={padTop}
+                  width={binWidth}
+                  height={chartHeight}
+                  fill="transparent"
+                  onMouseMove={(e) => {
+                    const rect = e.currentTarget.ownerSVGElement!.getBoundingClientRect();
+                    setHover({
+                      bin,
+                      x: ((e.clientX - rect.left) / rect.width) * width,
+                      y: ((e.clientY - rect.top) / rect.height) * height,
+                    });
+                  }}
+                />
               </g>
             );
           })}
 
-          {/* Threshold line */}
           <line
             x1={thresholdX}
-            y1={padTop}
+            y1={padTop - 4}
             x2={thresholdX}
             y2={padTop + chartHeight}
-            stroke="#6366F1"
-            strokeWidth="2"
+            stroke={SERIES.threshold}
+            strokeWidth={2}
             strokeDasharray="4 4"
           />
 
-          {/* X Axis Ticks */}
-          {[0, 0.2, 0.4, 0.6, 0.8, 1.0].map((tick, i) => {
-            const x = padLeft + tick * chartWidth;
-            return (
-              <text
-                key={i}
-                x={x}
-                y={padTop + chartHeight + 16}
-                textAnchor="middle"
-                className="text-[10px] fill-slate-400"
-              >
-                {tick.toFixed(1)}
-              </text>
-            );
-          })}
+          {[0, 0.2, 0.4, 0.6, 0.8, 1].map((tick) => (
+            <text
+              key={tick}
+              x={padLeft + tick * chartWidth}
+              y={height - 14}
+              textAnchor="middle"
+              className="fill-ink-faint text-[10px] tabular"
+            >
+              {tick.toFixed(1)}
+            </text>
+          ))}
+
+          <text
+            x={padLeft + chartWidth / 2}
+            y={height - 2}
+            textAnchor="middle"
+            className="fill-ink-faint text-[9px]"
+          >
+            Normalised anomaly score
+          </text>
+
+          <text
+            x={thresholdX + 4}
+            y={padTop + 9}
+            className="fill-accent text-[9px] font-semibold tabular"
+            aria-hidden="true"
+          >
+            τ {threshold.toFixed(2)}
+          </text>
         </svg>
 
-        {/* Hover Tooltip */}
-        {hoveredBin && (
-          <div className="absolute top-2 left-12 px-3 py-1.5 rounded bg-slate-900 border border-slate-700 text-[11px] shadow-lg text-slate-200 pointer-events-none">
-            <div>Score: {hoveredBin.bin_start} – {hoveredBin.bin_end}</div>
-            <div className="text-blue-400">Normal: {hoveredBin.normal_count}</div>
-            <div className="text-rose-400 font-semibold">Anomalies: {hoveredBin.anomaly_count}</div>
-          </div>
+        {hover && (
+          <TooltipCard x={hover.x} y={hover.y} width={width} height={height}>
+            <div className="mb-1 flex items-baseline justify-between gap-3 font-semibold text-ink">
+              <span>
+                {hover.bin.bin_start.toFixed(3)} – {hover.bin.bin_end.toFixed(3)}
+              </span>
+              <span className="text-[9px] font-normal text-ink-faint tabular">
+                {(
+                  hover.bin.normal_count + hover.bin.anomaly_count
+                ).toLocaleString()}{" "}
+                records
+              </span>
+            </div>
+            <div className="space-y-0.5">
+              <TooltipRow
+                label="Normal"
+                value={hover.bin.normal_count}
+                color={SERIES.normal}
+              />
+              <TooltipRow
+                label="Anomalies"
+                value={hover.bin.anomaly_count}
+                color={SERIES.anomaly}
+              />
+            </div>
+          </TooltipCard>
         )}
       </div>
 
-      <div className="text-center text-[10px] text-slate-400 mt-1">
-        Normalised Anomaly Score (0.0 = Normal · 1.0 = Highly Anomalous)
-      </div>
-    </div>
+      <p className="mt-1 text-center text-[10px] text-ink-faint">
+        0.0 = typical behaviour · 1.0 = most anomalous in this run
+      </p>
+    </ChartFrame>
   );
 };

@@ -7,10 +7,9 @@ Validates that a loaded DataFrame meets minimum requirements for anomaly
 detection and produces a structured validation report with warnings.
 """
 
-from typing import Dict, Any, List
-import numpy as np
-import pandas as pd
+from typing import Any
 
+import pandas as pd
 
 # ── Validation thresholds ──────────────────────────────────────────────────────
 
@@ -21,8 +20,17 @@ HIGH_CARDINALITY_THRESHOLD = 50    # Warn if categorical col has >50 unique valu
 NEAR_CONSTANT_VARIANCE_THRESHOLD = 1e-10  # Flag near-zero variance columns
 
 
-class ValidationError(Exception):
-    """Raised when a dataset fails a hard validation check."""
+class ValidationError(ValueError):
+    """
+    Raised when a dataset fails a hard validation check.
+
+    Subclasses ``ValueError`` deliberately: a dataset with 12 rows is a bad
+    *value supplied by the caller*, not an internal failure.  The API routers
+    translate ``ValueError`` into HTTP 400 and let everything else become a 500,
+    so deriving from the builtin is what makes "your CSV is too small" a client
+    error instead of a server error.  Code that already catches
+    ``ValidationError`` is unaffected.
+    """
 
 
 class DataValidator:
@@ -36,7 +44,7 @@ class DataValidator:
     - Feature type breakdown
     """
 
-    def validate(self, df: pd.DataFrame) -> Dict[str, Any]:
+    def validate(self, df: pd.DataFrame) -> dict[str, Any]:
         """
         Run all validation checks on ``df``.
 
@@ -55,8 +63,8 @@ class DataValidator:
         ValidationError
             If a hard check fails (e.g. empty DataFrame, too few rows).
         """
-        errors: List[str] = []
-        warnings: List[str] = []
+        errors: list[str] = []
+        warnings: list[str] = []
 
         # ── Hard checks (raise immediately) ───────────────────────────────────
 
@@ -179,7 +187,7 @@ class DataValidator:
 
         valid = len(errors) == 0
 
-        report: Dict[str, Any] = {
+        report: dict[str, Any] = {
             "valid": valid,
             "errors": errors,
             "warnings": warnings,
@@ -198,7 +206,7 @@ class DataValidator:
         return report
 
     @staticmethod
-    def format_report(report: Dict[str, Any]) -> str:
+    def format_report(report: dict[str, Any]) -> str:
         """
         Return a human-readable string representation of the validation report.
 

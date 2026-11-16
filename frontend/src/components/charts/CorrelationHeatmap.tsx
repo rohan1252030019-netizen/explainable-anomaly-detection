@@ -1,10 +1,22 @@
 "use client";
 
 import React, { useState } from "react";
+import { ChartEmpty, ChartFrame } from "./ChartFrame";
+import { cn } from "@/lib/cn";
 
 interface CorrelationHeatmapProps {
   features: string[];
   matrix: number[][];
+}
+
+function cellStyle(val: number) {
+  const strength = Math.min(1, Math.abs(val));
+  const series = val >= 0 ? "var(--info)" : "var(--warn)";
+  return {
+    background: `color-mix(in srgb, ${series} ${Math.round(
+      10 + strength * 38
+    )}%, transparent)`,
+  };
 }
 
 export const CorrelationHeatmap: React.FC<CorrelationHeatmapProps> = ({
@@ -18,65 +30,88 @@ export const CorrelationHeatmap: React.FC<CorrelationHeatmapProps> = ({
   } | null>(null);
 
   if (!features || features.length === 0 || !matrix || matrix.length === 0) {
-    return (
-      <div className="h-64 flex items-center justify-center text-xs text-slate-400">
-        No correlation matrix data available.
-      </div>
-    );
+    return <ChartEmpty message="No correlation matrix data available." />;
   }
 
   const n = features.length;
 
   return (
-    <div className="w-full overflow-x-auto">
-      <div className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
-        Feature Correlation Matrix
-      </div>
+    <ChartFrame
+      title="Feature correlation"
+      subtitle={`Pearson correlation across ${n} preprocessed features`}
+      legend={
+        <span className="flex items-center gap-2 text-[10px] text-ink-faint">
+          <span className="tabular">−1</span>
+          <span
+            className="h-2 w-20 rounded-full"
+            style={{
+              background:
+                "linear-gradient(90deg, color-mix(in srgb, var(--warn) 48%, transparent), var(--inset), color-mix(in srgb, var(--info) 48%, transparent))",
+            }}
+            aria-hidden="true"
+          />
+          <span className="tabular">+1</span>
+        </span>
+      }
+    >
+      <p className="sr-only">
+        Correlation matrix of {n} features. Positive correlations are shown in
+        blue and negative correlations in orange; darker cells indicate a
+        stronger relationship.
+      </p>
+      <div className="data-scroll overflow-x-auto pb-2">
+        <div
+          className="grid min-w-full gap-px"
+          style={{
+            gridTemplateColumns: `minmax(96px, 128px) repeat(${n}, minmax(38px, 1fr))`,
+          }}
+        >
+          <div aria-hidden="true" />
 
-      <div className="inline-block min-w-full">
-        <div className="grid" style={{ gridTemplateColumns: `100px repeat(${n}, minmax(36px, 1fr))` }}>
-          {/* Header corner */}
-          <div className="p-1" />
-
-          {/* Top header labels */}
           {features.map((feat, i) => (
             <div
-              key={i}
-              className="p-1 text-[10px] font-medium text-slate-400 truncate -rotate-45 origin-bottom-left h-20 flex items-end"
+              key={`h-${i}`}
+              className="flex h-24 items-end justify-center overflow-hidden pb-1"
+              title={feat}
             >
-              {feat}
+              <span className="truncate text-[10px] font-medium text-ink-faint [writing-mode:vertical-rl] rotate-180">
+                {feat}
+              </span>
             </div>
           ))}
 
-          {/* Rows */}
           {features.map((rowFeat, r) => (
             <React.Fragment key={r}>
-              {/* Row Label */}
-              <div className="p-1 text-[10px] font-medium text-slate-400 truncate flex items-center">
+              <div
+                className="flex items-center truncate pr-2 text-[10px] font-semibold text-ink-muted"
+                title={rowFeat}
+              >
                 {rowFeat}
               </div>
 
-              {/* Cells */}
               {features.map((colFeat, c) => {
                 const val = matrix[r]?.[c] ?? 0;
-                // Color scaling: positive = red/orange, negative = blue, 0 = neutral
-                let bg = "bg-slate-800/40";
-                if (val > 0.5) bg = "bg-rose-500/80 text-white";
-                else if (val > 0.2) bg = "bg-rose-500/40 text-slate-200";
-                else if (val < -0.5) bg = "bg-blue-600/80 text-white";
-                else if (val < -0.2) bg = "bg-blue-600/40 text-slate-200";
-
+                const strong = Math.abs(val) > 0.5;
                 return (
-                  <div
+                  <button
                     key={c}
+                    type="button"
+                    aria-label={`${rowFeat} correlated with ${colFeat}: ${val.toFixed(3)}`}
                     onMouseEnter={() =>
                       setHoveredCell({ f1: rowFeat, f2: colFeat, val })
                     }
                     onMouseLeave={() => setHoveredCell(null)}
-                    className={`h-9 flex items-center justify-center text-[10px] font-mono border border-slate-200 dark:border-slate-800/60 transition-colors cursor-pointer ${bg}`}
+                    onFocus={() => setHoveredCell({ f1: rowFeat, f2: colFeat, val })}
+                    onBlur={() => setHoveredCell(null)}
+                    className={cn(
+                      "h-9 border border-edge/60 font-mono text-[10px] tabular transition-transform",
+                      "hover:z-10 hover:scale-110 hover:border-accent",
+                      strong ? "font-bold text-ink" : "text-ink-muted"
+                    )}
+                    style={cellStyle(val)}
                   >
                     {val.toFixed(2)}
-                  </div>
+                  </button>
                 );
               })}
             </React.Fragment>
@@ -84,13 +119,32 @@ export const CorrelationHeatmap: React.FC<CorrelationHeatmapProps> = ({
         </div>
       </div>
 
-      {hoveredCell && (
-        <div className="mt-3 text-xs text-slate-400 bg-slate-900 border border-slate-800 p-2 rounded max-w-sm">
-          <span className="font-semibold text-slate-200">{hoveredCell.f1}</span> ×{" "}
-          <span className="font-semibold text-slate-200">{hoveredCell.f2}</span>:{" "}
-          <span className="font-bold text-indigo-400">{hoveredCell.val.toFixed(3)}</span>
-        </div>
-      )}
-    </div>
+      <p
+        className="mt-2 h-8 text-xs text-ink-muted"
+        role="status"
+        aria-live="polite"
+      >
+        {hoveredCell ? (
+          <>
+            <span className="font-semibold text-ink">{hoveredCell.f1}</span>
+            {" × "}
+            <span className="font-semibold text-ink">{hoveredCell.f2}</span>
+            {": "}
+            <span
+              className="font-bold tabular"
+              style={{
+                color: hoveredCell.val >= 0 ? "var(--info)" : "var(--warn)",
+              }}
+            >
+              {hoveredCell.val.toFixed(3)}
+            </span>
+          </>
+        ) : (
+          <span className="text-ink-faint">
+            Hover a cell to inspect the coefficient.
+          </span>
+        )}
+      </p>
+    </ChartFrame>
   );
 };

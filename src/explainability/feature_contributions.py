@@ -27,21 +27,33 @@ IMPORTANT:
 - We do NOT claim a feature *caused* the anomaly.
 """
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 import pandas as pd
-
 
 # ── Statistical deviation ──────────────────────────────────────────────────────
 
 def compute_statistical_deviations(
     observation: np.ndarray,
-    feature_names: List[str],
-    reference_stats: Dict[str, Dict[str, float]],
-) -> List[Dict[str, Any]]:
+    feature_names: list[str],
+    reference_stats: dict[str, dict[str, float]],
+    raw_observation: np.ndarray | None = None,
+) -> list[dict[str, Any]]:
     """
     Compute statistical deviations for each feature of a single observation.
+
+    Unit spaces
+    -----------
+    ``observation`` is in the model's SCALED space.  ``reference_stats`` (from
+    ``PreprocessingPipeline.get_reference_stats()``) is deliberately in RAW
+    dataset units so the UI can show real numbers.
+
+    Comparing those two directly was silently wrong: it produced a robust
+    z-score of, for example, ``(4.4 - 35.2) / (9.8 * 1.4826)`` for a feature
+    whose standardised value was 4.4 — a large negative number for a value that
+    is far ABOVE the median.  Pass ``raw_observation`` so the comparison is made
+    in one consistent space.
 
     Parameters
     ----------
@@ -50,19 +62,27 @@ def compute_statistical_deviations(
     feature_names : list of str
     reference_stats : dict
         Output of PreprocessingPipeline.get_reference_stats().
-        Keys: "median", "mean", "std", "q25", "q75", "iqr", "min", "max"
-        Each maps feature_name -> float.
+        Keys: "median", "mean", "std", "q25", "q75", "iqr", "min", "max".
         Only NUMERICAL features have entries; OHE features are handled
         separately.
+    raw_observation : np.ndarray or None
+        The same row in original units, aligned to ``feature_names``.  Supply
+        this whenever it is available; without it the numerical deviations fall
+        back to the scaled-vs-raw comparison described above and should be
+        treated as untrustworthy.
 
     Returns
     -------
     list of dicts, one per feature, sorted by |deviation| descending.
-    Each dict contains:
-        feature, observed_scaled, median_scaled (0 after StandardScaler),
-        z_score, percentile_rank, deviation_direction, deviation_magnitude
     """
-    results = []
+    obs = np.asarray(observation, dtype=np.float64).ravel()
+    raw = (
+        np.asarray(raw_observation, dtype=np.float64).ravel()
+        if raw_observation is not None
+        else None
+    )
+    if raw is not None and raw.shape[0] != obs.shape[0]:
+        raw = None
 
     median_stats = reference_stats.get("median", {})
     std_stats = reference_stats.get("std", {})
@@ -70,11 +90,15 @@ def compute_statistical_deviations(
     q75_stats = reference_stats.get("q75", {})
     iqr_stats = reference_stats.get("iqr", {})
 
-    for i, feat in enumerate(feature_names):
-        val = float(observation[i])
+    results: list[dict[str, Any]] = []
 
-        # For numerical (non-OHE) features we have reference stats
-        if feat in median_stats:
+    for i, feat in enumerate(feature_names):
+        # For numerical features, compare like with like.  One-hot columns have
+        # no raw counterpart, so their activation is used directly.
+        is_categorical = feat not in median_stats
+        val = float(raw[i]) if (raw is not None and not is_categorical) else float(obs[i])
+
+        if not is_categorical:
             med = median_stats[feat]
             std = std_stats.get(feat, 1.0)
             q25 = q25_stats.get(feat, med)
@@ -102,6 +126,7 @@ def compute_statistical_deviations(
                 "deviation_magnitude": deviation_magnitude,
                 "deviation_direction": deviation_direction,
                 "robust_z_score": round(robust_z, 3),
+                "units_match": raw is not None,
             })
         else:
             # OHE binary feature: contribution based on activation
@@ -115,6 +140,7 @@ def compute_statistical_deviations(
                 "deviation_magnitude": abs(val),
                 "deviation_direction": "active" if val > 0.5 else "inactive",
                 "robust_z_score": float(val),
+                "units_match": True,
             })
 
     results.sort(key=lambda x: x["deviation_magnitude"], reverse=True)
@@ -123,13 +149,32 @@ def compute_statistical_deviations(
 
 # ── Perturbation-based importance ──────────────────────────────────────────────
 
+def _as_scalar(value: Any, context: str = "score") -> float:
+    """
+    Coerce whatever ``score_fn`` returned into a single float.
+
+    Score functions in this project legitimately return either a scalar or a
+    one-element array (normalisation pipelines return ``np.ndarray``). NumPy 2
+    refuses ``float()`` on a one-element array, so the coercion has to be
+    explicit. Getting this wrong used to raise inside
+    ``perturbation_importance``, where the caller's broad ``except`` swallowed
+    it and silently downgraded every explanation to statistics-only.
+    """
+    arr = np.asarray(value, dtype=np.float64).ravel()
+    if arr.size == 0:
+        raise ValueError(f"The {context} function returned an empty result.")
+    finite = arr[np.isfinite(arr)]
+    if finite.size == 0:
+        raise ValueError(f"The {context} function returned no finite values.")
+    return float(finite[0])
+
 def perturbation_importance(
     observation: np.ndarray,
     score_fn,
-    feature_names: List[str],
-    baseline: Optional[np.ndarray] = None,
+    feature_names: list[str],
+    baseline: np.ndarray | None = None,
     n_repeats: int = 1,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     Estimate feature importance by masking each feature one at a time.
 
@@ -167,14 +212,20 @@ def perturbation_importance(
         baseline = np.zeros(n_features, dtype=np.float64)
 
     # Original score
-    original_score = float(score_fn(observation.reshape(1, -1)))
+    original_score = _as_scalar(
+        score_fn(observation.reshape(1, -1)),
+        context="original score",
+    )
 
-    importances = []
+    importances: list[dict[str, Any]] = []
     for i, feat in enumerate(feature_names):
         perturbed = observation.copy()
         perturbed[i] = baseline[i]
 
-        masked_score = float(score_fn(perturbed.reshape(1, -1)))
+        masked_score = _as_scalar(
+            score_fn(perturbed.reshape(1, -1)),
+            context=f"masked score for '{feat}'",
+        )
         delta = original_score - masked_score  # positive = feature contributed to anomaly
 
         importances.append({
@@ -192,12 +243,12 @@ def perturbation_importance(
 # ── Combined contribution ──────────────────────────────────────────────────────
 
 def combined_feature_contributions(
-    stat_devs: List[Dict[str, Any]],
-    perturbation_imps: Optional[List[Dict[str, Any]]],
+    stat_devs: list[dict[str, Any]],
+    perturbation_imps: list[dict[str, Any]] | None,
     top_k: int = 10,
     stat_weight: float = 0.5,
     perturb_weight: float = 0.5,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     Merge statistical deviation and perturbation importance into a single
     ranked contribution list.
@@ -262,8 +313,8 @@ def combined_feature_contributions(
 # ── Global feature importance ──────────────────────────────────────────────────
 
 def global_feature_importance(
-    anomaly_contributions: List[List[Dict[str, Any]]],
-    feature_names: List[str],
+    anomaly_contributions: list[list[dict[str, Any]]],
+    feature_names: list[str],
 ) -> pd.DataFrame:
     """
     Aggregate per-anomaly contributions into a global importance DataFrame.
@@ -280,14 +331,14 @@ def global_feature_importance(
         feature, mean_combined_score, frequency, mean_z_score, rank
     Sorted by mean_combined_score descending.
     """
-    score_accumulator: Dict[str, List[float]] = {f: [] for f in feature_names}
-    z_accumulator: Dict[str, List[float]] = {f: [] for f in feature_names}
-    freq_counter: Dict[str, int] = {f: 0 for f in feature_names}
+    score_accumulator: dict[str, list[float]] = {f: [] for f in feature_names}
+    z_accumulator: dict[str, list[float]] = {f: [] for f in feature_names}
+    freq_counter: dict[str, int] = {f: 0 for f in feature_names}
 
     for contribs in anomaly_contributions:
         if not contribs:
             continue
-        top_feature = contribs[0]["feature"] if contribs else None
+        contribs[0]["feature"] if contribs else None
         for entry in contribs:
             feat = entry["feature"]
             if feat in score_accumulator:

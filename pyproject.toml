@@ -1,0 +1,81 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "explainable-anomaly-detection"
+# Single source of truth: src/__init__.py.__version__.
+dynamic = ["version"]
+description = "Explainable framework for unsupervised tabular anomaly detection, with SHAP attribution, fidelity checks and counterfactual recommendations."
+readme = "README.md"
+requires-python = ">=3.11"
+# Apache 2.0 is what README.md promised; pyproject.toml said MIT, and no LICENSE
+# file shipped at all.  Both are now aligned, and the licence text is packaged.
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+
+dependencies = [
+    "numpy>=1.26,<3",
+    "pandas>=2.0,<4",
+    "scipy>=1.10,<2",
+    "scikit-learn>=1.4,<2",
+    "joblib>=1.3,<2",
+    "shap>=0.44,<1",
+    "fastapi>=0.110,<1",
+    "uvicorn[standard]>=0.27,<1",
+    "pydantic>=2.5,<3",
+    "python-multipart>=0.0.9,<1",
+    "matplotlib>=3.7,<4",
+    "seaborn>=0.13,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0,<10",
+    "pytest-cov>=4.0,<8",
+    "httpx>=0.27,<1",
+    "ruff>=0.6,<1",
+    "mypy>=1.8,<3",
+    "types-requests",
+    "pandas-stubs",
+]
+
+[tool.setuptools.dynamic]
+version = { attr = "src.__version__" }
+
+# Discover every subpackage.  The previous `packages = ["src", "backend"]` listed
+# the two top-level directories as if they were flat modules: the wheel then
+# contained 6 files and `import backend.routers` / `import src.models` failed
+# from a clean install.  find-packages walks the tree instead.
+[tool.setuptools.packages.find]
+include = ["src*", "backend*"]
+namespaces = false
+
+[tool.ruff]
+line-length = 90
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = [
+    "E501",   # line length is handled by the formatter
+    "B008",   # FastAPI Depends() in defaults is idiomatic
+]
+
+[tool.ruff.lint.per-file-ignores]
+# E402: main.py and state.py must extend sys.path before importing src/ and
+# backend/, so their imports cannot all sit at the top of the file.
+"backend/main.py" = ["E402"]
+"backend/state.py" = ["E402"]
+"tests/*" = ["E402"]
+
+[tool.mypy]
+# NOTE: this is the *type-checker* target, not the runtime floor (which is
+# requires-python = ">=3.11").  The installed numpy 2.x ships .pyi stubs that use
+# PEP 695 `type` statements; mypy refuses to parse them under python_version
+# "3.11" and aborts before checking a single project file.
+python_version = "3.12"
+ignore_missing_imports = true
+warn_unused_ignores = true
+# The ML core is dynamically typed at the numpy/sklearn boundary.
+disallow_untyped_defs = false

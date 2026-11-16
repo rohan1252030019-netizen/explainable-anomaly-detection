@@ -15,13 +15,12 @@ NOTE: Labels, if present, are identified here but are NEVER passed to
       evaluation only.
 """
 
-import os
 import io
-from typing import Optional, Tuple, Dict, Any, List
+import os
+from typing import Any
 
 import numpy as np
 import pandas as pd
-
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -41,7 +40,7 @@ HIGH_CARDINALITY_THRESHOLD = 50
 
 # ── Dataset Summary dataclass (plain dict for simplicity) ──────────────────────
 
-def _empty_summary() -> Dict[str, Any]:
+def _empty_summary() -> dict[str, Any]:
     return {
         "n_rows": 0,
         "n_cols": 0,
@@ -73,9 +72,9 @@ class DataLoader:
     """
 
     def __init__(self):
-        self.df: Optional[pd.DataFrame] = None
-        self.summary: Dict[str, Any] = _empty_summary()
-        self.filepath: Optional[str] = None
+        self.df: pd.DataFrame | None = None
+        self.summary: dict[str, Any] = _empty_summary()
+        self.filepath: str | None = None
 
     # ── Public interface ───────────────────────────────────────────────────────
 
@@ -202,7 +201,7 @@ class DataLoader:
         return df
 
     @staticmethod
-    def _detect_id_cols(df: pd.DataFrame) -> List[str]:
+    def _detect_id_cols(df: pd.DataFrame) -> list[str]:
         """
         Heuristically identify columns that look like row identifiers.
 
@@ -220,7 +219,7 @@ class DataLoader:
         return id_cols
 
     @staticmethod
-    def _detect_label_col(df: pd.DataFrame) -> Optional[str]:
+    def _detect_label_col(df: pd.DataFrame) -> str | None:
         """
         Heuristically identify a potential ground-truth label column.
 
@@ -265,7 +264,7 @@ class DataLoader:
 
         return None
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Return the dataset summary dictionary."""
         return self.summary
 

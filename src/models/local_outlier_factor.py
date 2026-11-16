@@ -31,7 +31,7 @@ sklearn's LOF negative_outlier_factor_ / score_samples():
 """
 
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 import numpy as np
 from sklearn.neighbors import LocalOutlierFactor
@@ -72,7 +72,7 @@ class LOFDetector(BaseDetector):
         self.metric = metric
         self.novelty = novelty
 
-        self._model: Optional[LocalOutlierFactor] = None
+        self._model: LocalOutlierFactor | None = None
 
     # ── BaseDetector interface ─────────────────────────────────────────────────
 
@@ -133,15 +133,16 @@ class LOFDetector(BaseDetector):
         """
         self._check_fitted()
         self._validate_input(X)
+        model = self._fitted_model(self._model)
 
         if self.novelty:
-            return self._model.score_samples(X)
+            return model.score_samples(X)
         else:
             # Non-novelty mode: can only score training data
             # Fall back to negative_outlier_factor_ for training set,
             # or re-fit with novelty=True for new data
             if np.array_equal(X, self._X_train):
-                return self._model.negative_outlier_factor_
+                return model.negative_outlier_factor_
             else:
                 # Score new data by fitting a temporary novelty LOF
                 temp_model = LocalOutlierFactor(
@@ -168,16 +169,17 @@ class LOFDetector(BaseDetector):
         """
         self._check_fitted()
         self._validate_input(X)
+        model = self._fitted_model(self._model)
 
         if self.novelty:
-            return self._model.predict(X)
+            return model.predict(X)
         else:
             # Use scores and contamination threshold
             scores = self.score_samples(X)
             threshold = np.percentile(scores, self.contamination * 100)
             return np.where(scores < threshold, -1, 1)
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         return {
             "n_neighbors": self.n_neighbors,
             "contamination": self.contamination,
@@ -185,7 +187,7 @@ class LOFDetector(BaseDetector):
             "novelty": self.novelty,
         }
 
-    def get_model_info(self) -> Dict[str, Any]:
+    def get_model_info(self) -> dict[str, Any]:
         info = super().get_model_info()
         info.update({
             "algorithm": "Local Outlier Factor",

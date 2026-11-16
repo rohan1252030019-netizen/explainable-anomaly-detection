@@ -2,6 +2,15 @@
 
 import React, { useState } from "react";
 import { ScoreTimelinePoint } from "@/lib/api";
+import { sampleSeries } from "@/lib/downsample";
+import {
+  ChartEmpty,
+  ChartFrame,
+  LegendItem,
+  SERIES,
+  TooltipCard,
+  TooltipRow,
+} from "./ChartFrame";
 
 interface ObservationTimelineChartProps {
   data: ScoreTimelinePoint[];
@@ -12,130 +21,189 @@ export const ObservationTimelineChart: React.FC<ObservationTimelineChartProps> =
   data,
   threshold = 0.5,
 }) => {
-  const [hovered, setHovered] = useState<ScoreTimelinePoint | null>(null);
+  const [hover, setHover] = useState<{
+    pt: ScoreTimelinePoint;
+    x: number;
+    y: number;
+  } | null>(null);
 
   if (!data || data.length === 0) {
-    return (
-      <div className="h-52 flex items-center justify-center text-xs text-slate-400">
-        No observation timeline available.
-      </div>
-    );
+    return <ChartEmpty message="No observation timeline available." height={200} />;
   }
 
-  const width = 800;
-  const height = 180;
+  const width = 820;
+  const height = 200;
   const padLeft = 40;
-  const padRight = 20;
-  const padTop = 15;
-  const padBottom = 25;
+  const padRight = 18;
+  const padTop = 14;
+  const padBottom = 26;
 
   const chartWidth = width - padLeft - padRight;
   const chartHeight = height - padTop - padBottom;
 
-  const minIdx = 0;
-  const maxIdx = Math.max(...data.map((d) => d.index), 1);
-
+  const maxIdx = data.reduce((acc, d) => (d.index > acc ? d.index : acc), 1);
   const thresholdY = padTop + chartHeight * (1 - threshold);
+  const flagged = data.filter((point) => point.is_anomaly).length;
+
+  // Rendering one node per observation is unusable past a few thousand rows.
+  // Anomalies survive the thinning; the normals are strided.
+  const rendered = sampleSeries(data, 2500, (point) => point.is_anomaly);
+
+  const onMove = (
+    e: React.MouseEvent<SVGCircleElement>,
+    pt: ScoreTimelinePoint
+  ) => {
+    const rect = e.currentTarget.ownerSVGElement!.getBoundingClientRect();
+    setHover({
+      pt,
+      x: ((e.clientX - rect.left) / rect.width) * width,
+      y: ((e.clientY - rect.top) / rect.height) * height,
+    });
+  };
 
   return (
-    <div className="w-full relative">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-          Anomaly Score by Observation Sequence
-        </span>
-        <div className="flex items-center gap-3 text-[11px] text-slate-400">
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-blue-500/50" /> Normal
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-rose-500" /> Flagged Outlier
-          </span>
-        </div>
-      </div>
-
+    <ChartFrame
+      title="Score by observation sequence"
+      subtitle={
+        rendered.sampled
+          ? `${data.length.toLocaleString()} records in dataset order · showing ${rendered.points.length.toLocaleString()} · ${flagged.toLocaleString()} flagged`
+          : `${data.length.toLocaleString()} records in dataset order · ${flagged.toLocaleString()} flagged`
+      }
+      legend={
+        <>
+          <LegendItem color={SERIES.normal} shape="dot" label="Normal" />
+          <LegendItem color={SERIES.anomaly} shape="dot" label="Flagged" />
+          <LegendItem
+            color={SERIES.threshold}
+            shape="line"
+            label={`Threshold ${threshold.toFixed(3)}`}
+          />
+        </>
+      }
+    >
+      <p className="sr-only">
+        Line of {data.length} anomaly scores in dataset order with a threshold at{" "}
+        {threshold.toFixed(3)}. {flagged} records are above the threshold.
+      </p>
       <div className="relative">
-        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto overflow-visible">
-          {/* Y Grid lines */}
-          {[0, 0.5, 1.0].map((val, i) => {
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          className="h-auto w-full"
+          role="img"
+          aria-label="Anomaly score plotted against observation index with a threshold line"
+          onMouseLeave={() => setHover(null)}
+        >
+          {[0, 0.5, 1].map((val) => {
             const y = padTop + chartHeight * (1 - val);
             return (
-              <g key={i}>
+              <g key={val}>
                 <line
                   x1={padLeft}
                   y1={y}
                   x2={width - padRight}
                   y2={y}
-                  stroke="currentColor"
-                  className="text-slate-200 dark:text-slate-800"
-                  strokeDasharray="2 2"
+                  stroke={SERIES.grid}
+                  strokeDasharray="2 4"
                 />
-                <text x={padLeft - 6} y={y + 3} textAnchor="end" className="text-[9px] fill-slate-400">
+                <text
+                  x={padLeft - 8}
+                  y={y + 3}
+                  textAnchor="end"
+                  className="fill-ink-faint text-[9px] tabular"
+                >
                   {val.toFixed(1)}
                 </text>
               </g>
             );
           })}
 
-          {/* Threshold line */}
           <line
             x1={padLeft}
             y1={thresholdY}
             x2={width - padRight}
             y2={thresholdY}
-            stroke="#6366F1"
-            strokeWidth="1.5"
-            strokeDasharray="3 3"
+            stroke={SERIES.threshold}
+            strokeWidth={1.5}
+            strokeDasharray="4 4"
           />
+          <text
+            x={width - padRight}
+            y={thresholdY - 4}
+            textAnchor="end"
+            className="fill-accent text-[9px] font-semibold tabular"
+          >
+            τ {threshold.toFixed(2)}
+          </text>
 
-          {/* Points */}
-          {data.map((pt, i) => {
+          {rendered.points.map((pt, i) => {
             const x = padLeft + (pt.index / maxIdx) * chartWidth;
             const y = padTop + chartHeight * (1 - Math.max(0, Math.min(1, pt.score)));
-
-            if (pt.is_anomaly) {
-              return (
-                <circle
-                  key={i}
-                  cx={x}
-                  cy={y}
-                  r="3.5"
-                  className="fill-rose-500 stroke-white dark:stroke-slate-900 cursor-pointer hover:r-5 transition-all"
-                  onMouseEnter={() => setHovered(pt)}
-                  onMouseLeave={() => setHovered(null)}
-                />
-              );
-            }
+            const active = hover?.pt === pt;
+            const r = Math.max(8, chartWidth / rendered.points.length / 2);
 
             return (
-              <circle
-                key={i}
-                cx={x}
-                cy={y}
-                r="1.8"
-                className="fill-blue-500/35 hover:fill-blue-400 cursor-pointer"
-                onMouseEnter={() => setHovered(pt)}
-                onMouseLeave={() => setHovered(null)}
-              />
+              <g key={i}>
+                <circle
+                  cx={x}
+                  cy={y}
+                  r={r}
+                  fill="transparent"
+                  onMouseMove={(e) => onMove(e, pt)}
+                />
+                {pt.is_anomaly ? (
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r={active ? 5 : 3.5}
+                    fill={SERIES.anomaly}
+                    className="pointer-events-none stroke-surface"
+                    strokeWidth={1.2}
+                    style={{ transition: "r 120ms ease" }}
+                  />
+                ) : (
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r={active ? 3.5 : 1.8}
+                    fill={SERIES.normal}
+                    opacity={active ? 0.95 : 0.4}
+                    className="pointer-events-none"
+                    style={{ transition: "r 120ms ease, opacity 120ms ease" }}
+                  />
+                )}
+              </g>
             );
           })}
         </svg>
 
-        {/* Hover tooltip */}
-        {hovered && (
-          <div className="absolute top-2 right-4 px-3 py-1.5 rounded bg-slate-900 border border-slate-700 text-[11px] shadow-md text-slate-200 pointer-events-none">
-            <div>Observation Index: #{hovered.index}</div>
-            <div>Score: {hovered.score.toFixed(4)}</div>
-            <div className={hovered.is_anomaly ? "text-rose-400 font-bold" : "text-blue-400"}>
-              {hovered.is_anomaly ? `Anomaly (${hovered.severity})` : "Normal"}
+        {hover && (
+          <TooltipCard x={hover.x} y={hover.y} width={width} height={height}>
+            <div className="mb-1 font-semibold text-ink">
+              Observation #{hover.pt.index}
             </div>
-          </div>
+            <TooltipRow
+              label="Score"
+              value={hover.pt.score.toFixed(4)}
+              color={hover.pt.is_anomaly ? SERIES.anomaly : SERIES.normal}
+            />
+            <div
+              className="mt-0.5 text-[10px] font-bold"
+              style={{
+                color: hover.pt.is_anomaly
+                  ? "var(--critical)"
+                  : "var(--signal)",
+              }}
+            >
+              {hover.pt.is_anomaly ? hover.pt.severity : "Normal"}
+            </div>
+          </TooltipCard>
         )}
       </div>
 
-      <div className="flex justify-between text-[10px] text-slate-400 mt-1 px-10">
-        <span>Obs #0</span>
-        <span>Obs #{maxIdx}</span>
+      <div className="mt-1 flex justify-between px-8 text-[10px] text-ink-faint tabular">
+        <span>Observation #0</span>
+        <span>#{maxIdx.toLocaleString()}</span>
       </div>
-    </div>
+    </ChartFrame>
   );
 };

@@ -27,7 +27,7 @@ variant, suitable for academic demonstration datasets.
 """
 
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 import numpy as np
 from sklearn.svm import OneClassSVM
@@ -66,7 +66,7 @@ class OneClassSVMDetector(BaseDetector):
         self.nu = nu
         self.gamma = gamma
 
-        self._model: Optional[OneClassSVM] = None
+        self._model: OneClassSVM | None = None
 
     # ── BaseDetector interface ─────────────────────────────────────────────────
 
@@ -115,7 +115,8 @@ class OneClassSVMDetector(BaseDetector):
         """
         self._check_fitted()
         self._validate_input(X)
-        return self._model.score_samples(X)
+        model = self._fitted_model(self._model)
+        return model.score_samples(X)
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -131,16 +132,17 @@ class OneClassSVMDetector(BaseDetector):
         """
         self._check_fitted()
         self._validate_input(X)
-        return self._model.predict(X)
+        model = self._fitted_model(self._model)
+        return model.predict(X)
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         return {
             "kernel": self.kernel,
             "nu": self.nu,
             "gamma": self.gamma,
         }
 
-    def get_model_info(self) -> Dict[str, Any]:
+    def get_model_info(self) -> dict[str, Any]:
         info = super().get_model_info()
         info.update({
             "algorithm": "One-Class SVM",

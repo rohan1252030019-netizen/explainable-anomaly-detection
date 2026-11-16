@@ -18,16 +18,17 @@ IMPORTANT:
 - Explanations describe model behaviour, not ground truth.
 """
 
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from collections.abc import Callable
+from typing import Any
 
 import numpy as np
 import pandas as pd
 
 from src.explainability.feature_contributions import (
-    compute_statistical_deviations,
-    perturbation_importance,
     combined_feature_contributions,
+    compute_statistical_deviations,
     global_feature_importance,
+    perturbation_importance,
 )
 from src.explainability.shap_explainer import SHAPExplainer
 
@@ -45,13 +46,19 @@ class ExplanationGenerator:
     feature_names : list of str
     reference_stats : dict
         From PreprocessingPipeline.get_reference_stats().
-    norm_score_fn : callable
-        Function (X: np.ndarray) -> np.ndarray of normalised scores.
-        Used for perturbation importance.
-    use_shap : bool
-        Whether to attempt SHAP explanations.
-    top_k : int
-        Number of top features to include in each local explanation.
+    score_space : dict or None
+        Output of ``ScoreNormalizer.describe()``.  Passed to the SHAP
+        explainer so attributions are expressed in normalised score units.
+    denormalize : callable or None
+        ``f(scaled_row) -> raw_row``.  Normally
+        ``PreprocessingPipeline.denormalize``.  Required for the statistical
+        deviations to be meaningful: ``reference_stats`` is stored in raw units,
+        so the observation must be converted before being compared with it.
+    score_fn_for_shap : callable or None
+        Must return the SAME normalised score the dashboard displays.  The SHAP
+        explainer verifies additivity against it and falls back to a
+        model-agnostic permutation explainer if a tree explainer's units do not
+        line up.
     """
 
     def __init__(
@@ -59,11 +66,13 @@ class ExplanationGenerator:
         model_name: str,
         sklearn_model: Any,
         X_train: np.ndarray,
-        feature_names: List[str],
-        reference_stats: Dict[str, Any],
+        feature_names: list[str],
+        reference_stats: dict[str, Any],
         norm_score_fn: Callable,
         use_shap: bool = True,
         top_k: int = 8,
+        denormalize: Callable | None = None,
+        score_space: dict[str, Any] | None = None,
     ):
         self.model_name = model_name
         self.sklearn_model = sklearn_model
@@ -72,9 +81,11 @@ class ExplanationGenerator:
         self.reference_stats = reference_stats
         self.norm_score_fn = norm_score_fn
         self.top_k = top_k
+        self.denormalize = denormalize
+        self.score_space = score_space
 
         # Build SHAP explainer
-        self._shap_explainer: Optional[SHAPExplainer] = None
+        self._shap_explainer: SHAPExplainer | None = None
         if use_shap:
             self._shap_explainer = SHAPExplainer(
                 model_name=model_name,
@@ -82,10 +93,11 @@ class ExplanationGenerator:
                 X_train=X_train,
                 feature_names=feature_names,
                 score_fn=norm_score_fn,
+                score_space=score_space,
             )
 
         # Cache global explanations
-        self._global_importance: Optional[pd.DataFrame] = None
+        self._global_importance: pd.DataFrame | None = None
 
     # ── Local explanation ──────────────────────────────────────────────────────
 
@@ -95,8 +107,8 @@ class ExplanationGenerator:
         norm_score: float,
         severity: str,
         row_id: Any = None,
-        original_values: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        original_values: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         Generate a full local explanation for a single observation.
 
@@ -120,22 +132,37 @@ class ExplanationGenerator:
             top_features, shap_values, explanation_text,
             confidence_note
         """
-        # A. Statistical deviations
+        # A. Statistical deviations (in raw units, so the z-scores are real)
+        raw_observation = None
+        if self.denormalize is not None:
+            try:
+                raw_observation = self.denormalize(np.asarray(observation))
+            except Exception:
+                raw_observation = None
+
         stat_devs = compute_statistical_deviations(
             observation=observation,
             feature_names=self.feature_names,
             reference_stats=self.reference_stats,
+            raw_observation=raw_observation,
         )
 
         # B. Perturbation importance
+        #
+        # A failure here used to be swallowed by a bare `except Exception`,
+        # which silently downgraded every explanation to statistics-only while
+        # the UI still claimed a combined contribution score. Failures are now
+        # recorded and surfaced.
+        perturbation_error = None
         try:
             perturb_imps = perturbation_importance(
                 observation=observation,
                 score_fn=self.norm_score_fn,
                 feature_names=self.feature_names,
             )
-        except Exception:
+        except Exception as exc:
             perturb_imps = None
+            perturbation_error = str(exc)
 
         # C. Combined contributions
         top_features = combined_feature_contributions(
@@ -171,10 +198,18 @@ class ExplanationGenerator:
             "feature_table": feature_table,
             "shap_values": shap_values,
             "explanation_text": explanation_text,
+            "used_perturbation": perturb_imps is not None,
+            "perturbation_error": perturbation_error,
             "confidence_note": (
                 "This explanation is a model-based approximation. "
                 "Feature contributions indicate statistical association, "
                 "not causal proof."
+                + (
+                    " Perturbation-based importance was unavailable for this "
+                    "row, so the ranking rests on statistical deviation alone."
+                    if perturbation_error
+                    else ""
+                )
             ),
         }
 
@@ -184,9 +219,9 @@ class ExplanationGenerator:
         norm_scores: np.ndarray,
         predictions: np.ndarray,
         severity: np.ndarray,
-        original_df: Optional[pd.DataFrame] = None,
+        original_df: pd.DataFrame | None = None,
         max_explanations: int = 200,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Generate explanations for all anomalous observations.
 
@@ -237,7 +272,7 @@ class ExplanationGenerator:
 
     def compute_global_importance(
         self,
-        explanations: List[Dict[str, Any]],
+        explanations: list[dict[str, Any]],
     ) -> pd.DataFrame:
         """
         Aggregate local explanations into global feature importance.
@@ -264,21 +299,27 @@ class ExplanationGenerator:
         )
         return self._global_importance
 
-    def get_global_importance(self) -> Optional[pd.DataFrame]:
+    def get_global_importance(self) -> pd.DataFrame | None:
         return self._global_importance
 
     # ── Helpers ────────────────────────────────────────────────────────────────
 
     def _build_feature_table(
         self,
-        top_features: List[Dict[str, Any]],
-        original_values: Optional[Dict[str, Any]],
+        top_features: list[dict[str, Any]],
+        original_values: dict[str, Any] | None,
     ) -> pd.DataFrame:
         """
         Build a display-ready feature comparison table.
 
         Columns: Feature | Observed Value | Typical Value | Deviation |
                  Contribution | Direction | Interpretation
+
+        ``observed_value`` and ``reference_value`` on each contribution are now
+        both in the dataset's original units (see
+        compute_statistical_deviations), so the percentage deviation is a real
+        percentage.  ``original_values`` is used only as a fallback for
+        numerical columns that were somehow missing.
         """
         rows = []
         for entry in top_features:
@@ -288,28 +329,30 @@ class ExplanationGenerator:
             z = entry.get("robust_z_score", 0.0)
             direction = entry["deviation_direction"]
             contribution = entry["combined_score"]
+            is_numerical = entry["feature_type"] == "numerical"
 
-            # Use original (unscaled) values for display when available
-            if original_values and feat in original_values:
-                raw_val = original_values[feat]
-                display_obs = round(float(raw_val), 4) if isinstance(raw_val, (int, float, np.floating, np.integer)) else raw_val
-                # reference_stats hold pre-scaling medians for numerical features
-                display_ref = round(ref_val, 4) if entry["feature_type"] == "numerical" else "N/A"
-            else:
-                display_obs = round(obs_val, 4)
-                display_ref = round(ref_val, 4)
+            if is_numerical:
+                display_obs = obs_val
+                display_ref = ref_val
 
-            # Deviation percentage — use original-space values for numerical
-            if entry["feature_type"] == "numerical":
-                # obs_numeric and ref_numeric should both be in original space
-                obs_numeric = float(display_obs) if isinstance(display_obs, (int, float, np.floating, np.integer)) else obs_val
-                ref_numeric = float(display_ref) if isinstance(display_ref, (int, float, np.floating, np.integer)) else ref_val
-                if abs(ref_numeric) > 1e-6:
-                    pct_dev = (obs_numeric - ref_numeric) / abs(ref_numeric) * 100
+                if original_values and feat in original_values:
+                    raw_val = original_values[feat]
+                    if isinstance(
+                        raw_val, (int, float, np.floating, np.integer)
+                    ):
+                        display_obs = round(float(raw_val), 4)
+
+                display_obs = round(float(display_obs), 4)
+                display_ref = round(float(display_ref), 4)
+
+                if abs(display_ref) > 1e-6:
+                    pct_dev = (display_obs - display_ref) / abs(display_ref) * 100
                     deviation_str = f"{'+' if pct_dev >= 0 else ''}{pct_dev:.1f}%"
                 else:
                     deviation_str = f"z={z:+.2f}"
             else:
+                display_obs = round(float(obs_val), 4)
+                display_ref = "N/A"
                 deviation_str = "active" if direction == "active" else "inactive"
 
             # Contribution label
@@ -322,7 +365,6 @@ class ExplanationGenerator:
             else:
                 contrib_label = "Low"
 
-            # Interpretation
             interpretation = _interpretation_text(
                 feat, direction, abs(z), contribution, entry["feature_type"]
             )
@@ -341,7 +383,7 @@ class ExplanationGenerator:
 
     def _generate_text(
         self,
-        top_features: List[Dict[str, Any]],
+        top_features: list[dict[str, Any]],
         norm_score: float,
         severity: str,
     ) -> str:
@@ -383,7 +425,7 @@ class ExplanationGenerator:
             "not causal explanations."
         )
 
-    def get_shap_status(self) -> Dict[str, Any]:
+    def get_shap_status(self) -> dict[str, Any]:
         if self._shap_explainer:
             return self._shap_explainer.get_status()
         return {"shap_available": False, "is_available": False, "error": "SHAP not initialised"}

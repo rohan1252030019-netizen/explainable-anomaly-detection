@@ -1,37 +1,47 @@
 # ============================================================
 # Explainable Framework for Unsupervised Anomaly Detection
-# Requirements — Python 3.11+
-# Tested on Python 3.13
+# Runtime dependencies — Python 3.10+
+#
+# Version ceilings are deliberate.
+#
+# This project broke twice because of unpinned majors: pandas 3.x removed
+# behaviour the loader relies on, and NumPy 2.x turned `float()` on a
+# one-element array from a deprecation into a TypeError, which a bare
+# `except` in the explainability layer silently swallowed — every
+# explanation quietly degraded to statistics-only.
+#
+# Upper bounds below mark the newest versions this code has actually been
+# run against. Raise them deliberately, with the test suite as the gate:
+#     python -m pytest
 # ============================================================
 
-# Core scientific computing
-numpy>=2.0.0
-pandas>=2.0.0
-scipy>=1.10.0
+# ── Core scientific computing ──────────────────────────────────────────────────
+numpy>=1.26,<3
+pandas>=2.0,<4
+scipy>=1.10,<2
 
-# Machine learning
-scikit-learn>=1.4.0
-joblib>=1.3.0
+# ── Machine learning ───────────────────────────────────────────────────────────
+scikit-learn>=1.4,<2
+joblib>=1.3,<2
 
-# Explainability
-shap>=0.44.0
+# ── Explainability ─────────────────────────────────────────────────────────────
+# TreeExplainer on a scikit-learn IsolationForest explains the raw tree path
+# length rather than score_samples; src/explainability/shap_explainer.py
+# verifies additivity and falls back to the permutation explainer when the
+# units disagree. 0.44+ is required for the Explainer API used there.
+shap>=0.44,<1
 
-# Visualization
-matplotlib>=3.7.0
-seaborn>=0.13.0
-plotly>=5.18.0
+# ── API ───────────────────────────────────────────────────────────────────────
+# Needed by backend/ — previously absent, so `pip install -r requirements.txt`
+# followed by `python run.py --backend` could not actually start the server.
+fastapi>=0.110,<1
+uvicorn[standard]>=0.27,<1
+pydantic>=2.5,<3
+python-multipart>=0.0.9,<1   # required by FastAPI for multipart file uploads
 
-# Dashboard
-streamlit>=1.30.0
+# ── Visualization ──────────────────────────────────────────────────────────────
+matplotlib>=3.7,<4
+seaborn>=0.13,<1
 
-# Notebook support
-jupyter
-ipykernel
-nbformat>=5.7.0
-
-# Testing
-pytest>=7.0.0
-pytest-cov>=4.0.0
-
-# Utilities
-tqdm>=4.60.0
+# ── Configuration ──────────────────────────────────────────────────────────────
+# No .env is required: backend/config.py falls back to local-safe defaults.

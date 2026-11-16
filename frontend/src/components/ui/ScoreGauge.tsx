@@ -1,10 +1,13 @@
 import React from "react";
+import { cn } from "@/lib/cn";
+import { severityStyle } from "./Badge";
 
 interface ScoreGaugeProps {
   score: number;
   severity: string;
   threshold?: number;
   size?: number;
+  className?: string;
 }
 
 export const ScoreGauge: React.FC<ScoreGaugeProps> = ({
@@ -12,62 +15,96 @@ export const ScoreGauge: React.FC<ScoreGaugeProps> = ({
   severity,
   threshold = 0.5,
   size = 180,
+  className,
 }) => {
   const normScore = Math.max(0, Math.min(1, score));
-  const strokeWidth = 14;
+  const strokeWidth = 11;
   const radius = (size - strokeWidth) / 2;
-  const circumference = Math.PI * radius; // half circle arc
-  const strokeDashoffset = circumference - normScore * circumference;
-
-  let color = "#10B981"; // Low (emerald)
-  if (severity.toUpperCase() === "CRITICAL") color = "#EF4444";
-  else if (severity.toUpperCase() === "HIGH") color = "#F97316";
-  else if (severity.toUpperCase() === "MEDIUM") color = "#F59E0B";
+  const circumference = Math.PI * radius;
+  const offset = circumference - normScore * circumference;
+  const style = severityStyle(severity);
+  const thresholdX =
+    strokeWidth / 2 + radius * 2 * Math.max(0, Math.min(1, threshold));
 
   return (
-    <div className="flex flex-col items-center justify-center">
-      <div className="relative" style={{ width: size, height: size / 2 + 20 }}>
-        <svg width={size} height={size / 2 + 10} className="overflow-visible">
-          {/* Background track */}
+    <div
+      className={cn("flex flex-col items-center", className)}
+      role="meter"
+      aria-valuenow={Number(normScore.toFixed(4))}
+      aria-valuemin={0}
+      aria-valuemax={1}
+      aria-valuetext={`${normScore.toFixed(4)} out of 1, ${severity.toLowerCase()}`}
+      aria-label="Normalised anomaly score"
+    >
+      <div className="relative" style={{ width: size, height: size / 2 + 18 }}>
+        <svg
+          width={size}
+          height={size / 2 + 18}
+          viewBox={`0 0 ${size} ${size / 2 + 18}`}
+          className="overflow-visible"
+          aria-hidden="true"
+        >
+          <defs>
+            <linearGradient id="gauge-fill" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor={style.hex} stopOpacity={0.45} />
+              <stop offset="100%" stopColor={style.hex} />
+            </linearGradient>
+          </defs>
+
           <path
             d={`M ${strokeWidth / 2} ${size / 2} A ${radius} ${radius} 0 0 1 ${size - strokeWidth / 2} ${size / 2}`}
             fill="none"
-            stroke="currentColor"
-            className="text-slate-200 dark:text-slate-800"
+            stroke="var(--inset)"
             strokeWidth={strokeWidth}
             strokeLinecap="round"
           />
 
-          {/* Active score fill */}
           <path
             d={`M ${strokeWidth / 2} ${size / 2} A ${radius} ${radius} 0 0 1 ${size - strokeWidth / 2} ${size / 2}`}
             fill="none"
-            stroke={color}
+            stroke="url(#gauge-fill)"
             strokeWidth={strokeWidth}
             strokeDasharray={circumference}
-            strokeDashoffset={strokeDashoffset}
+            strokeDashoffset={offset}
             strokeLinecap="round"
-            className="transition-all duration-700 ease-out"
+            style={{
+              transition: "stroke-dashoffset 700ms cubic-bezier(0.16,1,0.3,1)",
+            }}
           />
+
+          {threshold > 0 && threshold < 1 && (
+            <line
+              x1={thresholdX}
+              y1={size / 2 - radius - 6}
+              x2={thresholdX}
+              y2={size / 2 + 3}
+              stroke="var(--accent)"
+              strokeWidth={1.5}
+              strokeDasharray="3 3"
+              opacity={0.9}
+            />
+          )}
         </svg>
 
-        {/* Center score readout */}
-        <div className="absolute inset-x-0 bottom-0 flex flex-col items-center justify-center">
-          <span className="text-3xl font-extrabold tracking-tight" style={{ color }}>
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center">
+          <span
+            className="text-[1.7rem] font-extrabold leading-none tracking-tight tabular"
+            style={{ color: style.hex }}
+          >
             {normScore.toFixed(4)}
           </span>
-          <span className="text-[11px] font-medium text-slate-400 mt-0.5">
-            Normalized Anomaly Score
+          <span className="mt-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-ink-faint">
+            Normalised score
           </span>
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between w-full max-w-[200px] text-[10px] text-slate-400">
-        <span>0.00 (Normal)</span>
-        <span className="font-semibold text-indigo-400">
-          Threshold: {threshold.toFixed(3)}
+      <div className="mt-3 flex w-full max-w-[220px] items-center justify-between text-[9px] tabular text-ink-faint">
+        <span>0.00</span>
+        <span className="font-semibold text-accent">
+          threshold {threshold.toFixed(3)}
         </span>
-        <span>1.00 (Outlier)</span>
+        <span>1.00</span>
       </div>
     </div>
   );

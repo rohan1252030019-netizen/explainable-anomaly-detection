@@ -23,7 +23,7 @@ unsupervised.
 """
 
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 from sklearn.ensemble import IsolationForest
@@ -67,7 +67,7 @@ class IsolationForestDetector(BaseDetector):
         self.max_features = max_features
         self.random_state = random_state
 
-        self._model: Optional[IsolationForest] = None
+        self._model: IsolationForest | None = None
 
     # ── BaseDetector interface ─────────────────────────────────────────────────
 
@@ -120,7 +120,8 @@ class IsolationForestDetector(BaseDetector):
         """
         self._check_fitted()
         self._validate_input(X)
-        return self._model.score_samples(X)
+        model = self._fitted_model(self._model)
+        return model.score_samples(X)
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -133,9 +134,10 @@ class IsolationForestDetector(BaseDetector):
         """
         self._check_fitted()
         self._validate_input(X)
-        return self._model.predict(X)
+        model = self._fitted_model(self._model)
+        return model.predict(X)
 
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         return {
             "n_estimators": self.n_estimators,
             "contamination": self.contamination,
@@ -144,7 +146,7 @@ class IsolationForestDetector(BaseDetector):
             "random_state": self.random_state,
         }
 
-    def get_model_info(self) -> Dict[str, Any]:
+    def get_model_info(self) -> dict[str, Any]:
         info = super().get_model_info()
         info.update({
             "algorithm": "Isolation Forest",

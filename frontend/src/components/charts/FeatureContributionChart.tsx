@@ -1,6 +1,10 @@
 "use client";
 
 import React from "react";
+import { motion } from "framer-motion";
+import { ArrowDownRight, ArrowUpRight } from "lucide-react";
+import { ChartEmpty } from "./ChartFrame";
+import { cn } from "@/lib/cn";
 
 interface FeatureContribution {
   feature: string;
@@ -19,78 +23,114 @@ interface FeatureContributionChartProps {
 
 export const FeatureContributionChart: React.FC<FeatureContributionChartProps> = ({
   features,
-  title = "Feature Contributions (Why was it flagged?)",
+  title = "Feature contributions",
 }) => {
   if (!features || features.length === 0) {
     return (
-      <div className="text-xs text-slate-400 py-6 text-center">
-        No feature contribution breakdown available.
-      </div>
+      <ChartEmpty message="No feature contribution breakdown available." height={140} />
     );
   }
 
-  const sorted = [...features].sort((a, b) => {
-    const scoreA = a.combined_score ?? 0;
-    const scoreB = b.combined_score ?? 0;
-    return scoreB - scoreA;
-  });
+  const sorted = [...features].sort(
+    (a, b) => (b.combined_score ?? 0) - (a.combined_score ?? 0)
+  );
 
-  const maxVal = Math.max(...sorted.map((f) => f.combined_score ?? Math.abs(f.robust_z_score ?? 1)), 1);
+  const maxVal = Math.max(
+    ...sorted.map((feature) =>
+      Math.abs(feature.combined_score ?? feature.robust_z_score ?? 0)
+    ),
+    0.0001
+  );
 
   return (
-    <div className="space-y-3">
-      {title && (
-        <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h3 className="text-[10px] font-bold uppercase tracking-[0.14em] text-ink-faint">
           {title}
-        </div>
-      )}
+        </h3>
+        <p className="text-[10px] text-ink-faint">
+          Combined score, scaled to the largest contributor
+        </p>
+      </div>
 
-      <div className="space-y-2.5">
-        {sorted.map((item, i) => {
-          const score = item.combined_score ?? Math.abs(item.robust_z_score ?? 0);
-          const pct = Math.min(100, Math.max(10, (score / maxVal) * 100));
-          const dir = item.deviation_direction || item.direction || "above";
-          const isAbove = dir.toLowerCase().includes("above");
+      <ul className="space-y-3">
+        {sorted.map((item, index) => {
+          const score = Math.abs(
+            item.combined_score ?? item.robust_z_score ?? 0
+          );
+          const pct = Math.min(100, Math.max(2, (score / maxVal) * 100));
+          const direction =
+            item.deviation_direction || item.direction || "above";
+          const isAbove = direction.toLowerCase().includes("above");
 
           return (
-            <div key={i} className="text-xs space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-slate-800 dark:text-slate-200">
+            <li key={`${item.feature}-${index}`} className="space-y-1.5">
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+                <span className="min-w-0 truncate text-xs font-semibold text-ink">
                   {item.feature}
                 </span>
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                      isAbove
-                        ? "bg-rose-500/10 text-rose-400 border border-rose-500/20"
-                        : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
-                    }`}
-                  >
-                    {isAbove ? "↑ Above normal" : "↓ Below normal"}
+                <span className="flex shrink-0 items-center gap-2">
+                  {item.robust_z_score !== undefined &&
+                    item.robust_z_score !== null && (
+                      <span className="font-mono text-[10px] tabular text-ink-faint">
+                        z {item.robust_z_score.toFixed(2)}
+                      </span>
+                    )}
+                  <span className="font-mono text-[10px] font-bold tabular text-ink-muted">
+                    {score.toFixed(3)}
                   </span>
-                  {item.deviation && (
-                    <span className="text-[11px] text-slate-400 font-mono">
-                      {item.deviation}
-                    </span>
-                  )}
-                </div>
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded border px-1.5 py-px text-[9.5px] font-bold",
+                      isAbove
+                        ? "border-critical/30 bg-critical-soft text-critical"
+                        : "border-signal/30 bg-signal-soft text-signal"
+                    )}
+                  >
+                    {isAbove ? (
+                      <ArrowUpRight size={10} aria-hidden="true" />
+                    ) : (
+                      <ArrowDownRight size={10} aria-hidden="true" />
+                    )}
+                    {isAbove ? "Above" : "Below"} typical
+                  </span>
+                </span>
               </div>
 
-              {/* Progress bar */}
-              <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${
+              <div
+                className="h-2 overflow-hidden rounded-full bg-inset"
+                role="meter"
+                aria-valuemin={0}
+                aria-valuemax={Number(maxVal.toFixed(3))}
+                aria-valuenow={Number(score.toFixed(3))}
+                aria-label={`${item.feature} contribution`}
+              >
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${pct}%` }}
+                  transition={{
+                    duration: 0.6,
+                    ease: [0.16, 1, 0.3, 1],
+                    delay: index * 0.04,
+                  }}
+                  className={cn(
+                    "h-full rounded-full",
                     isAbove
-                      ? "bg-gradient-to-r from-rose-500 to-orange-400"
-                      : "bg-gradient-to-r from-blue-500 to-indigo-400"
-                  }`}
-                  style={{ width: `${pct}%` }}
+                      ? "bg-gradient-to-r from-critical/70 to-critical"
+                      : "bg-gradient-to-r from-signal/70 to-signal"
+                  )}
                 />
               </div>
-            </div>
+
+              {item.deviation && (
+                <p className="text-[10px] leading-relaxed text-ink-faint">
+                  {item.deviation}
+                </p>
+              )}
+            </li>
           );
         })}
-      </div>
+      </ul>
     </div>
   );
 };

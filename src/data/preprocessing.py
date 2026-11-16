@@ -26,16 +26,14 @@ IMPORTANT:
 """
 
 import warnings
-from typing import List, Optional, Tuple, Dict, Any
+from typing import Any
 
 import numpy as np
 import pandas as pd
-
-from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler, RobustScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
-
+from sklearn.preprocessing import OneHotEncoder, RobustScaler, StandardScaler
 
 # ── Configuration ──────────────────────────────────────────────────────────────
 
@@ -68,31 +66,31 @@ class PreprocessingPipeline:
 
     def __init__(
         self,
-        label_col: Optional[str] = None,
+        label_col: str | None = None,
         scaler_type: str = "standard",
         drop_duplicates: bool = False,
-        id_cols: Optional[List[str]] = None,
+        id_cols: list[str] | None = None,
     ):
         self.label_col = label_col
         self.scaler_type = scaler_type
         self.drop_duplicates = drop_duplicates
-        self.id_cols: List[str] = id_cols or []
+        self.id_cols: list[str] = id_cols or []
 
         # Set after fit
-        self.feature_names_out_: List[str] = []
-        self.numerical_cols_: List[str] = []
-        self.categorical_cols_: List[str] = []
-        self.dropped_cols_: List[str] = []
-        self.log_: List[str] = []
-        self._pipeline: Optional[ColumnTransformer] = None
+        self.feature_names_out_: list[str] = []
+        self.numerical_cols_: list[str] = []
+        self.categorical_cols_: list[str] = []
+        self.dropped_cols_: list[str] = []
+        self.log_: list[str] = []
+        self._pipeline: ColumnTransformer | None = None
         self._is_fitted: bool = False
-        self._reference_stats: Dict[str, Any] = {}  # for explanations
+        self._reference_stats: dict[str, Any] = {}  # for explanations
 
     # ── Public interface ───────────────────────────────────────────────────────
 
     def fit_transform(
         self, df: pd.DataFrame
-    ) -> Tuple[np.ndarray, List[str]]:
+    ) -> tuple[np.ndarray, list[str]]:
         """
         Fit the pipeline on ``df`` and return the transformed array.
 
@@ -106,7 +104,10 @@ class PreprocessingPipeline:
         feature_names : list of str
         """
         df_clean = self._prepare(df, fit=True)
-        X = self._pipeline.fit_transform(df_clean)
+        pipeline = self._pipeline
+        if pipeline is None:  # pragma: no cover - _prepare(fit=True) builds it
+            raise RuntimeError("Preprocessing pipeline was not constructed.")
+        X = pipeline.fit_transform(df_clean)
         self._is_fitted = True
         self._store_reference_stats(df_clean)
         return X, self.feature_names_out_
@@ -128,9 +129,12 @@ class PreprocessingPipeline:
                 "Pipeline is not fitted yet. Call fit_transform() first."
             )
         df_clean = self._prepare(df, fit=False)
-        return self._pipeline.transform(df_clean)
+        pipeline = self._pipeline
+        if pipeline is None:  # pragma: no cover - guarded by _is_fitted
+            raise RuntimeError("Preprocessing pipeline is not fitted.")
+        return pipeline.transform(df_clean)
 
-    def get_labels(self, df: pd.DataFrame) -> Optional[np.ndarray]:
+    def get_labels(self, df: pd.DataFrame) -> np.ndarray | None:
         """
         Extract the label column from a DataFrame (for post-hoc evaluation).
 
@@ -140,11 +144,11 @@ class PreprocessingPipeline:
             return df[self.label_col].values
         return None
 
-    def get_log(self) -> List[str]:
+    def get_log(self) -> list[str]:
         """Return the preprocessing log entries."""
         return self.log_
 
-    def get_reference_stats(self) -> Dict[str, Any]:
+    def get_reference_stats(self) -> dict[str, Any]:
         """
         Return per-feature reference statistics computed on the training data.
 
@@ -313,7 +317,7 @@ class PreprocessingPipeline:
         # We'll update these after fitting; for now store placeholders
         self.feature_names_out_ = self._compute_feature_names(df)
 
-    def _compute_feature_names(self, df: pd.DataFrame) -> List[str]:
+    def _compute_feature_names(self, df: pd.DataFrame) -> list[str]:
         """
         Compute the output feature names after transformation.
 
@@ -341,7 +345,7 @@ class PreprocessingPipeline:
 
         return names
 
-    def _auto_detect_id_cols(self, df: pd.DataFrame) -> List[str]:
+    def _auto_detect_id_cols(self, df: pd.DataFrame) -> list[str]:
         """Heuristically detect ID columns not explicitly specified."""
         auto_id = []
         for col in df.columns:
@@ -359,7 +363,7 @@ class PreprocessingPipeline:
         Used later by the explainability module to compute deviations.
         The statistics are computed on the raw (pre-scaling) values.
         """
-        stats: Dict[str, Any] = {
+        stats: dict[str, Any] = {
             "median": {},
             "mean": {},
             "std": {},
@@ -389,15 +393,82 @@ class PreprocessingPipeline:
         )
 
 
+    def denormalize(self, scaled_row: np.ndarray) -> np.ndarray:
+            """
+            Map a scaled feature vector back to original dataset units.
+
+            The explainability layer mixes three different unit spaces: the model
+            consumes scaled values, while ``_store_reference_stats`` deliberately
+            keeps medians and IQRs in RAW units so the UI can display real
+            numbers.  Comparing one against the other silently produces
+            meaningless z-scores, so every crossing of that boundary goes through
+            this method.
+
+            Only the numerical block can be inverted.  One-hot columns are not
+            ordinal, so they are returned as their 0/1 activation and must be
+            interpreted by category name instead.
+
+            Parameters
+            ----------
+            scaled_row : np.ndarray, shape (n_features_out,)
+                One row of the output of ``transform`` / ``fit_transform``.
+
+            Returns
+            -------
+            np.ndarray, shape (n_features_out,)
+                Values in the original units for numerical features; the raw 0/1
+                activation for one-hot features.
+            """
+            row = np.asarray(scaled_row, dtype=np.float64).ravel()
+            out = row.copy()
+
+            scaler = None
+            pipeline = getattr(self, "_pipeline", None)
+            if pipeline is not None:
+                try:
+                    scaler = pipeline.named_transformers_["num"].named_steps[
+                        "scaler"
+                    ]
+                except Exception:
+                    scaler = None
+
+            n_num = len(self.numerical_cols_)
+            if n_num == 0:
+                return out
+
+            block = row[:n_num]
+            if scaler is not None:
+                try:
+                    block = scaler.inverse_transform(block.reshape(1, -1)).ravel()
+                except Exception:
+                    block = row[:n_num]
+            out[:n_num] = block
+            return out
+
+    def feature_units(self) -> dict[str, str]:
+        """
+        Declare which unit space each output feature lives in.
+
+        Returns a mapping ``feature_name -> "raw" | "onehot"`` so callers never
+        have to guess whether a number is a real measurement or an encoder
+        activation.
+        """
+        units: dict[str, str] = {name: "raw" for name in self.numerical_cols_}
+        for name in self.feature_names_out_:
+            if name not in units:
+                units[name] = "onehot"
+        return units
+
+
 # ── Convenience function ───────────────────────────────────────────────────────
 
 def build_preprocessing_pipeline(
     df: pd.DataFrame,
-    label_col: Optional[str] = None,
+    label_col: str | None = None,
     scaler_type: str = "standard",
     drop_duplicates: bool = False,
-    id_cols: Optional[List[str]] = None,
-) -> Tuple["PreprocessingPipeline", np.ndarray, List[str]]:
+    id_cols: list[str] | None = None,
+) -> tuple["PreprocessingPipeline", np.ndarray, list[str]]:
     """
     Convenience wrapper: create, fit, and return the pipeline + transformed data.
 

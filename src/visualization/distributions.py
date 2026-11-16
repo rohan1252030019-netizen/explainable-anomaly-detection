@@ -13,16 +13,14 @@ Charts produced:
 - Feature variance bar chart
 """
 
-from typing import Dict, List, Optional, Tuple
 
 import matplotlib
+
 matplotlib.use("Agg")   # non-interactive backend for Streamlit / headless use
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 import numpy as np
 import pandas as pd
 import seaborn as sns
-
 
 # ── Style defaults ─────────────────────────────────────────────────────────────
 
@@ -34,7 +32,7 @@ TITLE_FONTSIZE  = 13
 LABEL_FONTSIZE  = 10
 
 
-def _save_or_return(fig: plt.Figure, save_path: Optional[str]) -> plt.Figure:
+def _save_or_return(fig: plt.Figure, save_path: str | None) -> plt.Figure:
     if save_path:
         fig.savefig(save_path, dpi=FIG_DPI, bbox_inches="tight")
     return fig
@@ -44,9 +42,9 @@ def _save_or_return(fig: plt.Figure, save_path: Optional[str]) -> plt.Figure:
 
 def plot_feature_distributions(
     df: pd.DataFrame,
-    numerical_cols: List[str],
+    numerical_cols: list[str],
     max_cols: int = 6,
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
 ) -> plt.Figure:
     """
     Histogram + KDE for each numerical feature.
@@ -99,10 +97,10 @@ def plot_feature_distributions(
 
 def plot_boxplots(
     df: pd.DataFrame,
-    numerical_cols: List[str],
-    label_col: Optional[str] = None,
+    numerical_cols: list[str],
+    label_col: str | None = None,
     max_cols: int = 8,
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
 ) -> plt.Figure:
     """
     Box plots optionally split by label (normal / anomaly).
@@ -168,9 +166,9 @@ def plot_boxplots(
 
 def plot_correlation_heatmap(
     df: pd.DataFrame,
-    numerical_cols: List[str],
+    numerical_cols: list[str],
     max_features: int = 20,
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
 ) -> plt.Figure:
     """
     Pearson correlation heatmap for numerical features.
@@ -218,7 +216,7 @@ def plot_correlation_heatmap(
 
 def plot_missing_values(
     df: pd.DataFrame,
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
 ) -> plt.Figure:
     """Bar chart of missing value percentages per column."""
     missing_pct = (df.isnull().sum() / len(df) * 100).sort_values(ascending=False)
@@ -233,7 +231,7 @@ def plot_missing_values(
         bars = ax.barh(missing_pct.index, missing_pct.values, color=PALETTE_ANOMALY, alpha=0.75)
         ax.set_xlabel("Missing (%)", fontsize=LABEL_FONTSIZE)
         ax.set_title("Missing Values per Feature", fontsize=TITLE_FONTSIZE)
-        for bar, val in zip(bars, missing_pct.values):
+        for bar, val in zip(bars, missing_pct.values, strict=False):
             ax.text(val + 0.2, bar.get_y() + bar.get_height() / 2,
                     f"{val:.1f}%", va="center", fontsize=8)
 
@@ -245,10 +243,10 @@ def plot_missing_values(
 
 def plot_categorical_frequencies(
     df: pd.DataFrame,
-    categorical_cols: List[str],
+    categorical_cols: list[str],
     max_cols: int = 4,
     top_k: int = 15,
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
 ) -> plt.Figure:
     """Bar chart of value counts for categorical features."""
     cols = categorical_cols[:max_cols]
@@ -283,15 +281,15 @@ def plot_categorical_frequencies(
 
 def plot_skewness(
     df: pd.DataFrame,
-    numerical_cols: List[str],
-    save_path: Optional[str] = None,
+    numerical_cols: list[str],
+    save_path: str | None = None,
 ) -> plt.Figure:
     """Horizontal bar chart of feature skewness values."""
     skew = df[numerical_cols].skew().sort_values()
     colors = [PALETTE_ANOMALY if abs(v) > 1 else PALETTE_NORMAL for v in skew]
 
     fig, ax = plt.subplots(figsize=(7, max(4, len(skew) * 0.35)))
-    bars = ax.barh(skew.index, skew.values, color=colors, alpha=0.8)
+    ax.barh(skew.index, skew.values, color=colors, alpha=0.8)
     ax.axvline(0, color="black", lw=0.8, ls="--")
     ax.axvline(1, color=PALETTE_ANOMALY, lw=0.8, ls=":", alpha=0.6, label="|skew|>1 (high)")
     ax.axvline(-1, color=PALETTE_ANOMALY, lw=0.8, ls=":", alpha=0.6)

@@ -1,303 +1,564 @@
 "use client";
 
 import React, { useState } from "react";
-import { useApp } from "@/context/AppContext";
-import { StatCard } from "@/components/ui/StatCard";
-import { api } from "@/lib/api";
 import {
-  Upload,
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle2,
+  Columns3,
   Database,
   FileSpreadsheet,
-  AlertCircle,
-  CheckCircle2,
-  Sliders,
+  Layers,
   Play,
-  RotateCcw,
+  Settings2,
+  ShieldAlert,
+  Sliders,
+  Sparkles,
+  Table2,
+  Upload,
 } from "lucide-react";
+import { useApp } from "@/context/AppContext";
+import { Button } from "@/components/ui/Button";
+import { Card, SectionLabel } from "@/components/ui/Card";
+import { Tabs } from "@/components/ui/Tabs";
+import { Spinner } from "@/components/ui/Feedback";
+import { useToast } from "@/components/ui/Toast";
+import { api, type DatasetProfileResponse } from "@/lib/api";
+import { cn } from "@/lib/cn";
+import { errorMessage } from "@/lib/errors";
+
+type ExplorerTab = "preview" | "columns" | "profile" | "config";
+type Busy = "upload" | "sample" | "preprocess" | null;
 
 export const DatasetView: React.FC = () => {
   const { dataset, refreshAll, setActiveTab } = useApp();
-  const [isUploading, setIsUploading] = useState(false);
+  const { toast } = useToast();
+  const [busy, setBusy] = useState<Busy>(null);
+  const [dragging, setDragging] = useState(false);
   const [scalerType, setScalerType] = useState("standard");
   const [labelCol, setLabelCol] = useState<string>("");
-  const [selectedTab, setSelectedTab] = useState<"preview" | "columns" | "config">("preview");
+  const [selectedTab, setSelectedTab] = useState<ExplorerTab>("preview");
   const [tableSearch, setTableSearch] = useState("");
+  const [profile, setProfile] = useState<DatasetProfileResponse | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // `fetchProfile` stays free of synchronous setState so the effect below never
+  // cascades renders; the effect drives its own request through promise
+  // callbacks with a cancellation flag, and the handler-driven refresh keeps
+  // using `fetchProfile` (called from a real event).
+  const fetchProfile = React.useCallback(async () => {
+    if (!dataset?.loaded) return;
+    try {
+      const res = await api.getDatasetProfile();
+      setProfile(res);
+    } catch {
+      // Ignored
+    } finally {
+      setLoadingProfile(false);
+    }
+  }, [dataset?.loaded]);
 
-    setIsUploading(true);
+  React.useEffect(() => {
+    if (selectedTab !== "profile" || profile || !dataset?.loaded) return;
+    let cancelled = false;
+    api
+      .getDatasetProfile()
+      .then((res) => {
+        if (!cancelled) setProfile(res);
+      })
+      .catch(() => {
+        // The profile tab offers a retry button if this fails.
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingProfile(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedTab, profile, dataset?.loaded]);
+
+  const handleFile = async (file: File) => {
+    if (!file.name.toLowerCase().endsWith(".csv")) {
+      toast(
+        "error",
+        "Unsupported file type",
+        "Upload a comma-separated .csv file."
+      );
+      return;
+    }
+
+    setBusy("upload");
     try {
       await api.uploadCsv(file);
       await refreshAll();
-    } catch (err: any) {
-      alert(`Upload failed: ${err.message}`);
+      setSelectedTab("preview");
+      toast(
+        "success",
+        "Dataset uploaded",
+        `${file.name} was profiled and is ready for preprocessing.`
+      );
+    } catch (err) {
+      toast("error", "Upload failed", errorMessage(err));
     } finally {
-      setIsUploading(false);
+      setBusy(null);
     }
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (file) await handleFile(file);
+  };
+
+  const handleDrop = async (event: React.DragEvent<HTMLLabelElement>) => {
+    event.preventDefault();
+    setDragging(false);
+    if (busy) return;
+    const file = event.dataTransfer.files?.[0];
+    if (file) await handleFile(file);
+  };
+
   const handleLoadSample = async () => {
-    setIsUploading(true);
+    setBusy("sample");
     try {
       await api.loadSample();
       await refreshAll();
-    } catch (err: any) {
-      alert(`Failed to load sample: ${err.message}`);
+      setSelectedTab("preview");
+      toast("success", "Benchmark dataset loaded");
+    } catch (err) {
+      toast("error", "Could not load the sample", errorMessage(err));
     } finally {
-      setIsUploading(false);
+      setBusy(null);
     }
   };
 
   const handleApplyPreprocessing = async () => {
+    setBusy("preprocess");
     try {
       await api.preprocess({
         scaler_type: scalerType,
         label_col: labelCol || null,
       });
       await refreshAll();
-      alert("Preprocessing reconfigured and feature matrix rebuilt.");
-    } catch (err: any) {
-      alert(`Preprocessing failed: ${err.message}`);
+      toast(
+        "success",
+        "Feature matrix rebuilt",
+        "The preprocessing configuration was applied to the current dataset."
+      );
+    } catch (err) {
+      toast("error", "Preprocessing failed", errorMessage(err));
+    } finally {
+      setBusy(null);
     }
   };
 
   const filteredPreview = (dataset?.preview || []).filter((row) => {
     if (!tableSearch) return true;
     const term = tableSearch.toLowerCase();
-    return Object.values(row).some((val) =>
-      String(val).toLowerCase().includes(term)
+    return Object.values(row).some((value) =>
+      String(value).toLowerCase().includes(term)
     );
   });
 
+  const previewColumns = Object.keys(dataset?.preview?.[0] || {});
+  const maxMissingPct = Math.max(
+    1,
+    ...(dataset?.columns?.map((column) => column.null_pct) ?? [1])
+  );
+
   return (
-    <div className="space-y-6">
-      {/* Upload and Source Card */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Upload Dropzone */}
-        <div className="saas-card p-6 flex flex-col justify-between">
-          <div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <Upload size={16} className="text-indigo-500" />
-              <span>Upload Custom Dataset</span>
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Upload any tabular CSV file. Preprocessing will automatically handle categorical encoding, imputation, and feature scaling.
-            </p>
+    <div className="space-y-5">
+      {/* Sources */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Card className="flex flex-col p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="flex items-center gap-2 text-sm font-bold text-ink">
+                <Upload size={15} className="text-accent" aria-hidden="true" />
+                Upload a dataset
+              </h2>
+              <p className="mt-1 text-[11px] leading-relaxed text-ink-muted">
+                Comma-separated tabular data. Column profiling runs immediately;
+                categorical encoding, imputation and scaling are handled during
+                preprocessing.
+              </p>
+            </div>
           </div>
 
-          <div className="mt-5 border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-indigo-500/50 rounded-xl p-6 text-center transition-colors">
+          <label
+            htmlFor="csv-file-input"
+            onDragOver={(event) => {
+              event.preventDefault();
+              if (!busy) setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={handleDrop}
+            className={cn(
+              "mt-4 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed px-5 py-7 text-center transition-colors",
+              dragging
+                ? "border-accent bg-accent-soft"
+                : "border-edge bg-inset/50 hover:border-accent-line hover:bg-inset",
+              busy && "pointer-events-none opacity-60"
+            )}
+          >
+            <span
+              className={cn(
+                "grid size-10 place-items-center rounded-lg border",
+                dragging
+                  ? "border-accent-line bg-accent-soft text-accent"
+                  : "border-edge bg-surface text-ink-faint"
+              )}
+            >
+              {busy === "upload" ? (
+                <Spinner className="text-accent" />
+              ) : (
+                <FileSpreadsheet size={18} aria-hidden="true" />
+              )}
+            </span>
+            <span className="text-xs font-semibold text-ink">
+              {busy === "upload"
+                ? "Uploading and profiling…"
+                : dragging
+                  ? "Drop the CSV to upload"
+                  : "Drop a CSV here, or browse"}
+            </span>
+            <span className="text-[10px] text-ink-faint">
+              CSV only · the current analysis is replaced on upload
+            </span>
             <input
               type="file"
-              accept=".csv"
-              onChange={handleFileUpload}
-              disabled={isUploading}
-              className="hidden"
+              accept=".csv,text/csv"
               id="csv-file-input"
+              onChange={handleFileUpload}
+              disabled={busy !== null}
+              className="sr-only"
             />
-            <label
-              htmlFor="csv-file-input"
-              className="cursor-pointer flex flex-col items-center justify-center space-y-2"
-            >
-              <div className="w-10 h-10 rounded-full bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
-                <FileSpreadsheet size={20} />
+          </label>
+        </Card>
+
+        <Card className="flex flex-col p-5">
+          <h2 className="flex items-center gap-2 text-sm font-bold text-ink">
+            <Database size={15} className="text-good" aria-hidden="true" />
+            Benchmark sample
+          </h2>
+          <p className="mt-1 text-[11px] leading-relaxed text-ink-muted">
+            A deterministic sample for exploring the full pipeline without
+            preparing data.
+          </p>
+
+          <div className="panel-inset mt-4 flex flex-1 flex-col justify-between gap-4 p-4">
+            <div>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="font-mono text-xs font-semibold text-ink">
+                  sample_anomaly_data.csv
+                </span>
+                <span className="rounded border border-edge bg-surface px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-ink-faint">
+                  Included
+                </span>
               </div>
-              <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                {isUploading ? "Uploading & Preprocessing..." : "Click to browse or drop CSV"}
-              </span>
-              <span className="text-[10px] text-slate-400">
-                Supports numeric & categorical tabular datasets
-              </span>
-            </label>
-          </div>
-        </div>
-
-        {/* Benchmark Sample Card */}
-        <div className="saas-card p-6 flex flex-col justify-between">
-          <div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <Database size={16} className="text-emerald-500" />
-              <span>Benchmark Sample Dataset</span>
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Load our benchmark anomaly dataset with 880 observations (800 normal records + 80 subtle synthetic outliers across 10 numerical/behavioral attributes).
-            </p>
-          </div>
-
-          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 space-y-3 mt-4">
-            <div className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-              sample_anomaly_data.csv
+              <ul className="mt-2.5 space-y-1 text-[11px] text-ink-muted">
+                <li>• 880 records (800 normal, 80 synthetic outliers)</li>
+                <li>• 8 numerical attributes + 2 categorical tags</li>
+                <li>• Ground-truth label reserved for post-hoc evaluation</li>
+              </ul>
             </div>
-            <div className="text-[11px] text-slate-400 space-y-1">
-              <div>• 880 instances (800 normal, 80 anomalies)</div>
-              <div>• 8 numerical attributes + 2 categorical tags</div>
-              <div>• Pre-configured ground-truth label for evaluation</div>
-            </div>
-            <button
+            <Button
+              variant="secondary"
+              className="w-full"
               onClick={handleLoadSample}
-              disabled={isUploading}
-              className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2"
+              disabled={busy !== null}
             >
-              <Database size={14} />
-              <span>{isUploading ? "Loading..." : "Load Benchmark Dataset"}</span>
-            </button>
+              {busy === "sample" ? (
+                <Spinner />
+              ) : (
+                <Database size={14} aria-hidden="true" />
+              )}
+              {busy === "sample"
+                ? "Loading sample…"
+                : dataset?.loaded
+                  ? "Reload benchmark sample"
+                  : "Load benchmark sample"}
+            </Button>
           </div>
-        </div>
+        </Card>
       </div>
+
+      {!dataset?.loaded && (
+        <p className="text-center text-[11px] text-ink-faint">
+          No dataset loaded. Upload a file or use the sample to unlock profiling,
+          detection and reporting.
+        </p>
+      )}
 
       {dataset?.loaded && (
         <>
-          {/* Dataset Profile KPIs */}
-          <div className="grid grid-cols-2 sm:grid-cols-6 gap-4">
-            <StatCard label="Total Rows" value={dataset.n_rows?.toLocaleString() || 0} />
-            <StatCard label="Total Columns" value={dataset.n_cols || 0} />
-            <StatCard label="Numerical Cols" value={dataset.numerical_cols?.length || 0} />
-            <StatCard label="Categorical Cols" value={dataset.categorical_cols?.length || 0} />
-            <StatCard
-              label="Missing Values"
-              value={dataset.total_missing || 0}
-              accentColor={dataset.total_missing && dataset.total_missing > 0 ? "#F59E0B" : undefined}
-            />
-            <StatCard label="Preprocessed X" value={`${dataset.n_preprocessed_features || 0} feats`} />
-          </div>
+          {/* Dataset summary */}
+          <Card className="p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="truncate text-sm font-bold tracking-tight text-ink">
+                    {dataset.dataset_name}
+                  </h2>
+                  <span className="inline-flex items-center gap-1 rounded-full border border-good/25 bg-good-soft px-2 py-0.5 text-[9.5px] font-semibold text-good">
+                    <CheckCircle2 size={10} aria-hidden="true" />
+                    Loaded
+                  </span>
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9.5px] font-semibold",
+                      dataset.feature_matrix_ready
+                        ? "border-accent-line bg-accent-soft text-accent"
+                        : "border-edge bg-inset text-ink-faint"
+                    )}
+                  >
+                    <Layers size={10} aria-hidden="true" />
+                    {dataset.feature_matrix_ready
+                      ? "Feature matrix ready"
+                      : "Feature matrix pending"}
+                  </span>
+                </div>
+                <p className="mt-1 text-[11px] text-ink-muted">
+                  {dataset.n_rows?.toLocaleString()} rows · {dataset.n_cols}{" "}
+                  columns
+                  {dataset.memory_mb !== undefined
+                    ? ` · ${dataset.memory_mb.toFixed(1)} MB in memory`
+                    : ""}
+                  {dataset.label_col
+                    ? ` · label column: ${dataset.label_col}`
+                    : " · no label column (purely unsupervised)"}
+                </p>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => setActiveTab("detection")}
+                className="shrink-0"
+              >
+                <Play size={13} aria-hidden="true" />
+                Continue to detection
+              </Button>
+            </div>
 
-          {/* Validation Warnings */}
+            <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-edge pt-4 sm:grid-cols-4 lg:grid-cols-6">
+              {[
+                ["Rows", dataset.n_rows?.toLocaleString() ?? "0"],
+                ["Columns", dataset.n_cols ?? 0],
+                ["Numerical", dataset.numerical_cols?.length ?? 0],
+                ["Categorical", dataset.categorical_cols?.length ?? 0],
+                [
+                  "Missing cells",
+                  dataset.total_missing?.toLocaleString() ?? "0",
+                  (dataset.total_missing ?? 0) > 0,
+                ],
+                ["Modelling features", dataset.n_preprocessed_features ?? 0],
+              ].map(([label, value, warning]) => (
+                <div key={String(label)}>
+                  <dt className="text-[9.5px] font-semibold uppercase tracking-[0.1em] text-ink-faint">
+                    {label}
+                  </dt>
+                  <dd
+                    className={cn(
+                      "mt-0.5 text-sm font-bold tabular",
+                      warning ? "text-caution" : "text-ink"
+                    )}
+                  >
+                    {value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </Card>
+
           {dataset.warnings && dataset.warnings.length > 0 && (
-            <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-400 flex items-start gap-3">
-              <AlertCircle size={16} className="shrink-0 mt-0.5" />
+            <div
+              role="alert"
+              className="flex items-start gap-3 rounded-xl border border-caution/30 bg-caution-soft p-4 text-xs"
+            >
+              <AlertCircle
+                size={16}
+                className="mt-0.5 shrink-0 text-caution"
+                aria-hidden="true"
+              />
               <div>
-                <span className="font-bold">Dataset Quality Warnings:</span>
-                <ul className="list-disc list-inside mt-1 space-y-0.5 text-slate-300">
-                  {dataset.warnings.map((w, i) => (
-                    <li key={i}>{w}</li>
+                <p className="font-bold text-ink">
+                  Dataset quality warnings ({dataset.warnings.length})
+                </p>
+                <ul className="mt-1 list-inside list-disc space-y-0.5 text-[11px] text-ink-muted">
+                  {dataset.warnings.map((warning, index) => (
+                    <li key={index}>{warning}</li>
                   ))}
                 </ul>
               </div>
             </div>
           )}
 
-          {/* Explorer Tabs: Preview, Column Metadata, Preprocessing Config */}
-          <div className="saas-card overflow-hidden">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-5 pt-3 bg-slate-50 dark:bg-slate-950/20">
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => setSelectedTab("preview")}
-                  className={`pb-3 text-xs font-semibold border-b-2 cursor-pointer transition-colors ${
-                    selectedTab === "preview"
-                      ? "border-indigo-500 text-indigo-400"
-                      : "border-transparent text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  Raw Data Preview
-                </button>
-                <button
-                  onClick={() => setSelectedTab("columns")}
-                  className={`pb-3 text-xs font-semibold border-b-2 cursor-pointer transition-colors ${
-                    selectedTab === "columns"
-                      ? "border-indigo-500 text-indigo-400"
-                      : "border-transparent text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  Column Profiling ({dataset.columns?.length || 0})
-                </button>
-                <button
-                  onClick={() => setSelectedTab("config")}
-                  className={`pb-3 text-xs font-semibold border-b-2 cursor-pointer transition-colors ${
-                    selectedTab === "config"
-                      ? "border-indigo-500 text-indigo-400"
-                      : "border-transparent text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  Preprocessing Configuration
-                </button>
-              </div>
-
+          <Card className="overflow-hidden">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-edge">
+              <Tabs
+                value={selectedTab}
+                onChange={(tab) => {
+                  if (tab === "profile" && !profile && dataset?.loaded) {
+                    setLoadingProfile(true);
+                  }
+                  setSelectedTab(tab);
+                }}
+                ariaLabel="Dataset explorer"
+                panelId="dataset-explorer"
+                tabs={[
+                  { id: "preview", label: "Data preview" },
+                  {
+                    id: "columns",
+                    label: "Column profile",
+                    count: dataset.columns?.length || 0,
+                  },
+                  { id: "profile", label: "Health & Profiler" },
+                  { id: "config", label: "Preprocessing" },
+                ]}
+                className="border-b-0"
+              />
               {selectedTab === "preview" && (
-                <input
-                  type="text"
-                  placeholder="Filter rows..."
-                  value={tableSearch}
-                  onChange={(e) => setTableSearch(e.target.value)}
-                  className="saas-input px-2.5 py-1 text-xs w-48 mb-2"
-                />
+                <div className="flex items-center gap-2 px-3">
+                  <Table2 size={13} className="text-ink-faint" aria-hidden="true" />
+                  <label htmlFor="preview-filter" className="sr-only">
+                    Filter preview rows
+                  </label>
+                  <input
+                    id="preview-filter"
+                    type="search"
+                    placeholder="Filter rows…"
+                    value={tableSearch}
+                    onChange={(event) => setTableSearch(event.target.value)}
+                    className="field h-8 w-40 py-1"
+                  />
+                </div>
               )}
             </div>
 
-            <div className="p-5">
-              {/* Tab 1: Preview Table */}
+            <div
+              id={`dataset-explorer-${selectedTab}`}
+              role="tabpanel"
+              aria-labelledby={`tab-dataset-explorer-${selectedTab}`}
+              className="p-4 sm:p-5"
+            >
               {selectedTab === "preview" && (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-semibold uppercase text-[10px]">
-                        <th className="py-2.5 px-3">#</th>
-                        {Object.keys(dataset.preview?.[0] || {}).map((col) => (
-                          <th key={col} className="py-2.5 px-3">
-                            {col}
+                <>
+                  <div className="data-scroll max-h-[26rem] overflow-auto rounded-lg border border-edge">
+                    <table className="data-table text-[11px]">
+                      <caption className="sr-only">
+                        Preview of the first {filteredPreview.length} rows of the
+                        loaded dataset
+                      </caption>
+                      <thead>
+                        <tr>
+                          <th scope="col" className="w-10">
+                            #
                           </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono text-[11px]">
-                      {filteredPreview.map((row, r) => (
-                        <tr key={r} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                          <td className="py-2 px-3 text-slate-400 font-sans">{r + 1}</td>
-                          {Object.keys(dataset.preview?.[0] || {}).map((col) => (
-                            <td key={col} className="py-2 px-3 text-slate-700 dark:text-slate-300 truncate max-w-[160px]">
-                              {row[col] !== null ? String(row[col]) : "—"}
-                            </td>
+                          {previewColumns.map((column) => (
+                            <th key={column} scope="col">
+                              {column}
+                            </th>
                           ))}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  <div className="mt-3 text-[10px] text-slate-400">
-                    Displaying sample rows. Preprocessed matrix has {dataset.n_preprocessed_features} dimensions ready for unsupervised training.
+                      </thead>
+                      <tbody className="font-mono">
+                        {filteredPreview.map((row, rowIndex) => (
+                          <tr key={rowIndex}>
+                            <td className="text-ink-faint">{rowIndex + 1}</td>
+                            {previewColumns.map((column) => (
+                              <td
+                                key={column}
+                                className="max-w-[180px] truncate text-ink"
+                                title={
+                                  row[column] !== null
+                                    ? String(row[column])
+                                    : undefined
+                                }
+                              >
+                                {row[column] !== null ? String(row[column]) : "—"}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {filteredPreview.length === 0 && (
+                      <p className="p-8 text-center text-xs text-ink-faint">
+                        No preview rows match “{tableSearch}”.
+                      </p>
+                    )}
                   </div>
-                </div>
+                  <p className="mt-2 text-[10px] text-ink-faint">
+                    Showing {filteredPreview.length} of{" "}
+                    {dataset.preview?.length ?? 0} preview rows. The backend
+                    returns a bounded sample, not the full table.
+                  </p>
+                </>
               )}
 
-              {/* Tab 2: Column Info */}
               {selectedTab === "columns" && (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
+                <div className="data-scroll max-h-[28rem] overflow-auto rounded-lg border border-edge">
+                  <table className="data-table text-[11px]">
+                    <caption className="sr-only">Column-level profiling</caption>
                     <thead>
-                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-semibold uppercase text-[10px]">
-                        <th className="py-2.5 px-3">Column Name</th>
-                        <th className="py-2.5 px-3">Type</th>
-                        <th className="py-2.5 px-3">Non-Null Count</th>
-                        <th className="py-2.5 px-3">Missing %</th>
-                        <th className="py-2.5 px-3">Unique Values</th>
-                        <th className="py-2.5 px-3">Numerical?</th>
+                      <tr>
+                        <th scope="col">Column</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Non-null</th>
+                        <th scope="col">Missing</th>
+                        <th scope="col">Unique</th>
+                        <th scope="col">Kind</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
-                      {(dataset.columns || []).map((col, i) => (
-                        <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                          <td className="py-2 px-3 font-semibold text-slate-800 dark:text-slate-200">
-                            {col.name}
+                    <tbody>
+                      {(dataset.columns || []).map((column) => (
+                        <tr key={column.name}>
+                          <th
+                            scope="row"
+                            className="font-semibold text-ink"
+                            title={column.name}
+                          >
+                            {column.name}
+                          </th>
+                          <td className="font-mono text-ink-muted">
+                            {column.dtype}
                           </td>
-                          <td className="py-2 px-3 font-mono text-slate-500 text-[11px]">{col.dtype}</td>
-                          <td className="py-2 px-3 text-slate-400">{col.non_null_count?.toLocaleString()}</td>
-                          <td className="py-2 px-3">
-                            <span
-                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                                col.null_pct > 0
-                                  ? "bg-amber-500/15 text-amber-400"
-                                  : "text-slate-400"
-                              }`}
-                            >
-                              {col.null_pct?.toFixed(1)}%
+                          <td className="tabular text-ink-muted">
+                            {column.non_null_count?.toLocaleString()}
+                          </td>
+                          <td>
+                            <span className="flex items-center gap-2">
+                              <span className="w-9 text-right font-bold tabular text-ink-muted">
+                                {column.null_pct?.toFixed(1)}%
+                              </span>
+                              <span
+                                className="h-1 w-12 overflow-hidden rounded-full bg-inset"
+                                aria-hidden="true"
+                              >
+                                <span
+                                  className="block h-full rounded-full bg-caution"
+                                  style={{
+                                    width: `${
+                                      (column.null_pct / maxMissingPct) * 100
+                                    }%`,
+                                  }}
+                                />
+                              </span>
                             </span>
                           </td>
-                          <td className="py-2 px-3 text-slate-400">{col.unique_count}</td>
-                          <td className="py-2 px-3">
-                            {col.is_numeric ? (
-                              <span className="text-emerald-500 font-bold">Yes</span>
-                            ) : (
-                              <span className="text-slate-400">Categorical</span>
-                            )}
+                          <td className="tabular text-ink-muted">
+                            {column.unique_count?.toLocaleString()}
+                          </td>
+                          <td>
+                            <span
+                              className={cn(
+                                "rounded border px-1.5 py-0.5 text-[9.5px] font-semibold",
+                                column.is_numeric
+                                  ? "border-signal/25 bg-signal-soft text-signal"
+                                  : "border-edge bg-inset text-ink-faint"
+                              )}
+                            >
+                              {column.is_numeric ? "Numeric" : "Categorical"}
+                            </span>
                           </td>
                         </tr>
                       ))}
@@ -306,68 +567,277 @@ export const DatasetView: React.FC = () => {
                 </div>
               )}
 
-              {/* Tab 3: Preprocessing Config */}
+                            {selectedTab === "profile" && (
+                <div className="space-y-6">
+                  {loadingProfile && (
+                    <div className="flex items-center justify-center p-8 gap-2 text-ink-muted text-xs">
+                      <Spinner /> Profiling dataset schema, collinearity, and health score...
+                    </div>
+                  )}
+
+                  {!loadingProfile && !profile && (
+                    <div className="p-8 text-center">
+                      <Button onClick={() => { setLoadingProfile(true); void fetchProfile(); }} className="gap-2"><Sparkles size={13} />
+                        Generate Full Dataset Intelligence Profile
+                      </Button>
+                    </div>
+                  )}
+
+                  {profile && (
+                    <div className="space-y-6">
+                      {/* Health score card */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="rounded-xl border border-edge bg-surface p-4 flex items-center gap-4">
+                          <div className={cn(
+                            "flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-4 font-mono text-xl font-extrabold",
+                            profile.health.score >= 80 ? "border-good text-good bg-good/5" :
+                            profile.health.score >= 60 ? "border-caution text-caution bg-caution/5" :
+                            "border-critical text-critical bg-critical/5"
+                          )}>
+                            {Math.round(profile.health.score)}
+                          </div>
+                          <div>
+                            <div className="text-[10px] uppercase font-bold tracking-wider text-ink-faint">
+                              Dataset Health Score
+                            </div>
+                            <div className="text-sm font-semibold text-ink mt-0.5">
+                              {profile.health.interpretation}
+                            </div>
+                            <div className="text-[11px] text-ink-muted mt-1">
+                              0–100 itemized empirical penalty rubric
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="rounded-xl border border-edge bg-surface p-4">
+                          <div className="text-[10px] uppercase font-bold tracking-wider text-ink-faint">
+                            Collinearity & Condition Number
+                          </div>
+                          <div className="font-mono text-lg font-bold text-ink mt-1">
+                            κ = {profile.collinearity.condition_number.toFixed(2)}
+                          </div>
+                          <div className="text-[11px] text-ink-muted mt-1">
+                            {profile.collinearity.severely_collinear ? (
+                              <span className="text-critical font-semibold flex items-center gap-1">
+                                <AlertTriangle size={12} /> Severely collinear (condition &gt; 30)
+                              </span>
+                            ) : (
+                              <span className="text-good font-semibold flex items-center gap-1">
+                                <CheckCircle2 size={12} /> Well-conditioned feature matrix
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="rounded-xl border border-edge bg-surface p-4">
+                          <div className="text-[10px] uppercase font-bold tracking-wider text-ink-faint">
+                            Data Completeness & Uniqueness
+                          </div>
+                          <div className="text-lg font-bold text-ink mt-1">
+                            {((1 - profile.quality.missing_pct) * 100).toFixed(1)}% complete
+                          </div>
+                          <div className="text-[11px] text-ink-muted mt-1">
+                            {profile.quality.duplicate_rows} duplicate rows ({profile.quality.duplicate_pct.toFixed(1)}%)
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Deductions if any */}
+                      {profile.health.deductions && profile.health.deductions.length > 0 && (
+                        <div className="rounded-lg border border-caution/30 bg-caution/5 p-3 text-xs text-caution">
+                          <div className="font-semibold flex items-center gap-1.5 mb-1">
+                            <ShieldAlert size={14} /> Health Score Deductions:
+                          </div>
+                          <ul className="list-disc pl-5 space-y-0.5 text-[11px]">
+                            {profile.health.deductions.map((d, i) => (
+                              <li key={i}>{d}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Schema Discovery */}
+                      <div className="rounded-xl border border-edge bg-surface p-4 space-y-3">
+                        <SectionLabel>Inferred Column Schema & Type Classification</SectionLabel>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          <div className="p-3 rounded-lg border border-edge bg-canvas">
+                            <div className="text-xs font-semibold text-ink flex items-center justify-between">
+                              <span>Numerical Features</span>
+                              <span className="font-mono text-accent">{profile.schema.numerical_columns.length}</span>
+                            </div>
+                            <div className="mt-2 flex flex-wrap gap-1 max-h-24 overflow-y-auto">
+                              {profile.schema.numerical_columns.map(c => (
+                                <span key={c} className="rounded bg-surface px-1.5 py-0.5 text-[10px] font-mono text-ink">
+                                  {c}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="p-3 rounded-lg border border-edge bg-canvas">
+                            <div className="text-xs font-semibold text-ink flex items-center justify-between">
+                              <span>Categorical Features</span>
+                              <span className="font-mono text-signal">{profile.schema.categorical_columns.length}</span>
+                            </div>
+                            <div className="mt-2 flex flex-wrap gap-1 max-h-24 overflow-y-auto">
+                              {profile.schema.categorical_columns.length > 0 ? (
+                                profile.schema.categorical_columns.map(c => (
+                                  <span key={c} className="rounded bg-surface px-1.5 py-0.5 text-[10px] font-mono text-ink">
+                                    {c}
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-[10px] text-ink-faint">None</span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="p-3 rounded-lg border border-edge bg-canvas">
+                            <div className="text-xs font-semibold text-ink flex items-center justify-between">
+                              <span>ID / High-Cardinality Candidates</span>
+                              <span className="font-mono text-caution">{profile.schema.id_candidates.length}</span>
+                            </div>
+                            <div className="mt-2 flex flex-wrap gap-1 max-h-24 overflow-y-auto">
+                              {profile.schema.id_candidates.length > 0 ? (
+                                profile.schema.id_candidates.map(c => (
+                                  <span key={c} className="rounded bg-caution/10 border border-caution/20 px-1.5 py-0.5 text-[10px] font-mono text-caution">
+                                    {c} (exclude)
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-[10px] text-ink-faint">None detected</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Collinear Pairs */}
+                      {profile.collinearity.high_correlations && profile.collinearity.high_correlations.length > 0 && (
+                        <div className="rounded-xl border border-edge bg-surface p-4 space-y-2">
+                          <SectionLabel>Highly Correlated Feature Pairs (|r| &gt; 0.85)</SectionLabel>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+                            {profile.collinearity.high_correlations.map((pair, idx) => (
+                              <div key={idx} className="flex items-center justify-between rounded border border-edge bg-canvas px-3 py-1.5 text-xs">
+                                <span className="font-mono text-ink">
+                                  {pair.feature_a} <span className="text-ink-faint">↔</span> {pair.feature_b}
+                                </span>
+                                <span className="font-mono font-bold text-caution tabular-nums">
+                                  r = {pair.pearson_r.toFixed(3)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Recommendations */}
+                      {profile.recommendations && profile.recommendations.length > 0 && (
+                        <div className="rounded-xl border border-edge bg-surface p-4 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Sparkles size={14} className="text-accent" />
+                            <SectionLabel>Profiler Modeling Recommendations</SectionLabel>
+                          </div>
+                          <ul className="list-disc pl-5 text-xs text-ink-muted space-y-1">
+                            {profile.recommendations.map((rec, i) => (
+                              <li key={i}>{rec}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {selectedTab === "config" && (
-                <div className="max-w-xl space-y-4">
+                <div className="max-w-xl space-y-5">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Feature Scaling Method
+                    <label
+                      htmlFor="scaler-type"
+                      className="mb-1.5 block text-[11px] font-semibold text-ink"
+                    >
+                      <SectionLabel className="inline-flex items-center gap-1.5">
+                        <Settings2 size={11} aria-hidden="true" />
+                        Feature scaling
+                      </SectionLabel>
                     </label>
                     <select
+                      id="scaler-type"
                       value={scalerType}
-                      onChange={(e) => setScalerType(e.target.value)}
-                      className="saas-input w-full p-2 text-xs"
+                      onChange={(event) => setScalerType(event.target.value)}
+                      className="field"
                     >
-                      <option value="standard">StandardScaler (Zero mean, unit variance)</option>
-                      <option value="robust">RobustScaler (Median & IQR - Outlier robust)</option>
+                      <option value="standard">
+                        StandardScaler — zero mean, unit variance
+                      </option>
+                      <option value="robust">
+                        RobustScaler — median and IQR, outlier resistant
+                      </option>
                     </select>
-                    <p className="text-[10px] text-slate-400 mt-1">
-                      RobustScaler is recommended when high-magnitude outliers might skew the empirical variance.
+                    <p className="mt-1.5 text-[10.5px] leading-relaxed text-ink-muted">
+                      RobustScaler is preferable when extreme values would
+                      otherwise dominate the empirical variance.
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Ground Truth Label Column (Optional for Evaluation)
+                    <label
+                      htmlFor="label-col"
+                      className="mb-1.5 block text-[11px] font-semibold text-ink"
+                    >
+                      <SectionLabel className="inline-flex items-center gap-1.5">
+                        <Columns3 size={11} aria-hidden="true" />
+                        Ground-truth label column (optional)
+                      </SectionLabel>
                     </label>
                     <select
+                      id="label-col"
                       value={labelCol}
-                      onChange={(e) => setLabelCol(e.target.value)}
-                      className="saas-input w-full p-2 text-xs"
+                      onChange={(event) => setLabelCol(event.target.value)}
+                      className="field"
                     >
-                      <option value="">None (Purely Unsupervised)</option>
-                      {dataset.columns?.map((c) => (
-                        <option key={c.name} value={c.name}>
-                          {c.name}
+                      <option value="">None — purely unsupervised</option>
+                      {dataset.columns?.map((column) => (
+                        <option key={column.name} value={column.name}>
+                          {column.name}
                         </option>
                       ))}
                     </select>
-                    <p className="text-[10px] text-slate-400 mt-1">
-                      Important: Labels are NEVER used during training. They are only used for post-hoc ROC-AUC and F1 evaluation.
+                    <p className="mt-1.5 text-[10.5px] leading-relaxed text-ink-muted">
+                      Labels are never used for fitting. They enable post-hoc
+                      ROC-AUC, F1 and held-out evaluation only.
                     </p>
                   </div>
 
-                  <button
-                    onClick={handleApplyPreprocessing}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow-sm transition-all cursor-pointer flex items-center gap-2"
-                  >
-                    <Sliders size={14} />
-                    <span>Apply & Rebuild Feature Matrix</span>
-                  </button>
+                  <div className="flex flex-wrap items-center gap-3 border-t border-edge pt-4">
+                    <Button
+                      onClick={handleApplyPreprocessing}
+                      disabled={busy !== null}
+                    >
+                      {busy === "preprocess" ? (
+                        <Spinner />
+                      ) : (
+                        <Sliders size={14} aria-hidden="true" />
+                      )}
+                      {busy === "preprocess"
+                        ? "Rebuilding features…"
+                        : "Apply and rebuild feature matrix"}
+                    </Button>
+                    <p className="text-[10px] text-ink-faint">
+                      Rebuilding replaces the current feature matrix.
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
-          </div>
+          </Card>
 
-          {/* CTA to Detection */}
           <div className="flex justify-end">
-            <button
-              onClick={() => setActiveTab("detection")}
-              className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow-sm transition-all cursor-pointer"
-            >
-              <Play size={14} />
-              <span>Proceed to Anomaly Detection</span>
-            </button>
+            <Button size="lg" onClick={() => setActiveTab("detection")}>
+              <Play size={14} aria-hidden="true" />
+              Continue to anomaly detection
+            </Button>
           </div>
         </>
       )}

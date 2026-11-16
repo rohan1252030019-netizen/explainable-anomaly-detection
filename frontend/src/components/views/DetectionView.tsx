@@ -1,109 +1,285 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import {
+  AlertTriangle,
+  ArrowRight,
+  CheckCircle2,
+  CircleDot,
+  Cpu,
+  Database,
+  Gauge,
+  Layers,
+  Play,
+  Sliders,
+  Sparkles,
+  Target,
+  Trees,
+  Zap,
+} from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { api } from "@/lib/api";
-import {
-  Play,
-  Trees,
-  Target,
-  Zap,
-  CircleDot,
-  CheckCircle2,
-  Layers,
-  ArrowRight,
-  Sliders,
-} from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Card, SectionLabel } from "@/components/ui/Card";
+import { Spinner } from "@/components/ui/Feedback";
+import { useToast } from "@/components/ui/Toast";
+import { cn } from "@/lib/cn";
+import { errorMessage } from "@/lib/errors";
+
+const MODELS = [
+  {
+    id: "Isolation Forest",
+    short: "IF",
+    icon: Trees,
+    tagline: "Recursive random partitioning",
+    desc: "Isolates anomalies via random splits — outliers need fewer partitions to isolate.",
+    bestFor: "Global outliers, large datasets",
+    complexity: "O(n log n)",
+    accent: "var(--accent)",
+  },
+  {
+    id: "Local Outlier Factor",
+    short: "LOF",
+    icon: Target,
+    tagline: "Density-based local scoring",
+    desc: "Compares each observation's local density with its k nearest neighbours.",
+    bestFor: "Local outliers, varying density clusters",
+    complexity: "O(n²)",
+    accent: "var(--signal)",
+  },
+  {
+    id: "One-Class SVM",
+    short: "OCSVM",
+    icon: Zap,
+    tagline: "Kernel max-margin boundary",
+    desc: "Learns a kernel hypersphere around the dense normal region in feature space.",
+    bestFor: "Non-linear distributions, novelty boundary",
+    complexity: "O(n²–n³)",
+    accent: "var(--caution)",
+  },
+  {
+    id: "Elliptic Envelope",
+    short: "EE",
+    icon: CircleDot,
+    tagline: "Gaussian + Mahalanobis distance",
+    desc: "Fits a robust covariance estimate and flags high Mahalanobis distances.",
+    bestFor: "Approximately Gaussian features",
+    complexity: "O(n · p²)",
+    accent: "var(--good)",
+  },
+  {
+    id: "k-Nearest Neighbors",
+    short: "k-NN",
+    icon: Zap,
+    tagline: "k-th distance density outlier",
+    desc: "Scores observations by Euclidean distance to the k-th nearest neighbour in scaled space.",
+    bestFor: "Clustered outliers, distance-based novelty",
+    complexity: "O(n log n)",
+    accent: "var(--signal)",
+  },
+  {
+    id: "PCA Reconstruction",
+    short: "PCA",
+    icon: Layers,
+    tagline: "Subspace projection residual",
+    desc: "Projects observations onto principal subspace and scores orthogonal reconstruction error.",
+    bestFor: "Multivariate linear subspace violations",
+    complexity: "O(n · p²)",
+    accent: "var(--accent)",
+  },
+  {
+    id: "Histogram-Based Outlier Score",
+    short: "HBOS",
+    icon: Sliders,
+    tagline: "Linear-time inverse log density",
+    desc: "Builds univariate histograms assuming feature independence; ultra-fast for streaming & massive data.",
+    bestFor: "High-throughput tabular data, large n",
+    complexity: "O(n · p)",
+    accent: "var(--good)",
+  },
+  {
+    id: "Gaussian Mixture Model",
+    short: "GMM",
+    icon: Gauge,
+    tagline: "Multimodal EM log-likelihood",
+    desc: "Fits an Expectation-Maximization mixture of Gaussians and flags low probability density observations.",
+    bestFor: "Multi-cluster distributions, multimodal data",
+    complexity: "O(n · k · p)",
+    accent: "var(--caution)",
+  },
+];
+
+const THRESHOLD_METHODS = [
+  {
+    value: "contamination",
+    label: "Contamination rate",
+    short: "Contamination",
+    hint: "Flags the top share of scores, matching the expected outlier rate.",
+  },
+  {
+    value: "quantile",
+    label: "Quantile cutoff",
+    short: "Quantile",
+    hint: "Uses an empirical percentile of the normalised score distribution.",
+  },
+  {
+    value: "fixed",
+    label: "Fixed score cutoff",
+    short: "Fixed cutoff",
+    hint: "Flags every observation at or above an absolute normalised score.",
+  },
+];
+
+function RangeField({
+  id,
+  label,
+  value,
+  display,
+  min,
+  max,
+  step,
+  onChange,
+  hint,
+  disabled = false,
+}: {
+  id: string;
+  label: string;
+  value: number;
+  display: string;
+  min: number;
+  max: number;
+  step: number;
+  onChange: (v: number) => void;
+  hint?: string;
+  disabled?: boolean;
+}) {
+  const progress = ((value - min) / (max - min)) * 100;
+  const hintId = hint ? `${id}-hint` : undefined;
+
+  return (
+    <div className={cn(disabled && "opacity-60")}>
+      <div className="mb-1 flex items-baseline justify-between gap-2">
+        <label htmlFor={id} className="text-xs font-semibold text-ink">
+          {label}
+        </label>
+        <span className="rounded bg-inset px-1.5 py-0.5 font-mono text-[11px] font-bold tabular text-accent">
+          {display}
+        </span>
+      </div>
+      <input
+        id={id}
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        disabled={disabled}
+        aria-valuetext={display}
+        aria-describedby={hintId}
+        style={{ ["--range-progress" as string]: `${progress}%` }}
+        onChange={(e) => onChange(Number(e.target.value))}
+      />
+      {hint && (
+        <p id={hintId} className="mt-1 text-[10px] leading-relaxed text-ink-faint">
+          {hint}
+        </p>
+      )}
+    </div>
+  );
+}
 
 export const DetectionView: React.FC = () => {
   const { dataset, overview, refreshAll, setActiveTab } = useApp();
+  const { toast } = useToast();
 
-  const [selectedModel, setSelectedModel] = useState<string>("Isolation Forest");
-  const [thresholdMethod, setThresholdMethod] = useState<string>("contamination");
-  const [contamination, setContamination] = useState<number>(0.05);
-  const [quantileVal, setQuantileVal] = useState<number>(0.95);
-  const [fixedVal, setFixedVal] = useState<number>(0.5);
+  const [selectedModel, setSelectedModel] = useState("Isolation Forest");
+  const [thresholdMethod, setThresholdMethod] = useState("contamination");
+  const [contamination, setContamination] = useState(0.05);
+  const [quantileVal, setQuantileVal] = useState(0.95);
+  const [fixedVal, setFixedVal] = useState(0.5);
 
-  // Model-specific params
-  const [nEstimators, setNEstimators] = useState<number>(100);
-  const [nNeighbors, setNNeighbors] = useState<number>(20);
-  const [svmNu, setSvmNu] = useState<number>(0.05);
-  const [svmKernel, setSvmKernel] = useState<string>("rbf");
+  const [nEstimators, setNEstimators] = useState(100);
+  const [nNeighbors, setNNeighbors] = useState(20);
+  const [svmNu, setSvmNu] = useState(0.05);
+  const [svmKernel, setSvmKernel] = useState("rbf");
 
-  // Ensemble toggle
-  const [useEnsemble, setUseEnsemble] = useState<boolean>(false);
+  const [useEnsemble, setUseEnsemble] = useState(false);
+  const [ensembleMethod] = useState<"rank_borda" | "weighted_score">("rank_borda");
+  const [selectedEnsembleModels] = useState<string[]>([
+    "Isolation Forest",
+    "Local Outlier Factor",
+    "k-Nearest Neighbors",
+  ]);
   const [ensembleWeights, setEnsembleWeights] = useState({
     "Isolation Forest": 0.4,
     "Local Outlier Factor": 0.3,
     "One-Class SVM": 0.3,
   });
 
-  // Running state
-  const [isRunning, setIsRunning] = useState<boolean>(false);
-  const [currentStep, setCurrentStep] = useState<number>(0);
+  const [isRunning, setIsRunning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [runCompleted, setRunCompleted] = useState(false);
 
-  const modelsList = [
-    {
-      id: "Isolation Forest",
-      name: "Isolation Forest",
-      short: "IF",
-      icon: Trees,
-      tagline: "Recursive random partitioning. Fast and scalable.",
-      desc: "Isolates anomalies by recursive random splits. Anomalies require fewer partitions to isolate.",
-      bestFor: "Global outliers, large datasets",
-      complexity: "O(n log n)",
-      color: "#6366F1",
-    },
-    {
-      id: "Local Outlier Factor",
-      name: "Local Outlier Factor",
-      short: "LOF",
-      icon: Target,
-      tagline: "Density-based. Detects sparse local regions.",
-      desc: "Compares local density of an observation to its k nearest neighbours. Low-density regions are flagged.",
-      bestFor: "Local outliers, clusters with varying densities",
-      complexity: "O(n²)",
-      color: "#3B82F6",
-    },
-    {
-      id: "One-Class SVM",
-      name: "One-Class SVM",
-      short: "OCSVM",
-      icon: Zap,
-      tagline: "Kernel-based max-margin boundary.",
-      desc: "Learns a kernel-based hypersphere surrounding the dense normal training points in feature space.",
-      bestFor: "Non-linear distributions, novelty boundary",
-      complexity: "O(n²–n³)",
-      color: "#F59E0B",
-    },
-    {
-      id: "Elliptic Envelope",
-      name: "Elliptic Envelope",
-      short: "EE",
-      icon: CircleDot,
-      tagline: "Multivariate Gaussian with Mahalanobis distance.",
-      desc: "Fits a robust covariance estimate to detect observations with high Mahalanobis distances.",
-      bestFor: "Unimodal, approximately Gaussian features",
-      complexity: "O(n · p²)",
-      color: "#10B981",
-    },
-  ];
+  const model = MODELS.find((item) => item.id === selectedModel) ?? MODELS[0];
+  const nRows = dataset?.n_rows ?? 0;
+  const nFeatures = dataset?.n_preprocessed_features ?? 0;
+  const matrixReady = dataset?.loaded && dataset.feature_matrix_ready === true;
+  const canRun = matrixReady && !isRunning;
+
+  const threshold = THRESHOLD_METHODS.find(
+    (method) => method.value === thresholdMethod
+  );
+
+  const targetFlags = useMemo(() => {
+    if (!nRows) return null;
+    if (thresholdMethod === "contamination") {
+      return Math.round(nRows * contamination);
+    }
+    if (thresholdMethod === "quantile") {
+      return Math.round(nRows * (1 - quantileVal));
+    }
+    return null;
+  }, [contamination, nRows, quantileVal, thresholdMethod]);
+
+  const thresholdSetting =
+    thresholdMethod === "contamination"
+      ? `${(contamination * 100).toFixed(1)}% expected`
+      : thresholdMethod === "quantile"
+        ? `${(quantileVal * 100).toFixed(0)}th percentile`
+        : `score ≥ ${fixedVal.toFixed(2)}`;
+
+  const parameterSummary =
+    selectedModel === "Isolation Forest"
+      ? `${nEstimators} trees`
+      : selectedModel === "Local Outlier Factor"
+        ? `k = ${nNeighbors}`
+        : selectedModel === "One-Class SVM"
+          ? `${svmKernel.toUpperCase()} · ν ${svmNu.toFixed(2)}`
+          : "robust covariance";
+
+  const ensembleWeightsTotal = Object.values(ensembleWeights).reduce(
+    (sum, weight) => sum + weight,
+    0
+  );
 
   const handleRunDetection = async () => {
-    if (!dataset?.loaded) {
-      alert("Please load a dataset first.");
+    if (!matrixReady) {
+      setError(
+        !dataset?.loaded
+          ? "Load a dataset before running detection."
+          : "Build the feature matrix before running detection."
+      );
       return;
     }
+    if (isRunning) return;
 
     setIsRunning(true);
-    setCurrentStep(1);
+    setError(null);
+    setRunCompleted(false);
 
     try {
-      // Step simulation for visual feedback
-      await new Promise((r) => setTimeout(r, 200));
-      setCurrentStep(2);
-
-      let params: Record<string, any> = {};
+      let params: Record<string, unknown> = {};
       if (selectedModel === "Isolation Forest") {
         params = { n_estimators: nEstimators, contamination };
       } else if (selectedModel === "Local Outlier Factor") {
@@ -114,445 +290,676 @@ export const DetectionView: React.FC = () => {
         params = { contamination };
       }
 
-      setCurrentStep(3);
-
-      await api.runDetection({
-        model_name: selectedModel,
-        params,
-        threshold_method: thresholdMethod,
-        contamination,
-        quantile_val: quantileVal,
-        fixed_val: fixedVal,
-        use_ensemble: useEnsemble,
-        ensemble_weights: useEnsemble ? ensembleWeights : undefined,
-      });
-
-      setCurrentStep(4);
-      await new Promise((r) => setTimeout(r, 200));
-      setCurrentStep(5);
+      let result;
+      if (useEnsemble) {
+        const ensembleRes = await api.runEnsemble({
+          models: selectedEnsembleModels.length > 0 ? selectedEnsembleModels : ["Isolation Forest", "k-Nearest Neighbors"],
+          aggregation_method: ensembleMethod,
+        });
+        result = { success: true, overview: ensembleRes.overview };
+      } else {
+        result = await api.runDetection({
+          model_name: selectedModel,
+          params,
+          threshold_method: thresholdMethod,
+          contamination,
+          quantile_val: quantileVal,
+          fixed_val: fixedVal,
+        });
+      }
 
       await refreshAll();
-    } catch (err: any) {
-      alert(`Detection failed: ${err.message}`);
+      setRunCompleted(true);
+
+      const flagged = result.overview?.n_anomalies ?? 0;
+      toast(
+        "success",
+        "Detection complete",
+        `${flagged.toLocaleString()} ${
+          flagged === 1 ? "record" : "records"
+        } flagged by ${selectedModel}.`
+      );
+    } catch (err) {
+      const message = errorMessage(err);
+      setError(message);
+      toast("error", "Detection failed", message);
     } finally {
       setIsRunning(false);
-      setCurrentStep(0);
     }
   };
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
-      {/* Visual Pipeline Banner */}
-      <div className="saas-card p-5 bg-gradient-to-r from-slate-900 to-indigo-950/30 border-indigo-500/20">
-        <div className="text-[11px] font-bold uppercase tracking-wider text-indigo-400 mb-3">
-          End-to-End Detection Pipeline
-        </div>
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="px-2.5 py-1 rounded bg-slate-800 text-slate-200 border border-slate-700">
-            1. Preprocessed X ({dataset?.n_preprocessed_features || 15} features)
-          </span>
-          <span className="text-slate-500">→</span>
-          <span className="px-2.5 py-1 rounded bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 font-semibold">
-            2. {selectedModel}
-          </span>
-          <span className="text-slate-500">→</span>
-          <span className="px-2.5 py-1 rounded bg-slate-800 text-slate-200 border border-slate-700">
-            3. Score Normalization
-          </span>
-          <span className="text-slate-500">→</span>
-          <span className="px-2.5 py-1 rounded bg-slate-800 text-slate-200 border border-slate-700">
-            4. {thresholdMethod} ({(contamination * 100).toFixed(0)}%)
-          </span>
-          <span className="text-slate-500">→</span>
-          <span className="px-2.5 py-1 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30 font-semibold">
-            5. Explainability & Ranking
-          </span>
-        </div>
-      </div>
-
-      {/* Model Selection Cards */}
-      <div className="space-y-3">
-        <div className="text-xs font-bold uppercase tracking-wider text-slate-400">
-          Step 1 · Select Unsupervised Algorithm
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {modelsList.map((m) => {
-            const Icon = m.icon;
-            const isSelected = selectedModel === m.id;
-            return (
-              <div
-                key={m.id}
-                onClick={() => setSelectedModel(m.id)}
-                className={`saas-card p-4 flex flex-col justify-between cursor-pointer transition-all ${
-                  isSelected
-                    ? "ring-2 ring-indigo-500 bg-indigo-500/5 dark:bg-indigo-500/10 border-transparent shadow-md"
-                    : "hover:border-slate-400 dark:hover:border-slate-700"
-                }`}
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-white"
-                      style={{ backgroundColor: m.color }}
-                    >
-                      <Icon size={16} />
-                    </div>
-                    <span className="text-[10px] font-mono font-bold text-slate-400 px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800">
-                      {m.complexity}
-                    </span>
-                  </div>
-
-                  <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                    {m.name}
-                  </h4>
-                  <p className="text-[11px] text-indigo-400 font-medium mt-0.5">
-                    {m.tagline}
-                  </p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-                    {m.desc}
-                  </p>
-                </div>
-
-                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-400">
-                  <span className="font-semibold text-slate-500">Best for:</span> {m.bestFor}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Model Hyperparameters + Thresholding Controls */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Parameters Column */}
-        <div className="saas-card p-5 space-y-4">
-          <div className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-            <Sliders size={14} />
-            <span>Step 2 · Algorithm Parameters ({selectedModel})</span>
-          </div>
-
-          {selectedModel === "Isolation Forest" && (
-            <div className="space-y-3">
-              <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-slate-700 dark:text-slate-300 font-semibold">n_estimators (Trees)</span>
-                  <span className="font-mono text-indigo-400">{nEstimators}</span>
-                </div>
-                <input
-                  type="range"
-                  min="50"
-                  max="300"
-                  step="25"
-                  value={nEstimators}
-                  onChange={(e) => setNEstimators(Number(e.target.value))}
-                  className="w-full accent-indigo-600 cursor-pointer"
-                />
-                <span className="text-[10px] text-slate-400">
-                  Number of decision trees grown to isolate observations.
-                </span>
-              </div>
-            </div>
-          )}
-
-          {selectedModel === "Local Outlier Factor" && (
-            <div className="space-y-3">
-              <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-slate-700 dark:text-slate-300 font-semibold">n_neighbors (k)</span>
-                  <span className="font-mono text-indigo-400">{nNeighbors}</span>
-                </div>
-                <input
-                  type="range"
-                  min="5"
-                  max="50"
-                  step="5"
-                  value={nNeighbors}
-                  onChange={(e) => setNNeighbors(Number(e.target.value))}
-                  className="w-full accent-indigo-600 cursor-pointer"
-                />
-                <span className="text-[10px] text-slate-400">
-                  Local neighborhood radius used to calculate relative point densities.
-                </span>
-              </div>
-            </div>
-          )}
-
-          {selectedModel === "One-Class SVM" && (
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Kernel Function
-                </label>
-                <select
-                  value={svmKernel}
-                  onChange={(e) => setSvmKernel(e.target.value)}
-                  className="saas-input w-full p-2 text-xs"
-                >
-                  <option value="rbf">RBF (Radial Basis Function - Non-linear)</option>
-                  <option value="linear">Linear</option>
-                  <option value="poly">Polynomial</option>
-                </select>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-slate-700 dark:text-slate-300 font-semibold">nu (Margin Error Upper Bound)</span>
-                  <span className="font-mono text-indigo-400">{svmNu}</span>
-                </div>
-                <input
-                  type="range"
-                  min="0.01"
-                  max="0.25"
-                  step="0.01"
-                  value={svmNu}
-                  onChange={(e) => setSvmNu(Number(e.target.value))}
-                  className="w-full accent-indigo-600 cursor-pointer"
-                />
-              </div>
-            </div>
-          )}
-
-          {selectedModel === "Elliptic Envelope" && (
-            <div className="text-xs text-slate-400">
-              Fits a robust minimum covariance determinant to evaluate Mahalanobis distance. Unsupervised; uses estimated contamination rate.
-            </div>
-          )}
-        </div>
-
-        {/* Thresholding Strategy Column */}
-        <div className="saas-card p-5 space-y-4">
-          <div className="text-xs font-bold uppercase tracking-wider text-slate-400">
-            Step 3 · Thresholding Strategy
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              Threshold Decision Method
-            </label>
-            <select
-              value={thresholdMethod}
-              onChange={(e) => setThresholdMethod(e.target.value)}
-              className="saas-input w-full p-2 text-xs"
-            >
-              <option value="contamination">Contamination Rate (Top expected % outliers)</option>
-              <option value="quantile">Quantile Cutoff (Percentile threshold)</option>
-              <option value="fixed">Fixed Cutoff (Exact score cutoff)</option>
-            </select>
-          </div>
-
-          {thresholdMethod === "contamination" && (
+    <div className="space-y-5">
+      {/* Prerequisite notice */}
+      {!matrixReady && (
+        <div
+          role="status"
+          className="flex flex-col gap-3 rounded-xl border border-caution/30 bg-caution-soft p-4 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div className="flex items-start gap-3">
+            <Database
+              size={16}
+              className="mt-0.5 shrink-0 text-caution"
+              aria-hidden="true"
+            />
             <div>
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-slate-700 dark:text-slate-300 font-semibold">Expected Contamination</span>
-                <span className="font-mono text-indigo-400">{(contamination * 100).toFixed(1)}%</span>
-              </div>
-              <input
-                type="range"
-                min="0.01"
-                max="0.25"
-                step="0.01"
-                value={contamination}
-                onChange={(e) => setContamination(Number(e.target.value))}
-                className="w-full accent-indigo-600 cursor-pointer"
-              />
-              <span className="text-[10px] text-slate-400">
-                Determines the fraction of observations flagged as outliers.
-              </span>
-            </div>
-          )}
-
-          {thresholdMethod === "quantile" && (
-            <div>
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-slate-700 dark:text-slate-300 font-semibold">Percentile Threshold</span>
-                <span className="font-mono text-indigo-400">{(quantileVal * 100).toFixed(1)}th</span>
-              </div>
-              <input
-                type="range"
-                min="0.80"
-                max="0.99"
-                step="0.01"
-                value={quantileVal}
-                onChange={(e) => setQuantileVal(Number(e.target.value))}
-                className="w-full accent-indigo-600 cursor-pointer"
-              />
-            </div>
-          )}
-
-          {thresholdMethod === "fixed" && (
-            <div>
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-slate-700 dark:text-slate-300 font-semibold">Fixed Score Cutoff</span>
-                <span className="font-mono text-indigo-400">{fixedVal.toFixed(2)}</span>
-              </div>
-              <input
-                type="range"
-                min="0.1"
-                max="0.95"
-                step="0.05"
-                value={fixedVal}
-                onChange={(e) => setFixedVal(Number(e.target.value))}
-                className="w-full accent-indigo-600 cursor-pointer"
-              />
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Ensemble Scoring Option */}
-      <div className="saas-card p-5 space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Layers size={16} className="text-indigo-400" />
-            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-              Ensemble Multi-Model Scoring
-            </span>
-          </div>
-          <input
-            type="checkbox"
-            checked={useEnsemble}
-            onChange={(e) => setUseEnsemble(e.target.checked)}
-            className="w-4 h-4 accent-indigo-600 rounded cursor-pointer"
-          />
-        </div>
-        <p className="text-xs text-slate-400 leading-relaxed">
-          Combines normalized outlier scores from Isolation Forest, LOF, and One-Class SVM via weighted average to produce more robust detections.
-        </p>
-
-        {useEnsemble && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-slate-800">
-            <div>
-              <div className="flex justify-between text-[11px] text-slate-400 mb-1">
-                <span>Isolation Forest Weight</span>
-                <span>{ensembleWeights["Isolation Forest"]}</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={ensembleWeights["Isolation Forest"]}
-                onChange={(e) =>
-                  setEnsembleWeights({
-                    ...ensembleWeights,
-                    "Isolation Forest": Number(e.target.value),
-                  })
-                }
-                className="w-full accent-indigo-600 cursor-pointer"
-              />
-            </div>
-            <div>
-              <div className="flex justify-between text-[11px] text-slate-400 mb-1">
-                <span>LOF Weight</span>
-                <span>{ensembleWeights["Local Outlier Factor"]}</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={ensembleWeights["Local Outlier Factor"]}
-                onChange={(e) =>
-                  setEnsembleWeights({
-                    ...ensembleWeights,
-                    "Local Outlier Factor": Number(e.target.value),
-                  })
-                }
-                className="w-full accent-indigo-600 cursor-pointer"
-              />
-            </div>
-            <div>
-              <div className="flex justify-between text-[11px] text-slate-400 mb-1">
-                <span>One-Class SVM Weight</span>
-                <span>{ensembleWeights["One-Class SVM"]}</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={ensembleWeights["One-Class SVM"]}
-                onChange={(e) =>
-                  setEnsembleWeights({
-                    ...ensembleWeights,
-                    "One-Class SVM": Number(e.target.value),
-                  })
-                }
-                className="w-full accent-indigo-600 cursor-pointer"
-              />
+              <p className="text-xs font-bold text-ink">
+                {dataset?.loaded
+                  ? "The feature matrix is not ready"
+                  : "A dataset is required before detection"}
+              </p>
+              <p className="mt-0.5 text-[11px] leading-relaxed text-ink-muted">
+                {dataset?.loaded
+                  ? "Run preprocessing on the dataset screen to build the matrix that every detector scores."
+                  : "Upload a CSV or load the benchmark sample, then build its feature matrix."}
+              </p>
             </div>
           </div>
-        )}
-      </div>
-
-      {/* Progress Execution Feedback */}
-      {isRunning && (
-        <div className="saas-card p-5 space-y-3 bg-indigo-950/20 border-indigo-500/30">
-          <div className="text-xs font-bold text-indigo-400 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-indigo-500 animate-ping" />
-            <span>Running Detection Pipeline...</span>
-          </div>
-          <div className="space-y-2 text-xs text-slate-300">
-            <div className={`flex items-center gap-2 ${currentStep >= 1 ? "text-emerald-400 font-semibold" : "text-slate-500"}`}>
-              <CheckCircle2 size={14} /> 1. Preparing feature matrix and reference distributions
-            </div>
-            <div className={`flex items-center gap-2 ${currentStep >= 2 ? "text-emerald-400 font-semibold" : "text-slate-500"}`}>
-              <CheckCircle2 size={14} /> 2. Fitting unsupervised detector ({selectedModel})
-            </div>
-            <div className={`flex items-center gap-2 ${currentStep >= 3 ? "text-emerald-400 font-semibold" : "text-slate-500"}`}>
-              <CheckCircle2 size={14} /> 3. Computing continuous anomaly scores
-            </div>
-            <div className={`flex items-center gap-2 ${currentStep >= 4 ? "text-emerald-400 font-semibold" : "text-slate-500"}`}>
-              <CheckCircle2 size={14} /> 4. Calibrating threshold & assigning severity tiers
-            </div>
-            <div className={`flex items-center gap-2 ${currentStep >= 5 ? "text-emerald-400 font-semibold" : "text-slate-500"}`}>
-              <CheckCircle2 size={14} /> 5. Building ranked results table
-            </div>
-          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setActiveTab("dataset")}
+            className="shrink-0"
+          >
+            <Database size={13} aria-hidden="true" />
+            {dataset?.loaded ? "Prepare features" : "Open dataset"}
+          </Button>
         </div>
       )}
 
-      {/* Run Action Button */}
-      <div className="flex items-center justify-between pt-2">
-        <div className="text-xs text-slate-400">
-          Dataset: <span className="font-semibold text-slate-200">{dataset?.dataset_name || "None"}</span> · Features: <span className="font-semibold text-slate-200">{dataset?.n_preprocessed_features || 0}</span>
+      {/* Detector selection */}
+      <section className="space-y-3" aria-labelledby="detector-heading">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <SectionLabel>Step 1 · Detector</SectionLabel>
+            <h2
+              id="detector-heading"
+              className="mt-1 text-sm font-bold tracking-tight text-ink"
+            >
+              Choose an unsupervised algorithm
+            </h2>
+          </div>
+          <span className="text-[10px] text-ink-faint">
+            4 methods · no labels required
+          </span>
         </div>
 
-        <button
-          onClick={handleRunDetection}
-          disabled={isRunning || !dataset?.loaded}
-          className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/20 transition-all cursor-pointer"
-        >
-          <Play size={15} />
-          <span>{isRunning ? "Training & Scoring..." : "Execute Anomaly Detection"}</span>
-        </button>
+        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {MODELS.map((item) => {
+            const Icon = item.icon;
+            const selected = selectedModel === item.id;
+            return (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedModel(item.id)}
+                  aria-pressed={selected}
+                  disabled={isRunning}
+                  className={cn(
+                    "panel group relative flex h-full w-full flex-col justify-between overflow-hidden p-4 text-left transition-[border-color,box-shadow,transform] duration-200",
+                    selected
+                      ? "border-accent-line shadow-[0_0_0_1px_var(--accent-line)]"
+                      : "hover:-translate-y-0.5 hover:border-edge-strong",
+                    isRunning && "cursor-not-allowed opacity-60"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "absolute inset-x-0 top-0 h-0.5 transition-opacity",
+                      selected ? "opacity-100" : "opacity-0"
+                    )}
+                    style={{ backgroundColor: item.accent }}
+                    aria-hidden="true"
+                  />
+                  <span className="block">
+                    <span className="mb-3 flex items-start justify-between gap-2">
+                      <span
+                        className="grid size-8 place-items-center rounded-lg text-on-accent"
+                        style={{ backgroundColor: item.accent }}
+                      >
+                        <Icon size={16} aria-hidden="true" />
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <span className="rounded bg-inset px-1.5 py-0.5 font-mono text-[10px] font-bold text-ink-faint">
+                          {item.complexity}
+                        </span>
+                        <span
+                          className={cn(
+                            "grid size-5 place-items-center rounded-full border transition-colors",
+                            selected
+                              ? "border-accent bg-accent text-on-accent"
+                              : "border-edge text-transparent"
+                          )}
+                          aria-hidden="true"
+                        >
+                          <CheckCircle2 size={12} />
+                        </span>
+                      </span>
+                    </span>
+                    <span className="block text-sm font-bold text-ink">
+                      {item.id}
+                    </span>
+                    <span className="mt-0.5 block text-[11px] font-semibold text-accent">
+                      {item.tagline}
+                    </span>
+                    <span className="mt-2 block text-[11px] leading-relaxed text-ink-muted">
+                      {item.desc}
+                    </span>
+                  </span>
+                  <span className="mt-4 block border-t border-edge pt-3 text-[10px] leading-relaxed text-ink-faint">
+                    <span className="font-semibold text-ink-muted">
+                      Best for:
+                    </span>{" "}
+                    {item.bestFor}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="space-y-4">
+          {/* Steps 2 and 3 */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Card className="p-5">
+              <div className="flex items-start gap-3">
+                <span className="grid size-6 shrink-0 place-items-center rounded-md border border-edge bg-inset font-mono text-[10px] font-bold text-ink-faint">
+                  2
+                </span>
+                <div>
+                  <h3 className="flex items-center gap-1.5 text-xs font-bold text-ink">
+                    <Sliders size={13} aria-hidden="true" />
+                    Algorithm parameters
+                  </h3>
+                  <p className="mt-0.5 text-[10px] leading-relaxed text-ink-faint">
+                    Specific to {model.short} · {parameterSummary}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4 space-y-4">
+                {selectedModel === "Isolation Forest" && (
+                  <RangeField
+                    id="n-estimators"
+                    label="n_estimators (trees)"
+                    value={nEstimators}
+                    display={`${nEstimators}`}
+                    min={50}
+                    max={300}
+                    step={25}
+                    onChange={setNEstimators}
+                    hint="Number of decision trees grown to isolate observations."
+                    disabled={isRunning}
+                  />
+                )}
+
+                {selectedModel === "Local Outlier Factor" && (
+                  <RangeField
+                    id="n-neighbors"
+                    label="n_neighbors (k)"
+                    value={nNeighbors}
+                    display={`${nNeighbors}`}
+                    min={5}
+                    max={50}
+                    step={5}
+                    onChange={setNNeighbors}
+                    hint="Neighbourhood radius used to compare relative point densities."
+                    disabled={isRunning}
+                  />
+                )}
+
+                {selectedModel === "One-Class SVM" && (
+                  <div className="space-y-4">
+                    <div>
+                      <label
+                        htmlFor="svm-kernel"
+                        className="mb-1.5 block text-xs font-semibold text-ink"
+                      >
+                        Kernel function
+                      </label>
+                      <select
+                        id="svm-kernel"
+                        value={svmKernel}
+                        onChange={(e) => setSvmKernel(e.target.value)}
+                        className="field"
+                        disabled={isRunning}
+                      >
+                        <option value="rbf">
+                          RBF (radial basis — non-linear)
+                        </option>
+                        <option value="linear">Linear</option>
+                        <option value="poly">Polynomial</option>
+                      </select>
+                    </div>
+                    <RangeField
+                      id="svm-nu"
+                      label="nu (upper bound on margin error)"
+                      value={svmNu}
+                      display={svmNu.toFixed(2)}
+                      min={0.01}
+                      max={0.25}
+                      step={0.01}
+                      onChange={setSvmNu}
+                      disabled={isRunning}
+                    />
+                  </div>
+                )}
+
+                {selectedModel === "Elliptic Envelope" && (
+                  <div className="panel-inset p-3">
+                    <p className="text-[11px] leading-relaxed text-ink-muted">
+                      Fits a robust minimum-covariance-determinant estimate and
+                      scores observations by Mahalanobis distance. Unsupervised;
+                      it uses the configured contamination rate shown in the
+                      threshold card.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            <Card className="p-5">
+              <div className="flex items-start gap-3">
+                <span className="grid size-6 shrink-0 place-items-center rounded-md border border-edge bg-inset font-mono text-[10px] font-bold text-ink-faint">
+                  3
+                </span>
+                <div>
+                  <h3 className="text-xs font-bold text-ink">
+                    Decision threshold
+                  </h3>
+                  <p className="mt-0.5 text-[10px] leading-relaxed text-ink-faint">
+                    How scores become flagged records
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4 space-y-4">
+                <div>
+                  <label
+                    htmlFor="threshold-method"
+                    className="mb-1.5 block text-xs font-semibold text-ink"
+                  >
+                    Threshold method
+                  </label>
+                  <select
+                    id="threshold-method"
+                    value={thresholdMethod}
+                    onChange={(e) => setThresholdMethod(e.target.value)}
+                    className="field"
+                    disabled={isRunning}
+                  >
+                    <option value="contamination">
+                      Contamination rate (top expected %)
+                    </option>
+                    <option value="quantile">
+                      Quantile cutoff (percentile threshold)
+                    </option>
+                    <option value="fixed">
+                      Fixed cutoff (exact score cutoff)
+                    </option>
+                  </select>
+                  <p className="mt-1 text-[10px] leading-relaxed text-ink-faint">
+                    {threshold?.hint}
+                  </p>
+                </div>
+
+                {thresholdMethod === "contamination" && (
+                  <RangeField
+                    id="contamination"
+                    label="Expected contamination"
+                    value={contamination}
+                    display={`${(contamination * 100).toFixed(1)}%`}
+                    min={0.01}
+                    max={0.25}
+                    step={0.01}
+                    onChange={setContamination}
+                    hint={
+                      targetFlags !== null
+                        ? `Targets about ${targetFlags.toLocaleString()} of ${nRows.toLocaleString()} records.`
+                        : "Determines the fraction of observations flagged as outliers."
+                    }
+                    disabled={isRunning}
+                  />
+                )}
+
+                {thresholdMethod === "quantile" && (
+                  <RangeField
+                    id="quantile"
+                    label="Percentile threshold"
+                    value={quantileVal}
+                    display={`${(quantileVal * 100).toFixed(1)}th`}
+                    min={0.8}
+                    max={0.99}
+                    step={0.01}
+                    onChange={setQuantileVal}
+                    hint={
+                      targetFlags !== null
+                        ? `Flags the top ${((1 - quantileVal) * 100).toFixed(
+                            1
+                          )}% — about ${targetFlags.toLocaleString()} records.`
+                        : "Scores above this percentile are flagged."
+                    }
+                    disabled={isRunning}
+                  />
+                )}
+
+                {thresholdMethod === "fixed" && (
+                  <RangeField
+                    id="fixed"
+                    label="Fixed score cutoff"
+                    value={fixedVal}
+                    display={fixedVal.toFixed(2)}
+                    min={0.1}
+                    max={0.95}
+                    step={0.05}
+                    onChange={setFixedVal}
+                    hint="Only records at or above this normalised score are flagged."
+                    disabled={isRunning}
+                  />
+                )}
+
+                <div className="rounded-lg border border-edge bg-inset px-3 py-2">
+                  <div className="flex items-center justify-between gap-2 text-[10px]">
+                    <span className="text-ink-faint">Configured cutoff</span>
+                    <span className="font-mono font-bold text-ink">
+                      {thresholdSetting}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Ensemble */}
+          <Card className="p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-edge bg-inset text-accent">
+                  <Layers size={15} aria-hidden="true" />
+                </span>
+                <div>
+                  <h3 className="text-xs font-bold text-ink">
+                    Ensemble multi-model scoring
+                  </h3>
+                  <p className="mt-0.5 max-w-xl text-[11px] leading-relaxed text-ink-muted">
+                    Blends the selected detector with Isolation Forest, LOF and
+                    One-Class SVM. Scores are normalised before weighting — useful
+                    when no single method clearly fits the data.
+                  </p>
+                </div>
+              </div>
+
+              <label className="flex cursor-pointer select-none items-center gap-2.5">
+                <span className="text-[10px] font-semibold text-ink-muted">
+                  {useEnsemble ? "Enabled" : "Disabled"}
+                </span>
+                <input
+                  type="checkbox"
+                  checked={useEnsemble}
+                  onChange={(e) => setUseEnsemble(e.target.checked)}
+                  disabled={isRunning}
+                  className="peer sr-only"
+                />
+                <span
+                  className={cn(
+                    "relative h-5 w-9 rounded-full border border-edge bg-inset transition-colors",
+                    "peer-checked:border-accent peer-checked:bg-accent",
+                    "peer-focus-visible:ring-2 peer-focus-visible:ring-accent/40 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-surface",
+                    "peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
+                  )}
+                  aria-hidden="true"
+                >
+                  <span
+                    className={cn(
+                      "absolute left-0.5 top-0.5 size-3.5 rounded-full bg-surface shadow-sm transition-transform",
+                      "peer-checked:translate-x-4"
+                    )}
+                  />
+                </span>
+                <span className="sr-only">Enable ensemble scoring</span>
+              </label>
+            </div>
+
+            {useEnsemble && (
+              <div className="mt-4 border-t border-edge pt-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  {(
+                    Object.keys(
+                      ensembleWeights
+                    ) as (keyof typeof ensembleWeights)[]
+                  ).map((key) => (
+                    <RangeField
+                      key={key}
+                      id={`weight-${key.toLowerCase().replace(/[^a-z]+/g, "-")}`}
+                      label={key === "Local Outlier Factor" ? "LOF" : key}
+                      value={ensembleWeights[key]}
+                      display={ensembleWeights[key].toFixed(1)}
+                      min={0}
+                      max={1}
+                      step={0.1}
+                      onChange={(v) =>
+                        setEnsembleWeights((prev) => ({ ...prev, [key]: v }))
+                      }
+                      disabled={isRunning}
+                    />
+                  ))}
+                </div>
+                <p className="mt-3 text-[10px] text-ink-faint">
+                  Relative weights sum to{" "}
+                  <span className="font-mono font-semibold tabular text-ink-muted">
+                    {ensembleWeightsTotal.toFixed(1)}
+                  </span>
+                  . The backend renormalises them to 1.0; an all-zero mix falls
+                  back to equal weights.
+                </p>
+              </div>
+            )}
+          </Card>
+        </div>
+
+        {/* Run rail */}
+        <aside className="space-y-4 xl:sticky xl:top-24">
+          <Card className="p-5" aria-busy={isRunning}>
+            <div className="flex items-center justify-between gap-2">
+              <SectionLabel>Run plan</SectionLabel>
+              <span className="inline-flex items-center gap-1 rounded-full border border-edge bg-inset px-2 py-0.5 text-[9px] font-semibold text-ink-faint">
+                <Cpu size={9} aria-hidden="true" />
+                Unsupervised
+              </span>
+            </div>
+
+            <dl className="mt-4 space-y-2.5 text-[11px]">
+              <div className="flex items-baseline justify-between gap-4">
+                <dt className="text-ink-faint">Dataset</dt>
+                <dd
+                  className="max-w-[11rem] truncate text-right font-semibold text-ink"
+                  title={dataset?.dataset_name || "No dataset loaded"}
+                >
+                  {dataset?.dataset_name || "None"}
+                </dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-4">
+                <dt className="text-ink-faint">Records</dt>
+                <dd className="font-semibold tabular text-ink">
+                  {nRows ? nRows.toLocaleString() : "—"}
+                </dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-4">
+                <dt className="text-ink-faint">Features</dt>
+                <dd className="font-semibold tabular text-ink">
+                  {matrixReady ? nFeatures.toLocaleString() : "—"}
+                </dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-4">
+                <dt className="text-ink-faint">Detector</dt>
+                <dd className="max-w-[11rem] truncate text-right font-semibold text-ink">
+                  {model.id}
+                </dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-4">
+                <dt className="text-ink-faint">Parameters</dt>
+                <dd className="text-right font-semibold text-ink">
+                  {parameterSummary}
+                </dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-4">
+                <dt className="text-ink-faint">Threshold</dt>
+                <dd className="text-right font-semibold text-ink">
+                  {thresholdSetting}
+                </dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-4">
+                <dt className="text-ink-faint">Target flagged</dt>
+                <dd className="font-semibold tabular text-ink">
+                  {targetFlags !== null
+                    ? `≈ ${targetFlags.toLocaleString()}`
+                    : "score-based"}
+                </dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-4 border-t border-edge pt-2.5">
+                <dt className="text-ink-faint">Ensemble</dt>
+                <dd
+                  className={cn(
+                    "font-semibold",
+                    useEnsemble ? "text-accent" : "text-ink-muted"
+                  )}
+                >
+                  {useEnsemble ? "Weighted blend" : "Off"}
+                </dd>
+              </div>
+            </dl>
+
+            <Button
+              size="lg"
+              onClick={handleRunDetection}
+              disabled={!canRun}
+              className="mt-4 w-full"
+            >
+              {isRunning ? <Spinner /> : <Play size={15} aria-hidden="true" />}
+              {isRunning ? "Fitting and scoring…" : "Run detection"}
+            </Button>
+
+            {isRunning && (
+              <div
+                className="mt-3 space-y-2"
+                role="status"
+                aria-live="polite"
+              >
+                <div className="h-1 overflow-hidden rounded-full bg-inset">
+                  <span className="block h-full w-full animate-pulse rounded-full bg-accent/70" />
+                </div>
+                <p className="text-[10px] leading-relaxed text-ink-faint">
+                  Fitting {model.short} and scoring{" "}
+                  {nRows ? nRows.toLocaleString() : "the"} records. The backend
+                  responds when scoring and thresholding finish.
+                </p>
+              </div>
+            )}
+
+            {!matrixReady && !isRunning && (
+              <p className="mt-3 text-[10px] leading-relaxed text-caution">
+                {dataset?.loaded
+                  ? "Prepare the feature matrix on the dataset screen to enable this run."
+                  : "Load a dataset to enable this run."}
+              </p>
+            )}
+
+            {error && (
+              <div
+                role="alert"
+                className="mt-3 flex items-start gap-2 rounded-lg border border-critical/30 bg-critical-soft px-3 py-2.5"
+              >
+                <AlertTriangle
+                  size={13}
+                  className="mt-0.5 shrink-0 text-critical"
+                  aria-hidden="true"
+                />
+                <div className="min-w-0">
+                  <p className="text-[11px] font-bold text-ink">
+                    Detection failed
+                  </p>
+                  <p className="mt-0.5 break-words text-[10px] leading-relaxed text-ink-muted">
+                    {error}
+                  </p>
+                </div>
+              </div>
+            )}
+          </Card>
+
+          <Card className="p-4">
+            <div className="flex items-center gap-2">
+              <Gauge size={13} className="text-ink-faint" aria-hidden="true" />
+              <SectionLabel>What the cutoff means</SectionLabel>
+            </div>
+            <p className="mt-2 text-[10px] leading-relaxed text-ink-muted">
+              {thresholdMethod === "contamination" &&
+                "Scores are ranked and the top share is flagged. The severity tier is assigned within that flagged set, so every tier stays meaningful."}
+              {thresholdMethod === "quantile" &&
+                "The empirical score percentile is used as the cutoff. Scores are normalised first, so the percentile reflects this run, not another dataset."}
+              {thresholdMethod === "fixed" &&
+                "An absolute normalised cutoff is applied. Use it when a specific operating point is required and you can accept the resulting flag count."}
+            </p>
+          </Card>
+        </aside>
       </div>
 
-      {/* Post-run prompt */}
+      {/* Latest run */}
       {overview?.ready && !isRunning && (
-        <div className="saas-card p-4 flex items-center justify-between border-emerald-500/30 bg-emerald-500/5">
-          <div className="flex items-center gap-3">
-            <CheckCircle2 size={18} className="text-emerald-500" />
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          className="panel flex flex-col gap-4 border-good/25 bg-good-soft p-4 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div className="flex items-start gap-3">
+            <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-good/25 bg-surface text-good">
+              <CheckCircle2 size={16} aria-hidden="true" />
+            </span>
             <div>
-              <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                Detection Complete: {overview.n_anomalies} anomalies identified ({( (overview.anomaly_rate || 0) * 100).toFixed(2)}%)
-              </div>
-              <div className="text-[11px] text-slate-400">
-                Threshold: {overview.threshold_val?.toFixed(4)} · Model: {overview.model_name}
-              </div>
+              <p className="text-xs font-bold text-ink">
+                {runCompleted ? "Detection complete" : "Latest detection run"}:{" "}
+                {(overview.n_anomalies ?? 0).toLocaleString()} anomalies
+                identified
+                {overview.anomaly_rate !== undefined
+                  ? ` (${(overview.anomaly_rate * 100).toFixed(2)}%)`
+                  : ""}
+              </p>
+              <p className="mt-0.5 text-[11px] text-ink-muted">
+                {overview.model_name}
+                {overview.threshold_val !== undefined
+                  ? ` · threshold ${overview.threshold_val.toFixed(4)}`
+                  : ""}
+                {overview.threshold_method
+                  ? ` · ${overview.threshold_method}`
+                  : ""}
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setActiveTab("anomalies")}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-lg shadow-sm cursor-pointer"
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setActiveTab("dashboard")}
             >
-              <span>Explore Anomalies</span>
-              <ArrowRight size={13} />
-            </button>
+              View dashboard
+            </Button>
+            <Button size="sm" onClick={() => setActiveTab("anomalies")}>
+              Explore anomalies
+              <ArrowRight size={13} aria-hidden="true" />
+            </Button>
           </div>
+        </motion.div>
+      )}
+
+      {/* Quick path for first-time users */}
+      {!dataset?.loaded && (
+        <div className="flex items-center gap-2 text-[10px] text-ink-faint">
+          <Sparkles size={11} aria-hidden="true" />
+          New here? The benchmark sample loads 880 records and a ready feature
+          matrix in one step from the dataset screen.
         </div>
       )}
     </div>

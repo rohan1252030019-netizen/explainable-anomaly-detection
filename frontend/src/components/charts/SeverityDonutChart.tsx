@@ -1,6 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import { cn } from "@/lib/cn";
+import { severityStyle } from "@/components/ui/Badge";
+import { ChartEmpty, ChartFrame } from "./ChartFrame";
 
 interface SeverityDonutChartProps {
   counts: {
@@ -11,94 +14,118 @@ interface SeverityDonutChartProps {
   };
 }
 
-export const SeverityDonutChart: React.FC<SeverityDonutChartProps> = ({ counts }) => {
-  const total =
-    (counts.CRITICAL || 0) +
-    (counts.HIGH || 0) +
-    (counts.MEDIUM || 0) +
-    (counts.LOW || 0);
+const ORDER = ["CRITICAL", "HIGH", "MEDIUM", "LOW"] as const;
+
+export const SeverityDonutChart: React.FC<SeverityDonutChartProps> = ({
+  counts,
+}) => {
+  const [active, setActive] = useState<string | null>(null);
+
+  const items = ORDER.map((key) => ({
+    key,
+    label: key.charAt(0) + key.slice(1).toLowerCase(),
+    count: counts?.[key] ?? 0,
+    style: severityStyle(key),
+  }));
+
+  const total = items.reduce((acc, i) => acc + i.count, 0);
 
   if (total === 0) {
-    return (
-      <div className="h-48 flex items-center justify-center text-xs text-slate-400">
-        No anomalies to breakdown.
-      </div>
-    );
+    return <ChartEmpty message="No anomalies to break down." height={180} />;
   }
 
-  const items = [
-    { label: "Critical", count: counts.CRITICAL || 0, color: "#EF4444" },
-    { label: "High", count: counts.HIGH || 0, color: "#F97316" },
-    { label: "Medium", count: counts.MEDIUM || 0, color: "#F59E0B" },
-    { label: "Low", count: counts.LOW || 0, color: "#10B981" },
-  ];
-
-  const size = 160;
-  const strokeWidth = 18;
+  const size = 168;
+  const strokeWidth = 16;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
 
-  let accumulated = 0;
+  // Pre-compute arc geometry so no variable is mutated during render.
+  const fractions = items.map((item) => item.count / total);
+  const arcs = items.map((item, i) => ({
+    key: item.key,
+    pct: fractions[i],
+    dash: fractions[i] * circumference,
+    offset: -fractions.slice(0, i).reduce((a, b) => a + b, 0) * circumference,
+  }));
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-center gap-6 p-2">
-      {/* SVG Donut */}
-      <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size} className="-rotate-90">
-          {items.map((item, i) => {
-            const pct = item.count / total;
-            const strokeDasharray = `${pct * circumference} ${circumference}`;
-            const strokeDashoffset = -accumulated * circumference;
-            accumulated += pct;
+    <ChartFrame title="Severity Classification" subtitle="Score quantile tiers">
+      <div className="flex flex-col items-center gap-5 sm:flex-row sm:justify-center">
+        <div className="relative shrink-0" style={{ width: size, height: size }}>
+          <svg
+            width={size}
+            height={size}
+            viewBox={`0 0 ${size} ${size}`}
+            className="-rotate-90"
+            role="img"
+            aria-label={`Severity breakdown of ${total} anomalies`}
+          >
+            {arcs.map((arc) => {
+              const item = items.find((i) => i.key === arc.key)!;
+              if (arc.pct <= 0) return null;
 
-            if (pct <= 0) return null;
+              return (
+                <circle
+                  key={arc.key}
+                  cx={size / 2}
+                  cy={size / 2}
+                  r={radius}
+                  fill="none"
+                  stroke={item.style.hex}
+                  strokeWidth={active === arc.key ? strokeWidth + 4 : strokeWidth}
+                  strokeDasharray={`${arc.dash} ${circumference - arc.dash}`}
+                  strokeDashoffset={arc.offset}
+                  opacity={active && active !== item.key ? 0.35 : 1}
+                  style={{ transition: "all 200ms cubic-bezier(0.16,1,0.3,1)" }}
+                  onMouseEnter={() => setActive(item.key)}
+                  onMouseLeave={() => setActive(null)}
+                />
+              );
+            })}
+          </svg>
 
-            return (
-              <circle
-                key={i}
-                cx={size / 2}
-                cy={size / 2}
-                r={radius}
-                fill="none"
-                stroke={item.color}
-                strokeWidth={strokeWidth}
-                strokeDasharray={strokeDasharray}
-                strokeDashoffset={strokeDashoffset}
-                className="transition-all duration-500 hover:opacity-90"
-              />
-            );
-          })}
-        </svg>
-
-        {/* Center Total Count */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-2xl font-black text-slate-900 dark:text-slate-100">
-            {total}
-          </span>
-          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-            Anomalies
-          </span>
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-2xl font-extrabold tabular text-ink">
+              {active ? items.find((i) => i.key === active)?.count : total}
+            </span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-faint">
+              {active ?? "Anomalies"}
+            </span>
+          </div>
         </div>
-      </div>
 
-      {/* Legend */}
-      <div className="space-y-2 text-xs">
-        {items.map((item, i) => {
-          const pct = total > 0 ? ((item.count / total) * 100).toFixed(0) : "0";
-          return (
-            <div key={i} className="flex items-center justify-between gap-4 min-w-[120px]">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                <span className="text-slate-600 dark:text-slate-300 font-medium">{item.label}</span>
-              </div>
-              <div className="flex items-center gap-1.5 font-semibold text-slate-900 dark:text-slate-100">
-                <span>{item.count}</span>
-                <span className="text-[10px] text-slate-400">({pct}%)</span>
-              </div>
-            </div>
-          );
-        })}
+        <ul className="w-full min-w-[150px] space-y-1.5">
+          {items.map((item) => (
+            <li key={item.key}>
+              <button
+                onMouseEnter={() => setActive(item.key)}
+                onMouseLeave={() => setActive(null)}
+                onFocus={() => setActive(item.key)}
+                onBlur={() => setActive(null)}
+                className={cn(
+                  "flex w-full items-center justify-between gap-4 rounded-md px-2 py-1 text-xs transition-colors",
+                  active === item.key ? "bg-inset" : "hover:bg-inset"
+                )}
+              >
+                <span className="flex items-center gap-2 font-medium text-ink-muted">
+                  <span
+                    className="size-2.5 rounded-full"
+                    style={{ backgroundColor: item.style.hex }}
+                    aria-hidden="true"
+                  />
+                  {item.label}
+                </span>
+                <span className="font-bold tabular text-ink">
+                  {item.count}
+                  <span className="ml-1 text-[10px] font-normal text-ink-faint">
+                    {((item.count / total) * 100).toFixed(0)}%
+                  </span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
       </div>
-    </div>
+    </ChartFrame>
   );
 };

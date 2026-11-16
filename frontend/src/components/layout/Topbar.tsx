@@ -1,23 +1,47 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import {
+  Cpu,
+  Database,
+  Menu,
+  Moon,
+  RefreshCw,
+  Search,
+  Sparkles,
+  Sun,
+} from "lucide-react";
 import { useApp } from "@/context/AppContext";
-import { Search, Sun, Moon, Database, Play, Sparkles } from "lucide-react";
 import { api } from "@/lib/api";
+import { getNavItem, getNavGroup } from "@/lib/navigation";
+import { Button } from "@/components/ui/Button";
+import { IconButton } from "@/components/ui/IconButton";
+import { useToast } from "@/components/ui/Toast";
+import { errorMessage } from "@/lib/errors";
+import { cn } from "@/lib/cn";
 
 export const Topbar: React.FC = () => {
   const {
     activeTab,
+    setActiveTab,
     setCommandPaletteOpen,
     theme,
     toggleTheme,
     dataset,
     overview,
     refreshAll,
-    setActiveTab,
+    setMobileNavOpen,
   } = useApp();
+  const { toast } = useToast();
+
+  const [busy, setBusy] = useState<"demo" | "refresh" | null>(null);
+
+  const navItem = getNavItem(activeTab);
+  const navGroup = getNavGroup(activeTab);
+  const pageLabel = navItem?.label ?? activeTab;
 
   const handleQuickDemo = async () => {
+    setBusy("demo");
     try {
       await api.loadSample();
       await api.runDetection({
@@ -26,75 +50,161 @@ export const Topbar: React.FC = () => {
       });
       await refreshAll();
       setActiveTab("dashboard");
+      toast(
+        "success",
+        "Demo analysis ready",
+        "Sample dataset loaded and scored with Isolation Forest."
+      );
     } catch (err) {
-      console.error("Quick demo failed", err);
+      toast("error", "Could not run the demo", errorMessage(err));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setBusy("refresh");
+    try {
+      await refreshAll();
+    } finally {
+      setBusy(null);
     }
   };
 
   return (
-    <header className="h-16 border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/60 backdrop-blur sticky top-0 z-30 px-6 flex items-center justify-between">
-      {/* Page Title & Breadcrumb */}
-      <div className="flex items-center gap-3">
-        <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-          XAUD
+    <header
+      className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-edge bg-surface/90 px-4 backdrop-blur-xl sm:h-16 sm:px-6"
+      data-print-hide
+    >
+      {/* Left: mobile nav trigger + breadcrumb */}
+      <div className="flex min-w-0 items-center gap-3">
+        <IconButton
+          onClick={() => setMobileNavOpen(true)}
+          variant="ghost"
+          size="sm"
+          className="lg:hidden"
+          aria-label="Open navigation"
+        >
+          <Menu size={16} />
+        </IconButton>
+
+        <div className="hidden min-w-0 items-center gap-2 text-[11px] sm:flex">
+          <span className="font-semibold text-ink-faint">XAUD</span>
+          {navGroup && (
+            <>
+              <span className="text-edge-strong" aria-hidden="true">
+                /
+              </span>
+              <span className="text-ink-faint">{navGroup}</span>
+            </>
+          )}
+          <span className="text-edge-strong" aria-hidden="true">
+            /
+          </span>
+          <span className="truncate font-semibold text-ink">{pageLabel}</span>
+        </div>
+
+        <span className="truncate text-sm font-bold tracking-tight text-ink sm:hidden">
+          {pageLabel}
         </span>
-        <span className="text-slate-300 dark:text-slate-700">/</span>
-        <h1 className="text-sm font-bold text-slate-800 dark:text-slate-100 capitalize">
-          {activeTab.replace("_", " ")}
-        </h1>
       </div>
 
-      {/* Global Center Search Trigger */}
-      <button
-        onClick={() => setCommandPaletteOpen(true)}
-        className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 text-xs text-slate-400 hover:border-indigo-500/40 hover:text-slate-200 transition-all cursor-pointer w-72 justify-between"
-      >
-        <div className="flex items-center gap-2">
-          <Search size={14} />
-          <span>Quick actions & search...</span>
-        </div>
-        <kbd className="text-[10px] font-mono px-1.5 py-0.5 bg-slate-200 dark:bg-slate-800 rounded border border-slate-300 dark:border-slate-700">
-          Ctrl K
-        </kbd>
-      </button>
+      {/* Center: command palette trigger */}
+      <div className="flex flex-1 justify-end md:justify-center">
+        <button
+          onClick={() => setCommandPaletteOpen(true)}
+          className={cn(
+            "hidden items-center justify-between gap-2 rounded-lg border border-edge bg-inset px-3 py-1.5 text-[11px] text-ink-faint",
+            "transition-colors duration-150 hover:border-accent-line hover:text-ink",
+            "md:flex md:w-64 lg:w-72"
+          )}
+          aria-label="Search views and actions"
+        >
+          <span className="flex items-center gap-2">
+            <Search size={13} aria-hidden="true" />
+            <span>Search or jump to…</span>
+          </span>
+          <kbd className="rounded border border-edge bg-surface px-1.5 py-0.5 font-mono text-[10px]">
+            ⌘K
+          </kbd>
+        </button>
+      </div>
 
-      {/* Right Controls */}
-      <div className="flex items-center gap-3">
-        {/* Active Dataset Chip */}
+      {/* Right controls */}
+      <div className="flex shrink-0 items-center gap-1.5">
+        <IconButton
+          onClick={() => setCommandPaletteOpen(true)}
+          variant="ghost"
+          size="sm"
+          className="md:hidden"
+          aria-label="Search views and actions"
+        >
+          <Search size={16} />
+        </IconButton>
+
         {dataset?.loaded ? (
-          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border border-indigo-500/20">
-            <Database size={12} />
-            <span className="truncate max-w-[120px]">{dataset.dataset_name}</span>
-          </div>
-        ) : (
           <button
-            onClick={handleQuickDemo}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-all cursor-pointer"
+            onClick={() => setActiveTab("dataset")}
+            className="hidden max-w-[180px] items-center gap-1.5 rounded-full border border-edge bg-inset px-2.5 py-1 text-[11px] font-medium text-ink-muted transition-colors hover:border-accent-line hover:text-ink md:flex"
+            title={`Active dataset: ${dataset.dataset_name ?? "Untitled"}`}
           >
-            <Sparkles size={13} />
-            <span>1-Click Demo</span>
+            <Database size={11} className="text-accent" aria-hidden="true" />
+            <span className="truncate">{dataset.dataset_name}</span>
+          </button>
+        ) : (
+          <Button
+            size="sm"
+            onClick={handleQuickDemo}
+            disabled={busy !== null}
+            className="hidden sm:inline-flex"
+          >
+            <Sparkles size={13} aria-hidden="true" />
+            {busy === "demo" ? "Preparing…" : "Load demo"}
+          </Button>
+        )}
+
+        {overview?.ready && (
+          <button
+            onClick={() => setActiveTab("anomalies")}
+            title={`${overview.n_anomalies} anomalies flagged by ${overview.model_name}`}
+            className="hidden items-center gap-1.5 rounded-full border border-edge bg-inset px-2.5 py-1 text-[11px] font-medium text-ink-muted transition-colors hover:border-critical/30 hover:text-ink lg:flex"
+          >
+            <Cpu size={11} className="text-good" aria-hidden="true" />
+            <span className="max-w-[130px] truncate">{overview.model_name}</span>
+            <span className="h-3 w-px bg-edge" aria-hidden="true" />
+            <span className="font-bold tabular text-critical">
+              {(overview.n_anomalies ?? 0).toLocaleString()}
+            </span>
+            <span className="sr-only">anomalies flagged</span>
           </button>
         )}
 
-        {/* Model Status Chip */}
-        {overview?.ready && (
-          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-            <Play size={11} className="text-emerald-500" />
-            <span>{overview.model_name}</span>
-            <span className="text-rose-400 font-bold ml-1">
-              ({overview.n_anomalies} anomalies)
-            </span>
-          </div>
-        )}
-
-        {/* Theme Toggle */}
-        <button
-          onClick={toggleTheme}
-          aria-label="Toggle Theme"
-          className="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition-colors cursor-pointer"
+        <IconButton
+          onClick={handleRefresh}
+          disabled={busy !== null}
+          aria-label="Refresh data"
+          title="Refresh data"
+          size="sm"
         >
-          {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-        </button>
+          <RefreshCw
+            size={14}
+            className={cn(busy === "refresh" && "animate-spin")}
+          />
+        </IconButton>
+
+        <IconButton
+          onClick={toggleTheme}
+          aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+          aria-pressed={theme === "dark"}
+          title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+          size="sm"
+        >
+          {theme === "dark" ? (
+            <Sun size={15} aria-hidden="true" />
+          ) : (
+            <Moon size={15} aria-hidden="true" />
+          )}
+        </IconButton>
       </div>
     </header>
   );

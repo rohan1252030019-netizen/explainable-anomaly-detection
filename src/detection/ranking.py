@@ -14,7 +14,6 @@ Ranking is based entirely on normalised anomaly scores, which are independent
 of ground-truth labels.
 """
 
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -77,36 +76,28 @@ def build_results_dataframe(
     predictions: np.ndarray,
     severity: np.ndarray,
     model_name: str,
-    feature_names: Optional[list] = None,
+    feature_names: list | None = None,
 ) -> pd.DataFrame:
     """
     Assemble a comprehensive results DataFrame.
 
-    Contains:
-    - All original columns
-    - anomaly_score (raw)
-    - normalized_score
-    - prediction (+1 / -1)
-    - severity
-    - rank (1 = most anomalous, NaN for normal)
-    - is_anomaly (boolean)
+    Columns added:
+    - anomaly_score (raw), normalized_score, prediction, severity
+    - rank (1 = most anomalous, NaN for normal), is_anomaly
+    - original_index — the row's position in the INPUT DataFrame
     - model
 
-    Parameters
-    ----------
-    original_df : pd.DataFrame
-        The original (un-preprocessed) DataFrame.
-    raw_scores, norm_scores, predictions, severity : np.ndarray
-    model_name : str
-    feature_names : list or None
-
-    Returns
-    -------
-    pd.DataFrame
+    The returned frame is SORTED (anomalies first by rank, then normals by
+    descending score), so its row order no longer matches the input.
+    `original_index` therefore exists so that any code holding an earlier
+    row id can find the right record: filter on that column, never use
+    `.iloc`.  Looking a record up positionally in the sorted frame silently
+    returns a different one.
     """
     ranks = rank_anomalies(norm_scores, predictions)
 
     result_df = original_df.copy().reset_index(drop=True)
+    result_df["original_index"] = np.arange(len(result_df), dtype=int)
     result_df["anomaly_score"] = np.round(raw_scores, 6)
     result_df["normalized_score"] = np.round(norm_scores, 4)
     result_df["prediction"] = predictions
@@ -115,12 +106,45 @@ def build_results_dataframe(
     result_df["is_anomaly"] = predictions == -1
     result_df["model"] = model_name
 
-    # Sort so anomalies appear first, ordered by rank
     anomalies = result_df[result_df["is_anomaly"]].sort_values("rank")
     normals = result_df[~result_df["is_anomaly"]].sort_values(
         "normalized_score", ascending=False
     )
     return pd.concat([anomalies, normals], ignore_index=True)
+
+
+def lookup_by_original_index(
+    results_df: pd.DataFrame,
+    row_id: int,
+) -> pd.Series | None:
+    """
+    Fetch the results row for a given original row id.
+
+    Parameters
+    ----------
+    results_df : pd.DataFrame
+        Output of :func:uild_results_dataframe.
+    row_id : int
+        The positional index the observation had in the input dataset.
+
+    Returns
+    -------
+    pandas.Series or None
+        The matching row, or None when the id is out of range or the frame
+        predates the `original_index` column.
+    """
+    if "original_index" not in results_df.columns:
+        return None
+    try:
+        row_id = int(row_id)
+    except (TypeError, ValueError):
+        return None
+
+    match = results_df[results_df["original_index"] == row_id]
+    if match.empty:
+        return None
+    return match.iloc[0]
+
 
 
 def top_anomalies(

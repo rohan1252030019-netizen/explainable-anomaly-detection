@@ -15,9 +15,11 @@ IMPORTANT: Labels must never be passed into fit() for unsupervised training.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any, TypeVar
 
 import numpy as np
+
+_T = TypeVar("_T")
 
 
 class BaseDetector(ABC):
@@ -57,12 +59,12 @@ class BaseDetector(ABC):
         """
 
     @abstractmethod
-    def get_params(self) -> Dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         """Return a dict of hyperparameters."""
 
     # ── Concrete helper methods ────────────────────────────────────────────────
 
-    def get_model_info(self) -> Dict[str, Any]:
+    def get_model_info(self) -> dict[str, Any]:
         """Return a summary dict describing the model."""
         return {
             "name": self.MODEL_NAME,
@@ -87,6 +89,28 @@ class BaseDetector(ABC):
                 f"{self.MODEL_NAME} is not fitted yet. "
                 "Call fit(X) before scoring or predicting."
             )
+
+    def _fitted_model(self, model: _T | None) -> _T:
+        """
+        Return the underlying estimator, proving it exists first.
+
+        The detectors store their sklearn estimator in a ``... | None`` attribute
+        that is only populated by ``fit()``.  Runtime guards (``_check_fitted``)
+        did not narrow that for a type checker, so every ``self._model.foo()``
+        call reported a false union-attribute error and hid real ones.
+
+        This deliberately does NOT consult ``_is_fitted``: several detectors
+        (k-NN, GMM) call ``score_samples`` from inside ``fit`` to derive their
+        contamination threshold, at which point the estimator exists but the
+        fitted flag has not been set yet.  Public entry points keep their own
+        ``_check_fitted()`` call; this helper only guarantees non-``None``.
+        """
+        if model is None:
+            raise RuntimeError(
+                f"{self.MODEL_NAME} is not fitted yet. "
+                "Call fit(X) before scoring or predicting."
+            )
+        return model
 
     @staticmethod
     def _validate_input(X: np.ndarray) -> None:

@@ -28,20 +28,17 @@ IMPORTANT:
 - Clearly document that precision/recall require ground-truth labels.
 """
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
-import pandas as pd
-
 from sklearn.metrics import (
-    precision_score,
-    recall_score,
-    f1_score,
-    roc_auc_score,
     average_precision_score,
     confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
 )
-
 
 # ── Label conversion helper ────────────────────────────────────────────────────
 
@@ -73,7 +70,7 @@ def supervised_metrics(
     y_true: np.ndarray,
     y_pred: np.ndarray,
     norm_scores: np.ndarray,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Compute supervised evaluation metrics.
 
@@ -153,7 +150,7 @@ def supervised_metrics(
 def unsupervised_metrics(
     norm_scores: np.ndarray,
     predictions: np.ndarray,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Compute unsupervised validation statistics.
 
@@ -222,10 +219,10 @@ def unsupervised_metrics(
 # ── Convenience wrapper ────────────────────────────────────────────────────────
 
 def evaluate(
-    y_true: Optional[np.ndarray],
+    y_true: np.ndarray | None,
     y_pred: np.ndarray,
     norm_scores: np.ndarray,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Auto-select supervised or unsupervised evaluation based on label availability.
 
