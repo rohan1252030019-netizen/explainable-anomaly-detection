@@ -45,16 +45,16 @@ function SeverityStrip({
 }) {
   const total = SEVERITY_KEYS.reduce((sum, key) => sum + counts[key], 0) || 1;
   const colors = {
-    CRITICAL: "bg-critical",
-    HIGH: "bg-warn",
+    CRITICAL: "bg-danger",
+    HIGH: "bg-warning",
     MEDIUM: "bg-caution",
-    LOW: "bg-good",
+    LOW: "bg-success",
   };
 
   return (
     <div className="space-y-1.5">
       <div
-        className="flex h-1.5 overflow-hidden rounded-full bg-inset"
+        className="flex h-1.5 overflow-hidden rounded-full bg-surface-muted"
         role="img"
         aria-label={SEVERITY_KEYS.map(
           (key) => `${counts[key]} ${key.toLowerCase()}`
@@ -71,7 +71,7 @@ function SeverityStrip({
           ) : null
         )}
       </div>
-      <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-ink-faint">
+      <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-subtle-foreground">
         {SEVERITY_KEYS.map((key) => (
           <span key={key} className="inline-flex items-center gap-1">
             <span
@@ -79,7 +79,7 @@ function SeverityStrip({
               aria-hidden="true"
             />
             {key.charAt(0) + key.slice(1).toLowerCase()}{" "}
-            <span className="font-semibold tabular text-ink-muted">
+            <span className="font-semibold tabular text-muted-foreground">
               {counts[key]}
             </span>
           </span>
@@ -124,15 +124,15 @@ export const DashboardView: React.FC = () => {
         <Card className="overflow-hidden">
           <div className="grid grid-cols-1 gap-6 p-6 lg:grid-cols-[1.15fr_0.85fr] lg:p-7">
             <div className="flex flex-col justify-center">
-              <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-accent-line bg-accent-soft px-2.5 py-1 text-[10px] font-semibold text-accent">
+              <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-primary-line bg-primary-soft px-2.5 py-1 text-[10px] font-semibold text-primary">
                 <Sparkles size={11} aria-hidden="true" />
                 Start with a dataset
               </span>
-              <h2 className="mt-3 text-lg font-bold tracking-tight text-ink">
+              <h2 className="mt-3 text-lg font-bold tracking-tight text-foreground">
                 No analysis loaded yet
               </h2>
-              <p className="mt-2 max-w-md text-xs leading-relaxed text-ink-muted">
-                Upload a tabular CSV or load the benchmark sample. XAUD profiles
+              <p className="mt-2 max-w-md text-xs leading-relaxed text-muted-foreground">
+                Upload a tabular CSV or load the benchmark sample. SENTINEL profiles
                 the columns, builds a feature matrix and scores every record
                 without labels.
               </p>
@@ -154,7 +154,7 @@ export const DashboardView: React.FC = () => {
                   Upload a CSV
                 </Button>
               </div>
-              <p className="mt-3 text-[10px] text-ink-faint">
+              <p className="mt-3 text-[10px] text-subtle-foreground">
                 Benchmark sample: 880 records · 10 attributes · 80 synthetic
                 outliers.
               </p>
@@ -183,14 +183,14 @@ export const DashboardView: React.FC = () => {
                   const Icon = step.icon;
                   return (
                     <li key={step.title} className="flex items-start gap-3">
-                      <span className="grid size-7 shrink-0 place-items-center rounded-md border border-edge bg-surface text-ink-faint">
+                      <span className="grid size-7 shrink-0 place-items-center rounded-md border border-border bg-surface text-subtle-foreground">
                         <Icon size={13} aria-hidden="true" />
                       </span>
                       <div className="min-w-0">
-                        <p className="text-[11px] font-semibold text-ink">
+                        <p className="text-[11px] font-semibold text-foreground">
                           {index + 1}. {step.title}
                         </p>
-                        <p className="mt-0.5 text-[10px] leading-relaxed text-ink-faint">
+                        <p className="mt-0.5 text-[10px] leading-relaxed text-subtle-foreground">
                           {step.body}
                         </p>
                       </div>
@@ -205,18 +205,18 @@ export const DashboardView: React.FC = () => {
         <Card className="p-4">
           <div className="flex items-center justify-between gap-3">
             <SectionLabel>Available detectors</SectionLabel>
-            <span className="text-[10px] text-ink-faint">Unsupervised</span>
+            <span className="text-[10px] text-subtle-foreground">Unsupervised</span>
           </div>
           <ul className="mt-3 grid grid-cols-2 gap-2 lg:grid-cols-4">
             {DETECTORS.map((detector) => (
               <li
                 key={detector.name}
-                className="rounded-lg border border-edge bg-inset px-3 py-2.5"
+                className="rounded-lg border border-border bg-surface-muted px-3 py-2.5"
               >
-                <p className="truncate text-[11px] font-semibold text-ink">
+                <p className="truncate text-[11px] font-semibold text-foreground">
                   {detector.name}
                 </p>
-                <p className="mt-0.5 text-[10px] text-ink-faint">
+                <p className="mt-0.5 text-[10px] text-subtle-foreground">
                   {detector.note}
                 </p>
               </li>
@@ -236,14 +236,14 @@ export const DashboardView: React.FC = () => {
         <Card className="p-6">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-good/25 bg-good-soft px-2.5 py-1 text-[10px] font-semibold text-good">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-success-line bg-success-soft px-2.5 py-1 text-[10px] font-semibold text-success">
                 <ShieldCheck size={11} aria-hidden="true" />
                 Dataset ready
               </span>
-              <h2 className="mt-3 truncate text-lg font-bold tracking-tight text-ink">
+              <h2 className="mt-3 truncate text-lg font-bold tracking-tight text-foreground">
                 {dataset.dataset_name}
               </h2>
-              <p className="mt-1 text-xs text-ink-muted">
+              <p className="mt-1 text-xs text-muted-foreground">
                 {dataset.n_rows?.toLocaleString()} rows · {dataset.n_cols}{" "}
                 columns · {dataset.n_preprocessed_features || 0} features
                 available for modelling
@@ -255,7 +255,7 @@ export const DashboardView: React.FC = () => {
             </Button>
           </div>
 
-          <div className="mt-5 grid grid-cols-2 gap-3 border-t border-edge pt-4 sm:grid-cols-4">
+          <div className="mt-5 grid grid-cols-2 gap-3 border-t border-border pt-4 sm:grid-cols-4">
             {[
               ["Numerical columns", dataset.numerical_cols?.length ?? 0],
               ["Categorical columns", dataset.categorical_cols?.length ?? 0],
@@ -264,7 +264,7 @@ export const DashboardView: React.FC = () => {
             ].map(([label, value]) => (
               <div key={String(label)}>
                 <SectionLabel>{label}</SectionLabel>
-                <p className="mt-1 text-lg font-bold tabular text-ink">
+                <p className="mt-1 text-lg font-bold tabular text-foreground">
                   {Number(value).toLocaleString()}
                 </p>
               </div>
@@ -303,15 +303,15 @@ export const DashboardView: React.FC = () => {
                     className={cn(
                       "grid size-7 place-items-center rounded-md border",
                       step.done
-                        ? "border-good/25 bg-good-soft text-good"
-                        : "border-edge bg-inset text-ink-faint"
+                        ? "border-success-line bg-success-soft text-success"
+                        : "border-border bg-surface-muted text-subtle-foreground"
                     )}
                   >
                     <Icon size={13} aria-hidden="true" />
                   </span>
-                  <p className="text-[11px] font-bold text-ink">{step.title}</p>
+                  <p className="text-[11px] font-bold text-foreground">{step.title}</p>
                 </div>
-                <p className="mt-2 text-[11px] leading-relaxed text-ink-muted">
+                <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
                   {step.body}
                 </p>
               </Card>
@@ -322,7 +322,7 @@ export const DashboardView: React.FC = () => {
         {dataset.warnings && dataset.warnings.length > 0 && (
           <div
             role="status"
-            className="flex items-start gap-3 rounded-xl border border-caution/30 bg-caution-soft p-4 text-xs"
+            className="flex items-start gap-3 rounded-xl border border-caution-line bg-caution-soft p-4 text-xs"
           >
             <AlertTriangle
               size={15}
@@ -330,11 +330,11 @@ export const DashboardView: React.FC = () => {
               aria-hidden="true"
             />
             <div>
-              <p className="font-semibold text-ink">
+              <p className="font-semibold text-foreground">
                 {dataset.warnings.length} dataset quality{" "}
                 {dataset.warnings.length === 1 ? "warning" : "warnings"}
               </p>
-              <p className="mt-0.5 text-[11px] text-ink-muted">
+              <p className="mt-0.5 text-[11px] text-muted-foreground">
                 Review them in the dataset explorer before drawing conclusions.
               </p>
             </div>
@@ -373,14 +373,14 @@ export const DashboardView: React.FC = () => {
           value={anomalies.toLocaleString()}
           sub={`${ratePct.toFixed(2)}% of records`}
           icon={ShieldAlert}
-          accentColor="var(--critical)"
+          accentColor="var(--danger)"
         />
         <StatCard
           label="Priority review"
           value={(critCount + highCount).toLocaleString()}
           sub={`${critCount} critical · ${highCount} high`}
           icon={AlertTriangle}
-          accentColor="var(--warn)"
+          accentColor="var(--warning)"
         />
         <StatCard
           label="Median anomaly score"
@@ -395,27 +395,27 @@ export const DashboardView: React.FC = () => {
       <Card className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
           <div className="flex items-center gap-2.5">
-            <span className="grid size-8 place-items-center rounded-lg border border-edge bg-inset text-accent">
+            <span className="grid size-8 place-items-center rounded-lg border border-border bg-surface-muted text-primary">
               <Cpu size={15} aria-hidden="true" />
             </span>
             <div>
               <SectionLabel>Active detector</SectionLabel>
-              <p className="text-xs font-semibold text-ink">
+              <p className="text-xs font-semibold text-foreground">
                 {overview.model_name}
               </p>
             </div>
           </div>
-          <div className="hidden h-8 w-px bg-edge sm:block" aria-hidden="true" />
+          <div className="hidden h-8 w-px bg-border sm:block" aria-hidden="true" />
           <div>
             <SectionLabel>Threshold</SectionLabel>
-            <p className="text-xs font-semibold text-ink">
+            <p className="text-xs font-semibold text-foreground">
               {overview.threshold_method ?? "contamination"} ·{" "}
               <span className="tabular">
                 {(overview.threshold_val ?? 0).toFixed(4)}
               </span>
             </p>
           </div>
-          <div className="hidden h-8 w-px bg-edge sm:block" aria-hidden="true" />
+          <div className="hidden h-8 w-px bg-border sm:block" aria-hidden="true" />
           <div>
             <SectionLabel>Severity spread</SectionLabel>
             <div className="mt-1">
@@ -452,7 +452,7 @@ export const DashboardView: React.FC = () => {
         <Card className="flex flex-col p-5">
           <SeverityDonutChart counts={severityCounts} />
           {overview.severity_bands?.levels?.length ? (
-            <ul className="mt-3 space-y-1.5 border-t border-edge pt-3">
+            <ul className="mt-3 space-y-1.5 border-t border-border pt-3">
               {overview.severity_bands.levels.map((band) => (
                 <li
                   key={band.severity}
@@ -465,17 +465,17 @@ export const DashboardView: React.FC = () => {
                   >
                     {band.severity}
                   </span>
-                  <span className="flex-1 truncate text-ink-faint">
+                  <span className="flex-1 truncate text-subtle-foreground">
                     {band.definition}
                   </span>
-                  <span className="shrink-0 tabular text-ink-muted">
+                  <span className="shrink-0 tabular text-muted-foreground">
                     {band.count}
                   </span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="mt-3 border-t border-edge pt-3 text-center text-[10px] text-ink-faint">
+            <p className="mt-3 border-t border-border pt-3 text-center text-[10px] text-subtle-foreground">
               Tiers are assigned by score quantile within the flagged set.
             </p>
           )}
@@ -493,13 +493,13 @@ export const DashboardView: React.FC = () => {
         <Card className="flex items-start gap-3 p-4">
           <BarChart3
             size={15}
-            className="mt-0.5 shrink-0 text-ink-faint"
+            className="mt-0.5 shrink-0 text-subtle-foreground"
             aria-hidden="true"
           />
-          <p className="text-[11px] leading-relaxed text-ink-muted">
-            <span className="font-semibold text-ink">Score scale · </span>
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            <span className="font-semibold text-foreground">Score scale · </span>
             Scores are normalised with the{" "}
-            <span className="font-semibold text-ink">
+            <span className="font-semibold text-foreground">
               {overview.score_normalization.method}
             </span>{" "}
             method between the{" "}
@@ -512,18 +512,18 @@ export const DashboardView: React.FC = () => {
         </Card>
       )}
 
-      <Card className="flex flex-col items-start justify-between gap-4 border-accent-line bg-accent-soft/40 p-4 sm:flex-row sm:items-center">
+      <Card className="flex flex-col items-start justify-between gap-4 border-primary-line bg-primary-soft/40 p-4 sm:flex-row sm:items-center">
         <div className="flex items-start gap-3">
           <ListFilter
             size={16}
-            className="mt-0.5 shrink-0 text-accent"
+            className="mt-0.5 shrink-0 text-primary"
             aria-hidden="true"
           />
           <div>
-            <p className="text-xs font-bold text-ink">
+            <p className="text-xs font-bold text-foreground">
               {anomalies.toLocaleString()} records are waiting for review
             </p>
-            <p className="mt-0.5 text-[11px] text-ink-muted">
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
               Rank by score, then open a record for feature evidence and
               counterfactuals.
             </p>

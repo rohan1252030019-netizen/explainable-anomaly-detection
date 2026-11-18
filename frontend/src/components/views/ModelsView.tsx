@@ -112,10 +112,10 @@ export const ModelsView: React.FC = () => {
       <Card className="flex flex-col items-start justify-between gap-4 p-5 lg:flex-row lg:items-center">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <Layers size={14} className="text-accent" aria-hidden="true" />
+            <Layers size={14} className="text-primary" aria-hidden="true" />
             <SectionLabel>Benchmark setup</SectionLabel>
           </div>
-          <p className="mt-1.5 max-w-2xl text-[11px] leading-relaxed text-ink-muted">
+          <p className="mt-1.5 max-w-2xl text-[11px] leading-relaxed text-muted-foreground">
             Fit Isolation Forest, LOF, One-Class SVM and Elliptic Envelope on the
             same preprocessed matrix. Every detector receives the same
             contamination rate so overlap is comparable.
@@ -123,14 +123,14 @@ export const ModelsView: React.FC = () => {
         </div>
 
         <div className="flex shrink-0 flex-wrap items-center gap-3 lg:flex-nowrap">
-          <div className="flex items-center gap-2 rounded-lg border border-edge bg-inset px-3 py-1.5">
+          <div className="flex items-center gap-2 rounded-lg border border-border bg-surface-muted px-3 py-1.5">
             <label
               htmlFor="bench-contamination"
-              className="text-[11px] text-ink-muted"
+              className="text-[11px] text-muted-foreground"
             >
               Contamination
             </label>
-            <span className="font-mono text-[11px] font-bold tabular text-accent">
+            <span className="font-mono text-[11px] font-bold tabular text-primary">
               {(contamination * 100).toFixed(0)}%
             </span>
           </div>
@@ -163,7 +163,7 @@ export const ModelsView: React.FC = () => {
       </Card>
 
       {!matrixReady && (
-        <div className="flex flex-col gap-3 rounded-xl border border-caution/30 bg-caution-soft p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-xl border border-caution-line bg-caution-soft p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
             <Database
               size={15}
@@ -171,10 +171,10 @@ export const ModelsView: React.FC = () => {
               aria-hidden="true"
             />
             <div>
-              <p className="text-xs font-bold text-ink">
+              <p className="text-xs font-bold text-foreground">
                 Build the feature matrix first
               </p>
-              <p className="mt-0.5 text-[11px] text-ink-muted">
+              <p className="mt-0.5 text-[11px] text-muted-foreground">
                 The benchmark trains on the preprocessed matrix, which is not
                 ready for this dataset.
               </p>
@@ -194,16 +194,16 @@ export const ModelsView: React.FC = () => {
       {error && (
         <div
           role="alert"
-          className="flex items-start gap-3 rounded-xl border border-critical/30 bg-critical-soft p-4"
+          className="flex items-start gap-3 rounded-xl border border-danger-line bg-danger-soft p-4"
         >
           <AlertTriangle
             size={15}
-            className="mt-0.5 shrink-0 text-critical"
+            className="mt-0.5 shrink-0 text-danger"
             aria-hidden="true"
           />
           <div className="min-w-0">
-            <p className="text-xs font-bold text-ink">Benchmark failed</p>
-            <p className="mt-0.5 break-words text-[11px] leading-relaxed text-ink-muted">
+            <p className="text-xs font-bold text-foreground">Benchmark failed</p>
+            <p className="mt-0.5 break-words text-[11px] leading-relaxed text-muted-foreground">
               {error}
             </p>
           </div>
@@ -247,17 +247,17 @@ export const ModelsView: React.FC = () => {
           </div>
 
           <Card className="overflow-hidden">
-            <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-edge bg-elevated px-4 py-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border bg-surface-muted px-4 py-3">
               <div>
-                <h3 className="text-xs font-bold text-ink">
+                <h3 className="text-xs font-bold text-foreground">
                   Detector comparison
                 </h3>
-                <p className="mt-0.5 text-[10px] text-ink-faint">
+                <p className="mt-0.5 text-[10px] text-subtle-foreground">
                   Metrics are computed against the available labels; PR-AUC is
                   shown where the backend reports it.
                 </p>
               </div>
-              <span className="rounded-full border border-edge bg-inset px-2 py-0.5 text-[10px] font-semibold text-ink-faint">
+              <span className="rounded-full border border-border bg-surface-muted px-2 py-0.5 text-[10px] font-semibold text-subtle-foreground">
                 {models.length} detectors ·{" "}
                 {(contamination * 100).toFixed(0)}% contamination
               </span>
@@ -283,20 +283,20 @@ export const ModelsView: React.FC = () => {
                   {data.comparison_table.map((row, index) => (
                     <tr key={`${row.Model}-${index}`}>
                       <td className="font-sans">
-                        <span className="block font-bold text-ink">
+                        <span className="block font-bold text-foreground">
                           {row.Model}
                         </span>
-                        <span className="mt-0.5 block text-[10px] text-ink-faint">
+                        <span className="mt-0.5 block text-[10px] text-subtle-foreground">
                           {countByModel.get(row.Model) ?? 0} flagged
                         </span>
                       </td>
-                      <td className="tabular text-ink-muted">
+                      <td className="tabular text-muted-foreground">
                         {(countByModel.get(row.Model) ?? 0).toLocaleString()}
                       </td>
-                      <td className="font-bold tabular text-accent">
+                      <td className="font-bold tabular text-primary">
                         {num(row["Score Sep."], 4)}
                       </td>
-                      <td className="tabular text-ink-muted">
+                      <td className="tabular text-muted-foreground">
                         {(() => {
                           const fitTime = toNumber(
                             row["Runtime (s)"] ?? row["Fit Time (s)"]
@@ -306,11 +306,11 @@ export const ModelsView: React.FC = () => {
                             : `${fitTime.toFixed(3)}s`;
                         })()}
                       </td>
-                      <td className="tabular text-ink-muted">{num(row.F1)}</td>
-                      <td className="tabular text-ink-muted">
+                      <td className="tabular text-muted-foreground">{num(row.F1)}</td>
+                      <td className="tabular text-muted-foreground">
                         {num(row["ROC-AUC"])}
                       </td>
-                      <td className="tabular text-ink-muted">
+                      <td className="tabular text-muted-foreground">
                         {num(row["PR-AUC"])}
                       </td>
                     </tr>
@@ -324,12 +324,12 @@ export const ModelsView: React.FC = () => {
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <div>
                 <SectionLabel>Pairwise Jaccard overlap</SectionLabel>
-                <p className="mt-1 text-[11px] text-ink-muted">
+                <p className="mt-1 text-[11px] text-muted-foreground">
                   Intersection over union of outlier sets. 1.0 means identical
                   flags; 0.0 means completely disjoint.
                 </p>
               </div>
-              <span className="text-[10px] text-ink-faint">
+              <span className="text-[10px] text-subtle-foreground">
                 Diagonal = same model
               </span>
             </div>
@@ -348,7 +348,7 @@ export const ModelsView: React.FC = () => {
                       <th
                         key={model}
                         scope="col"
-                        className="p-1.5 text-[10px] font-bold text-ink-faint"
+                        className="p-1.5 text-[10px] font-bold text-subtle-foreground"
                         title={model}
                       >
                         {SHORT_NAMES[model] ?? model}
@@ -361,7 +361,7 @@ export const ModelsView: React.FC = () => {
                     <tr key={rowModel}>
                       <th
                         scope="row"
-                        className="whitespace-nowrap p-1.5 text-left text-[10px] font-semibold text-ink-muted"
+                        className="whitespace-nowrap p-1.5 text-left text-[10px] font-semibold text-muted-foreground"
                         title={rowModel}
                       >
                         {SHORT_NAMES[rowModel] ?? rowModel}
@@ -380,17 +380,17 @@ export const ModelsView: React.FC = () => {
                               className={cn(
                                 "grid h-10 place-items-center rounded-md border text-[11px] font-bold tabular",
                                 same
-                                  ? "border-edge bg-inset text-ink-faint"
+                                  ? "border-border bg-surface-muted text-subtle-foreground"
                                   : value === null
-                                    ? "border-edge bg-inset text-ink-faint"
-                                    : "border-edge text-ink"
+                                    ? "border-border bg-surface-muted text-subtle-foreground"
+                                    : "border-border text-foreground"
                               )}
                               style={
                                 !same && value !== null
                                   ? {
-                                      backgroundColor: `color-mix(in srgb, var(--accent) ${
+                                      backgroundColor: `color-mix(in srgb, var(--primary) ${
                                         Math.round(value * 55)
-                                      }%, transparent)`,
+                                      }%, var(--surface))`,
                                     }
                                   : undefined
                               }
@@ -424,13 +424,13 @@ export const ModelsView: React.FC = () => {
       ) : (
         !loading && (
           <Card className="p-10 text-center">
-            <span className="mx-auto grid size-10 place-items-center rounded-xl border border-edge bg-inset text-ink-faint">
+            <span className="mx-auto grid size-10 place-items-center rounded-xl border border-border bg-surface-muted text-subtle-foreground">
               <Layers size={18} aria-hidden="true" />
             </span>
-            <p className="mt-3 text-sm font-bold text-ink">
+            <p className="mt-3 text-sm font-bold text-foreground">
               No benchmark run yet
             </p>
-            <p className="mx-auto mt-1 max-w-md text-xs leading-relaxed text-ink-muted">
+            <p className="mx-auto mt-1 max-w-md text-xs leading-relaxed text-muted-foreground">
               Run all four detectors to compare flag counts, separation, ranking
               metrics and pairwise overlap on the same rows.
             </p>
@@ -439,7 +439,7 @@ export const ModelsView: React.FC = () => {
       )}
 
       {loading && !data && (
-        <Card className="flex items-center justify-center gap-2 p-10 text-xs text-ink-muted">
+        <Card className="flex items-center justify-center gap-2 p-10 text-xs text-muted-foreground">
           <Spinner />
           Training detectors on the current feature matrix…
         </Card>

@@ -61,6 +61,10 @@ desktop.ini
 data/raw/*.csv
 data/raw/*.zip
 data/raw/*.gz
+data/raw/*.pq
+
+# ULB sample is regenerated deterministically by scripts/prepare_ulb_dataset.py
+data/sample/creditcard_fraud_sample.csv
 
 # Model files (can be large)
 models/*.pkl

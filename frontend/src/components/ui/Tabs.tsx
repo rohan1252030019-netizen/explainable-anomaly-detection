@@ -55,7 +55,7 @@ export function Tabs<T extends string>({
       role="tablist"
       aria-label={ariaLabel}
       className={cn(
-        "data-scroll flex items-center gap-1 overflow-x-auto border-b border-edge px-2 sm:px-3",
+        "data-scroll flex items-center gap-1 overflow-x-auto border-b border-border px-2 sm:px-3",
         className
       )}
     >
@@ -77,8 +77,8 @@ export function Tabs<T extends string>({
             onKeyDown={(event) => handleKeyDown(event, index)}
             className={cn(
               "relative shrink-0 px-3 py-2.5 text-xs font-semibold transition-colors",
-              "focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent",
-              active ? "text-accent" : "text-ink-muted hover:text-ink"
+              "focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary",
+              active ? "text-primary" : "text-muted-foreground hover:text-foreground"
             )}
           >
             <span className="flex items-center gap-1.5">
@@ -87,7 +87,7 @@ export function Tabs<T extends string>({
                 <span
                   className={cn(
                     "rounded-full px-1.5 py-px text-[10px] tabular",
-                    active ? "bg-accent-soft text-accent" : "bg-inset text-ink-faint"
+                    active ? "bg-primary-soft text-primary" : "bg-surface-muted text-subtle-foreground"
                   )}
                 >
                   {tab.count}
@@ -97,7 +97,7 @@ export function Tabs<T extends string>({
             {active && (
               <motion.span
                 layoutId={`tab-${group}`}
-                className="absolute inset-x-1 -bottom-px h-0.5 rounded-full bg-accent"
+                className="absolute inset-x-1 -bottom-px h-0.5 rounded-full bg-primary"
                 transition={{ type: "spring", stiffness: 420, damping: 34 }}
               />
             )}

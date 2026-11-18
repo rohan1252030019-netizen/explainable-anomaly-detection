@@ -250,6 +250,24 @@ def test_settings_fall_back_on_invalid_values(monkeypatch):
     assert settings.MAX_ROWS == 200_000
 
 
+def test_sentinel_env_precedence_and_deprecation(monkeypatch):
+    """SENTINEL_* env vars take precedence; XAUD_* issues a DeprecationWarning."""
+    import pytest
+
+    # SENTINEL overrides XAUD
+    monkeypatch.setenv("SENTINEL_PORT", "8888")
+    monkeypatch.setenv("XAUD_PORT", "7777")
+    s = Settings()
+    assert s.PORT == 8888
+
+    # XAUD fallback triggers deprecation warning
+    monkeypatch.delenv("SENTINEL_PORT", raising=False)
+    monkeypatch.setenv("XAUD_PORT", "9999")
+    with pytest.deprecated_call():
+        s_old = Settings()
+        assert s_old.PORT == 9999
+
+
 def test_version_has_one_source_of_truth():
     import src
     from backend.main import app

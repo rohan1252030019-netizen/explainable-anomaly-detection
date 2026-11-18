@@ -172,10 +172,10 @@ export const ExplainabilityView: React.FC = () => {
       <Card className="flex flex-col items-start justify-between gap-4 p-5 lg:flex-row lg:items-center">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <Sparkles size={14} className="text-accent" aria-hidden="true" />
+            <Sparkles size={14} className="text-primary" aria-hidden="true" />
             <SectionLabel>Attribution configuration</SectionLabel>
           </div>
-          <p className="mt-1.5 max-w-2xl text-[11px] leading-relaxed text-ink-muted">
+          <p className="mt-1.5 max-w-2xl text-[11px] leading-relaxed text-muted-foreground">
             Decompose model decisions across the whole population to find which
             features separate outliers from normal observations. Regenerating
             replaces the current attribution set.
@@ -183,7 +183,7 @@ export const ExplainabilityView: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <label className="flex cursor-pointer select-none items-center gap-2 rounded-lg border border-edge bg-inset px-3 py-1.5 text-[11px] text-ink-muted">
+          <label className="flex cursor-pointer select-none items-center gap-2 rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-[11px] text-muted-foreground">
             <input
               type="checkbox"
               checked={useShap}
@@ -194,7 +194,7 @@ export const ExplainabilityView: React.FC = () => {
           </label>
 
           <div className="flex items-center gap-2">
-            <label htmlFor="top-k" className="text-[11px] text-ink-muted">
+            <label htmlFor="top-k" className="text-[11px] text-muted-foreground">
               Top K
             </label>
             <select
@@ -231,14 +231,14 @@ export const ExplainabilityView: React.FC = () => {
           role="alert"
           className="flex flex-col items-center gap-3 p-10 text-center"
         >
-          <span className="grid size-10 place-items-center rounded-xl border border-critical/30 bg-critical-soft text-critical">
+          <span className="grid size-10 place-items-center rounded-xl border border-danger-line bg-danger-soft text-danger">
             <AlertTriangle size={18} aria-hidden="true" />
           </span>
           <div>
-            <p className="text-sm font-bold text-ink">
+            <p className="text-sm font-bold text-foreground">
               Could not load feature attributions
             </p>
-            <p className="mx-auto mt-1 max-w-lg break-words text-xs leading-relaxed text-ink-muted">
+            <p className="mx-auto mt-1 max-w-lg break-words text-xs leading-relaxed text-muted-foreground">
               {globalError}
             </p>
           </div>
@@ -283,7 +283,7 @@ export const ExplainabilityView: React.FC = () => {
             <Card className="p-5 lg:col-span-2" aria-busy={generating}>
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <SectionLabel>Top anomaly-driving features</SectionLabel>
-                <span className="text-[10px] text-ink-faint">
+                <span className="text-[10px] text-subtle-foreground">
                   Click a feature to inspect its distribution
                 </span>
               </div>
@@ -302,18 +302,18 @@ export const ExplainabilityView: React.FC = () => {
                         className={cn(
                           "w-full rounded-lg border p-3 text-left transition-[border-color,background-color]",
                           isSelected
-                            ? "border-accent bg-accent-soft"
-                            : "border-edge hover:border-accent-line hover:bg-elevated"
+                            ? "border-primary bg-primary-soft"
+                            : "border-border hover:border-primary hover:bg-surface-muted"
                         )}
                       >
                         <span className="mb-1.5 flex flex-wrap items-center justify-between gap-2 text-xs">
-                          <span className="flex min-w-0 items-center gap-2 font-bold text-ink">
-                            <span className="text-accent tabular">
+                          <span className="flex min-w-0 items-center gap-2 font-bold text-foreground">
+                            <span className="text-primary tabular">
                               #{index + 1}
                             </span>
                             <span className="truncate">{item.feature}</span>
                           </span>
-                          <span className="flex items-center gap-3 text-[11px] text-ink-muted">
+                          <span className="flex items-center gap-3 text-[11px] text-muted-foreground">
                             <span
                               className="tabular"
                               title={`Named in ${item.frequency} of ${
@@ -324,19 +324,19 @@ export const ExplainabilityView: React.FC = () => {
                             </span>
                             {typeof item.mean_z_score === "number" && (
                               <span
-                                className="font-mono tabular text-ink-faint"
+                                className="font-mono tabular text-subtle-foreground"
                                 title="Mean robust z-score"
                               >
                                 z {item.mean_z_score.toFixed(2)}
                               </span>
                             )}
-                            <span className="font-mono font-bold tabular text-accent">
+                            <span className="font-mono font-bold tabular text-primary">
                               {item.mean_combined_score.toFixed(3)}
                             </span>
                           </span>
                         </span>
                         <span
-                          className="block h-1.5 overflow-hidden rounded-full bg-inset"
+                          className="block h-1.5 overflow-hidden rounded-full bg-surface-muted"
                           role="meter"
                           aria-valuemin={0}
                           aria-valuemax={Number(maxScore.toFixed(3))}
@@ -353,7 +353,7 @@ export const ExplainabilityView: React.FC = () => {
                               delay: index * 0.04,
                               ease: [0.16, 1, 0.3, 1],
                             }}
-                            className="block h-full rounded-full bg-gradient-to-r from-accent to-critical"
+                            className="block h-full rounded-full bg-gradient-to-r from-primary to-danger"
                           />
                         </span>
                       </button>
@@ -367,17 +367,17 @@ export const ExplainabilityView: React.FC = () => {
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <SectionLabel>Distribution separation</SectionLabel>
-                  <h3 className="mt-2 truncate text-sm font-bold text-ink">
+                  <h3 className="mt-2 truncate text-sm font-bold text-foreground">
                     {selectedFeature || "Select a feature"}
                   </h3>
                 </div>
                 {distData && !distBusy && (
-                  <span className="shrink-0 rounded-full border border-edge bg-inset px-2 py-0.5 font-mono text-[10px] font-semibold tabular text-ink-muted">
+                  <span className="shrink-0 rounded-full border border-border bg-surface-muted px-2 py-0.5 font-mono text-[10px] font-semibold tabular text-muted-foreground">
                     Δ {distData.separation}
                   </span>
                 )}
               </div>
-              <p className="mt-1 text-[11px] leading-relaxed text-ink-muted">
+              <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
                 Empirical medians for the normal cluster versus flagged records.
               </p>
 
@@ -385,11 +385,11 @@ export const ExplainabilityView: React.FC = () => {
                 {distBusy ? (
                   <SkeletonRows rows={2} />
                 ) : distError ? (
-                  <div className="rounded-lg border border-critical/30 bg-critical-soft p-3">
-                    <p className="text-[10px] font-semibold text-ink">
+                  <div className="rounded-lg border border-danger-line bg-danger-soft p-3">
+                    <p className="text-[10px] font-semibold text-foreground">
                       Distribution unavailable
                     </p>
-                    <p className="mt-1 break-words text-[10px] leading-relaxed text-ink-muted">
+                    <p className="mt-1 break-words text-[10px] leading-relaxed text-muted-foreground">
                       {distError}
                     </p>
                     <button
@@ -399,7 +399,7 @@ export const ExplainabilityView: React.FC = () => {
                         setDistLoading(true);
                         setDistReloadToken((token) => token + 1);
                       }}
-                      className="mt-2 inline-flex items-center gap-1 text-[10px] font-semibold text-accent hover:text-ink"
+                      className="mt-2 inline-flex items-center gap-1 text-[10px] font-semibold text-primary hover:text-foreground"
                     >
                       <RefreshCw size={10} aria-hidden="true" />
                       Retry
@@ -408,19 +408,19 @@ export const ExplainabilityView: React.FC = () => {
                 ) : distData ? (
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-2 text-center">
-                      <div className="panel-inset border-signal/25 bg-signal-soft p-3">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-signal">
+                      <div className="panel-inset border-info-line bg-info-soft p-3">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-info">
                           Normal median
                         </div>
-                        <div className="mt-0.5 text-base font-bold tabular text-ink">
+                        <div className="mt-0.5 text-base font-bold tabular text-foreground">
                           {distData.normal_median}
                         </div>
                       </div>
-                      <div className="panel-inset border-critical/25 bg-critical-soft p-3">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-critical">
+                      <div className="panel-inset border-danger-line bg-danger-soft p-3">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-danger">
                           Anomaly median
                         </div>
-                        <div className="mt-0.5 text-base font-bold tabular text-ink">
+                        <div className="mt-0.5 text-base font-bold tabular text-foreground">
                           {distData.anomaly_median}
                         </div>
                       </div>
@@ -428,7 +428,7 @@ export const ExplainabilityView: React.FC = () => {
 
                     <div className="panel-inset px-3 py-2">
                       <div className="flex items-baseline justify-between gap-2">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-ink-faint">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-subtle-foreground">
                           Distribution shift
                         </span>
                         <span className="text-lg font-extrabold tabular text-caution">
@@ -438,13 +438,13 @@ export const ExplainabilityView: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <p className="text-[11px] text-ink-faint">
+                  <p className="text-[11px] text-subtle-foreground">
                     Choose a feature to load its distribution.
                   </p>
                 )}
               </div>
 
-              <p className="mt-4 border-t border-edge pt-3 text-[10px] leading-relaxed text-ink-faint">
+              <p className="mt-4 border-t border-border pt-3 text-[10px] leading-relaxed text-subtle-foreground">
                 A larger positive shift means flagged records sit further from
                 the normal median on this feature.
               </p>
@@ -453,14 +453,14 @@ export const ExplainabilityView: React.FC = () => {
         </>
       ) : (
         <Card className="flex flex-col items-center gap-4 p-10 text-center">
-          <span className="grid size-10 place-items-center rounded-xl border border-edge bg-inset text-ink-faint">
+          <span className="grid size-10 place-items-center rounded-xl border border-border bg-surface-muted text-subtle-foreground">
             <Sparkles size={18} aria-hidden="true" />
           </span>
           <div>
-            <p className="text-sm font-bold text-ink">
+            <p className="text-sm font-bold text-foreground">
               Global attributions have not been computed
             </p>
-            <p className="mx-auto mt-1 max-w-md text-xs leading-relaxed text-ink-muted">
+            <p className="mx-auto mt-1 max-w-md text-xs leading-relaxed text-muted-foreground">
               Generate explanations to rank the features that most often drive
               this run&apos;s anomaly scores. The operation can take a moment on
               large datasets.
@@ -480,12 +480,12 @@ export const ExplainabilityView: React.FC = () => {
       <Card className="flex items-start gap-3 p-4">
         <Info
           size={14}
-          className="mt-0.5 shrink-0 text-accent"
+          className="mt-0.5 shrink-0 text-primary"
           aria-hidden="true"
         />
         <div>
-          <p className="text-[11px] font-bold text-ink">Reading these scores</p>
-          <p className="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+          <p className="text-[11px] font-bold text-foreground">Reading these scores</p>
+          <p className="mt-0.5 text-[10px] leading-relaxed text-muted-foreground">
             Feature contributions reflect mathematical deviations and
             sensitivity gradients from the learned normal boundary. They provide
             statistical transparency into model scoring rather than causal

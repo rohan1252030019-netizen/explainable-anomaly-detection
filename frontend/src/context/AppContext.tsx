@@ -73,9 +73,11 @@ function createBooleanStore(key: string, fallback: boolean) {
 }
 
 const themeStore = (() => {
-  const key = "xaud-theme";
+  const key = "sentinel-theme";
+  const legacyKey = "xaud-theme";
   const event = `${key}-change`;
-  const fallback: Theme = "dark";
+  // Light is the product default; dark is an explicit opt-in.
+  const fallback: Theme = "light";
 
   return {
     subscribe: (onChange: () => void) => {
@@ -87,7 +89,7 @@ const themeStore = (() => {
       };
     },
     getSnapshot: (): Theme => {
-      const raw = localStorage.getItem(key);
+      const raw = localStorage.getItem(key) || localStorage.getItem(legacyKey);
       return raw === "light" || raw === "dark" ? raw : fallback;
     },
     set: (value: Theme) => {
@@ -97,7 +99,7 @@ const themeStore = (() => {
   };
 })();
 
-const sidebarStore = createBooleanStore("xaud-sidebar-collapsed", false);
+const sidebarStore = createBooleanStore("sentinel-sidebar-collapsed", false);
 
 function applyThemeClass(theme: Theme) {
   document.documentElement.classList.toggle("dark", theme === "dark");
@@ -115,7 +117,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const theme = useSyncExternalStore(
     themeStore.subscribe,
     themeStore.getSnapshot,
-    () => "dark" as Theme
+    () => "light" as Theme
   );
   const sidebarCollapsed = useSyncExternalStore(
     sidebarStore.subscribe,

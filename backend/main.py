@@ -37,8 +37,8 @@ from backend.state import state
 from src import __version__
 
 app = FastAPI(
-    title="XAUD API — Autonomous Anomaly Intelligence Platform",
-    description="Production REST API for unsupervised anomaly detection, validation, explainability, drift, and benchmarks.",
+    title="SENTINEL API — Autonomous Anomaly Intelligence Platform",
+    description="Production REST API for unsupervised anomaly detection, conformal validation, explainability, drift, and benchmarks. Detect. Explain. Verify. Act.",
     version=__version__,
 )
 
@@ -74,12 +74,24 @@ app.include_router(benchmarks.router)
 app.include_router(experiments.router)
 
 
+@app.get("/")
+def root():
+    """Root endpoint welcoming users and providing documentation links."""
+    return {
+        "status": "online",
+        "message": "SENTINEL 3.0 Backend API is running successfully. Detect. Explain. Verify. Act.",
+        "documentation": "/docs",
+        "health_check": "/api/health",
+        "frontend_dashboard": "http://localhost:3000",
+    }
+
+
 @app.get("/api/health", response_model=HealthResponse)
 def health_check() -> HealthResponse:
     """Healthcheck endpoint returning framework and pipeline status."""
     return HealthResponse(
         status="healthy",
-        framework="XAUD Autonomous Intelligence",
+        framework="SENTINEL Autonomous Intelligence",
         version=__version__,
         dataset_loaded=state.df_raw is not None,
         dataset_name=state.dataset_name or None,

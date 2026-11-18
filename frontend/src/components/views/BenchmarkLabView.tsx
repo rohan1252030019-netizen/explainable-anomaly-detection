@@ -87,12 +87,12 @@ export const BenchmarkLabView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Scientific Notice */}
-      <Card className="border-l-4 border-l-accent p-4">
+      <Card className="border-l-4 border-l-primary p-4">
         <div className="flex items-start gap-3">
-          <Info size={16} className="text-accent shrink-0 mt-0.5" />
+          <Info size={16} className="text-primary shrink-0 mt-0.5" />
           <div className="space-y-1">
             <SectionLabel>Scientific Validation Notice</SectionLabel>
-            <p className="text-xs text-ink-muted leading-relaxed">
+            <p className="text-xs text-muted-foreground leading-relaxed">
               In real-world unsupervised settings, ground-truth anomaly labels do not exist. To mathematically evaluate and rank detection algorithms without fabricating artificial metrics, the <strong>Synthetic Injection Laboratory</strong> introduces mathematically controlled perturbations (point, multivariate subspace, or cluster). Detectors are benchmarked strictly against these traceable injected ground truths.
             </p>
           </div>
@@ -101,14 +101,14 @@ export const BenchmarkLabView: React.FC = () => {
 
       {/* Benchmark Experiment Configuration */}
       <Card className="p-5">
-        <div className="flex items-center gap-2 border-b border-edge pb-3">
-          <FlaskConical size={16} className="text-accent" />
+        <div className="flex items-center gap-2 border-b border-border pb-3">
+          <FlaskConical size={16} className="text-primary" />
           <SectionLabel>Experiment Configuration</SectionLabel>
         </div>
 
         <div className="mt-4 space-y-4">
           <div>
-            <label className="text-xs font-semibold text-ink">Perturbation Geometry</label>
+            <label className="text-xs font-semibold text-foreground">Perturbation Geometry</label>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-2">
               {ANOMALY_TYPES.map((t) => (
                 <button
@@ -118,12 +118,12 @@ export const BenchmarkLabView: React.FC = () => {
                   className={cn(
                     "flex flex-col text-left p-3 rounded-lg border transition-all",
                     anomalyType === t.id
-                      ? "border-accent bg-accent/5 ring-1 ring-accent"
-                      : "border-edge bg-canvas hover:border-ink-faint"
+                      ? "border-primary bg-primary/5 ring-1 ring-primary"
+                      : "border-border bg-background hover:border-subtle-foreground"
                   )}
                 >
-                  <span className="text-xs font-bold text-ink">{t.label}</span>
-                  <span className="text-[11px] text-ink-muted mt-1 leading-snug">{t.desc}</span>
+                  <span className="text-xs font-bold text-foreground">{t.label}</span>
+                  <span className="text-[11px] text-muted-foreground mt-1 leading-snug">{t.desc}</span>
                 </button>
               ))}
             </div>
@@ -131,8 +131,8 @@ export const BenchmarkLabView: React.FC = () => {
 
           <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
             <div className="flex items-center gap-4">
-              <label htmlFor="contamination-slider" className="text-xs font-semibold text-ink">
-                Contamination Ratio: <span className="font-mono text-accent">{(contamination * 100).toFixed(1)}%</span>
+              <label htmlFor="contamination-slider" className="text-xs font-semibold text-foreground">
+                Contamination Ratio: <span className="font-mono text-primary">{(contamination * 100).toFixed(1)}%</span>
               </label>
               <input
                 id="contamination-slider"
@@ -142,7 +142,7 @@ export const BenchmarkLabView: React.FC = () => {
                 step={0.01}
                 value={contamination}
                 onChange={(e) => setContamination(Number(e.target.value))}
-                className="w-44 accent-accent cursor-pointer"
+                className="w-44 accent-primary cursor-pointer"
               />
             </div>
 
@@ -165,7 +165,7 @@ export const BenchmarkLabView: React.FC = () => {
             <StatCard
               label="Best Performing Detector"
               value={benchmarkResult.best_model ?? "—"}
-              accentColor="var(--good)"
+              accentColor="var(--success)"
               sub="Highest combined ROC-AUC & PR-AUC"
             />
             <StatCard
@@ -187,10 +187,10 @@ export const BenchmarkLabView: React.FC = () => {
 
           {/* Leaderboard Table */}
           <Card className="overflow-hidden">
-            <div className="border-b border-edge p-4 flex items-center justify-between">
+            <div className="border-b border-border p-4 flex items-center justify-between">
               <div>
                 <SectionLabel>Detector Leaderboard & Sensitivity Ranking</SectionLabel>
-                <p className="text-xs text-ink-faint mt-0.5">
+                <p className="text-xs text-subtle-foreground mt-0.5">
                   Models sorted by discrimination performance on {benchmarkResult.anomaly_type} anomalies.
                 </p>
               </div>
@@ -205,7 +205,7 @@ export const BenchmarkLabView: React.FC = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-edge bg-canvas text-ink-faint">
+                  <tr className="border-b border-border bg-background text-subtle-foreground">
                     <th className="py-2.5 px-4 font-semibold w-16">Rank</th>
                     <th className="py-2.5 px-4 font-semibold">Detector Algorithm</th>
                     <th className="py-2.5 px-4 font-semibold">ROC-AUC</th>
@@ -214,7 +214,7 @@ export const BenchmarkLabView: React.FC = () => {
                     <th className="py-2.5 px-4 font-semibold">Performance Bar</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-edge">
+                <tbody className="divide-y divide-border">
                   {resultsTable.map((row) => {
                     const isTop = row.rank === 1;
                     const aucPct = Math.min(Math.max(row.roc_auc * 100, 0), 100);
@@ -223,48 +223,48 @@ export const BenchmarkLabView: React.FC = () => {
                       <tr
                         key={row.model}
                         className={cn(
-                          "transition-colors hover:bg-surface-elevated/40",
-                          isTop && "bg-accent/5 font-semibold"
+                          "transition-colors hover:bg-surface-muted/40",
+                          isTop && "bg-primary/5 font-semibold"
                         )}
                       >
                         <td className="py-3 px-4 font-mono">
                           {isTop ? (
-                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-on-accent">
+                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
                               1
                             </span>
                           ) : (
                             `#${row.rank}`
                           )}
                         </td>
-                        <td className="py-3 px-4 text-ink flex items-center gap-2">
+                        <td className="py-3 px-4 text-foreground flex items-center gap-2">
                           {row.model}
                           {isTop && (
-                            <span className="text-[10px] uppercase tracking-wide text-accent font-bold">
+                            <span className="text-[10px] uppercase tracking-wide text-primary font-bold">
                               Winner
                             </span>
                           )}
                         </td>
-                        <td className="py-3 px-4 font-mono tabular-nums text-ink">
+                        <td className="py-3 px-4 font-mono tabular-nums text-foreground">
                           {row.roc_auc.toFixed(4)}
                         </td>
-                        <td className="py-3 px-4 font-mono tabular-nums text-ink">
+                        <td className="py-3 px-4 font-mono tabular-nums text-foreground">
                           {row.pr_auc.toFixed(4)}
                         </td>
-                        <td className="py-3 px-4 font-mono tabular-nums text-ink-muted">
+                        <td className="py-3 px-4 font-mono tabular-nums text-muted-foreground">
                           {row.precision_at_k.toFixed(4)}
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
-                            <div className="h-1.5 w-28 rounded-full bg-edge overflow-hidden">
+                            <div className="h-1.5 w-28 rounded-full bg-border overflow-hidden">
                               <div
                                 className={cn(
                                   "h-full rounded-full transition-all",
-                                  isTop ? "bg-accent" : "bg-ink-muted"
+                                  isTop ? "bg-primary" : "bg-border-strong"
                                 )}
                                 style={{ width: `${aucPct}%` }}
                               />
                             </div>
-                            <span className="text-[10px] text-ink-faint tabular-nums font-mono">
+                            <span className="text-[10px] text-subtle-foreground tabular-nums font-mono">
                               {aucPct.toFixed(1)}%
                             </span>
                           </div>
@@ -281,9 +281,9 @@ export const BenchmarkLabView: React.FC = () => {
 
       {!benchmarkResult && !loading && (
         <Card className="p-8 text-center">
-          <FlaskConical size={28} className="mx-auto text-ink-faint" />
-          <h3 className="mt-2 text-sm font-semibold text-ink">No Benchmark Executed Yet</h3>
-          <p className="mt-1 text-xs text-ink-muted max-w-md mx-auto">
+          <FlaskConical size={28} className="mx-auto text-subtle-foreground" />
+          <h3 className="mt-2 text-sm font-semibold text-foreground">No Benchmark Executed Yet</h3>
+          <p className="mt-1 text-xs text-muted-foreground max-w-md mx-auto">
             Choose a perturbation geometry above and run the experiment to see how your detectors handle extreme values, subspace violations, or dense cluster outliers.
           </p>
         </Card>

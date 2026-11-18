@@ -47,7 +47,7 @@ def launch_backend(port: int | None = None):
     server_port = port or settings.PORT
 
     print("=" * 60)
-    print("  Explainable Framework for Unsupervised Anomaly Detection")
+    print("  SENTINEL — Autonomous Anomaly Intelligence Platform")
     print("  FastAPI Backend Service")
     print("=" * 60)
     print(f"\n  Starting FastAPI server on http://localhost:{server_port} ...")
@@ -66,7 +66,7 @@ def launch_frontend(port: int = 3000):
     """Launch the Next.js frontend server."""
     frontend_dir = os.path.join(PROJECT_ROOT, "frontend")
     print("=" * 60)
-    print("  XAUD Next.js Frontend")
+    print("  SENTINEL Next.js Frontend")
     print("=" * 60)
     print(f"\n  Starting Next.js dev server on http://localhost:{port} ...\n")
     npm_cmd = "npm.cmd" if sys.platform == "win32" else "npm"
@@ -91,7 +91,7 @@ def launch_all(backend_port: int | None = None, frontend_port: int = 3000):
     npm_cmd = "npm.cmd" if sys.platform == "win32" else "npm"
 
     print("=" * 60)
-    print("  XAUD 2.0 — Launching Full-Stack Platform")
+    print("  SENTINEL 3.0 — Launching Full-Stack Platform")
     print("=" * 60)
     print(f"\n  Backend:  http://127.0.0.1:{b_port} (Docs: http://127.0.0.1:{b_port}/docs)")
     print(f"  Frontend: http://localhost:{frontend_port}\n")

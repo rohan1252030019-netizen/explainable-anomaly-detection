@@ -32,7 +32,7 @@ class ReportingServiceMixin(ServiceState):
 
         return {
             "title": "Explainable Anomaly Detection Audit Report",
-            "framework": "XAUD Unsupervised Intelligence Framework",
+            "framework": "SENTINEL Autonomous Anomaly Intelligence Platform",
             "generated_at": datetime.datetime.now().strftime("%B %d, %Y - %H:%M:%S"),
             "dataset": {
                 "name": self.dataset_name,

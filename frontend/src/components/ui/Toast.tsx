@@ -32,20 +32,20 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 const TONE = {
   success: {
     icon: CheckCircle2,
-    accent: "text-good",
-    bar: "bg-good",
+    accent: "text-success",
+    bar: "bg-success",
     role: "status" as const,
   },
   error: {
     icon: AlertTriangle,
-    accent: "text-critical",
-    bar: "bg-critical",
+    accent: "text-danger",
+    bar: "bg-danger",
     role: "alert" as const,
   },
   info: {
     icon: Info,
-    accent: "text-accent",
-    bar: "bg-accent",
+    accent: "text-primary",
+    bar: "bg-primary",
     role: "status" as const,
   },
 };
@@ -119,9 +119,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                     aria-hidden="true"
                   />
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-ink">{item.title}</p>
+                    <p className="text-xs font-bold text-foreground">{item.title}</p>
                     {item.description && (
-                      <p className="mt-0.5 text-[11px] leading-relaxed text-ink-muted">
+                      <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
                         {item.description}
                       </p>
                     )}
@@ -129,7 +129,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 </div>
                 <button
                   onClick={() => dismiss(item.id)}
-                  className="absolute right-1.5 top-1.5 grid size-7 place-items-center rounded-md text-ink-faint transition-colors hover:bg-inset hover:text-ink"
+                  className="absolute right-1.5 top-1.5 grid size-7 place-items-center rounded-md text-subtle-foreground transition-colors hover:bg-surface-muted hover:text-foreground"
                   aria-label="Dismiss notification"
                 >
                   <X size={13} />

@@ -73,10 +73,10 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-svh bg-canvas">
+    <div className="flex min-h-svh bg-background">
       <a
         href="#main-content"
-        className="sr-only-focusable fixed left-4 top-4 z-50 rounded-lg bg-accent px-3 py-2 text-xs font-semibold text-on-accent"
+        className="sr-only-focusable fixed left-4 top-4 z-50 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground"
       >
         Skip to main content
       </a>

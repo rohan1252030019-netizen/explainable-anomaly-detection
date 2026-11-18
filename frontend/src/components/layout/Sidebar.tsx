@@ -42,13 +42,13 @@ function NavButton({
         "group relative flex w-full items-center rounded-lg text-xs font-semibold transition-colors duration-150",
         collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2",
         active
-          ? "bg-accent-soft text-accent"
-          : "text-ink-muted hover:bg-inset hover:text-ink"
+          ? "bg-primary-soft text-primary"
+          : "text-muted-foreground hover:bg-surface-muted hover:text-foreground"
       )}
     >
       {active && !collapsed && (
         <span
-          className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-accent"
+          className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-primary"
           aria-hidden="true"
         />
       )}
@@ -56,7 +56,7 @@ function NavButton({
         size={16}
         className={cn(
           "shrink-0 transition-colors",
-          active ? "text-accent" : "text-ink-faint group-hover:text-ink-muted"
+          active ? "text-primary" : "text-subtle-foreground group-hover:text-muted-foreground"
         )}
         aria-hidden="true"
       />
@@ -68,8 +68,8 @@ function NavButton({
               className={cn(
                 "rounded-full px-1.5 py-px text-[10px] font-bold tabular",
                 active
-                  ? "bg-accent/15 text-accent"
-                  : "border border-critical/25 bg-critical-soft text-critical"
+                  ? "bg-primary/15 text-primary"
+                  : "border border-danger-line bg-danger-soft text-danger"
               )}
             >
               {badge > 9999 ? "9k+" : badge}
@@ -79,7 +79,7 @@ function NavButton({
       )}
       {collapsed && badge !== undefined && badge > 0 && (
         <span
-          className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-critical"
+          className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-danger"
           aria-hidden="true"
         />
       )}
@@ -114,28 +114,28 @@ function SidebarContent({
       {/* Brand */}
       <div
         className={cn(
-          "flex items-center border-b border-edge",
+          "flex items-center border-b border-border",
           collapsed ? "justify-center px-3 py-[1.05rem]" : "gap-3 px-4 py-4"
         )}
       >
         <span
-          className="relative grid size-8 shrink-0 place-items-center rounded-lg bg-accent text-[13px] font-black text-on-accent"
+          className="relative grid size-8 shrink-0 place-items-center rounded-lg bg-primary text-[13px] font-black text-primary-foreground shadow-sm"
           aria-hidden="true"
         >
-          X
-          <span className="absolute -right-0.5 -top-0.5 size-1.5 rounded-full border border-sidebar bg-good" />
+          S
+          <span className="absolute -right-0.5 -top-0.5 size-1.5 rounded-full border border-surface bg-success" />
         </span>
         {!collapsed && (
           <div className="min-w-0">
             <div className="flex items-baseline gap-1.5">
-              <span className="text-sm font-extrabold tracking-tight text-ink">
-                XAUD
+              <span className="text-sm font-extrabold tracking-tight text-foreground">
+                SENTINEL
               </span>
-              <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-ink-faint">
-                2.0
+              <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-subtle-foreground">
+                3.0
               </span>
             </div>
-            <div className="text-[9px] font-semibold uppercase tracking-[0.16em] text-ink-faint">
+            <div className="text-[9px] font-semibold uppercase tracking-[0.16em] text-subtle-foreground">
               Anomaly Intelligence
             </div>
           </div>
@@ -144,7 +144,7 @@ function SidebarContent({
           <button
             ref={closeRef}
             onClick={onClose}
-            className="ml-auto grid size-8 place-items-center rounded-lg text-ink-faint hover:bg-inset hover:text-ink"
+            className="ml-auto grid size-8 place-items-center rounded-lg text-subtle-foreground hover:bg-surface-muted hover:text-foreground"
             aria-label="Close navigation"
           >
             <X size={16} />
@@ -163,10 +163,10 @@ function SidebarContent({
         {NAV_GROUPS.map((group, index) => (
           <div
             key={group.title}
-            className={cn(index > 0 && "mt-4 border-t border-edge pt-4")}
+            className={cn(index > 0 && "mt-4 border-t border-border pt-4")}
           >
             {!collapsed ? (
-              <div className="mb-1.5 px-3 text-[9px] font-bold uppercase tracking-[0.16em] text-ink-faint">
+              <div className="mb-1.5 px-3 text-[9px] font-bold uppercase tracking-[0.16em] text-subtle-foreground">
                 {group.title}
               </div>
             ) : (
@@ -195,7 +195,7 @@ function SidebarContent({
       </nav>
 
       {/* Pipeline summary */}
-      <div className={cn("border-t border-edge", collapsed ? "p-2" : "p-3")}>
+      <div className={cn("border-t border-border", collapsed ? "p-2" : "p-3")}>
         {collapsed ? (
           <div
             className="flex flex-col items-center gap-1.5 py-1"
@@ -206,7 +206,7 @@ function SidebarContent({
                 key={step.key}
                 className={cn(
                   "size-1.5 rounded-full",
-                  step.done ? "bg-good" : "bg-edge-strong"
+                  step.done ? "bg-success" : "bg-border-strong"
                 )}
               />
             ))}
@@ -218,10 +218,10 @@ function SidebarContent({
           <>
             <div className="mb-2 flex items-center justify-between gap-2">
               <span className="eyebrow">Pipeline</span>
-              <span className="flex items-center gap-1.5 text-[10px] font-semibold text-ink-muted">
+              <span className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground">
                 <ShieldCheck
                   size={11}
-                  className={completed === 3 ? "text-good" : "text-ink-faint"}
+                  className={completed === 3 ? "text-success" : "text-subtle-foreground"}
                   aria-hidden="true"
                 />
                 {completed}/{steps.length}
@@ -241,7 +241,7 @@ function SidebarContent({
                   key={step.key}
                   className={cn(
                     "h-1 rounded-full transition-colors",
-                    step.done ? "bg-good" : "bg-edge"
+                    step.done ? "bg-success" : "bg-border"
                   )}
                 />
               ))}
@@ -251,16 +251,16 @@ function SidebarContent({
               {steps.map((step) => (
                 <li
                   key={step.key}
-                  className="flex items-center gap-2 text-[10.5px] text-ink-muted"
+                  className="flex items-center gap-2 text-[10.5px] text-muted-foreground"
                 >
                   <span
                     className={cn(
                       "size-1 shrink-0 rounded-full",
-                      step.done ? "bg-good" : "bg-edge-strong"
+                      step.done ? "bg-success" : "bg-border-strong"
                     )}
                     aria-hidden="true"
                   />
-                  <span className={cn("truncate", !step.done && "text-ink-faint")}>
+                  <span className={cn("truncate", !step.done && "text-subtle-foreground")}>
                     {step.label}
                   </span>
                   <span className="sr-only">
@@ -271,7 +271,7 @@ function SidebarContent({
             </ol>
 
             {dataset?.dataset_name && (
-              <div className="mt-3 truncate border-t border-edge pt-2 text-[10px] text-ink-faint">
+              <div className="mt-3 truncate border-t border-border pt-2 text-[10px] text-subtle-foreground">
                 <span className="sr-only">Active dataset: </span>
                 {dataset.dataset_name}
               </div>
@@ -282,7 +282,7 @@ function SidebarContent({
         <button
           onClick={onToggleCollapse}
           className={cn(
-            "mt-2 flex w-full items-center rounded-lg py-1.5 text-[10.5px] font-semibold text-ink-faint transition-colors hover:bg-inset hover:text-ink",
+            "mt-2 flex w-full items-center rounded-lg py-1.5 text-[10.5px] font-semibold text-subtle-foreground transition-colors hover:bg-surface-muted hover:text-foreground",
             collapsed ? "justify-center" : "gap-2 px-2"
           )}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -294,7 +294,7 @@ function SidebarContent({
             <>
               <PanelLeftClose size={14} />
               <span>Collapse</span>
-              <kbd className="ml-auto rounded border border-edge bg-inset px-1 font-mono text-[9px] font-normal">
+              <kbd className="ml-auto rounded border border-border bg-surface-muted px-1 font-mono text-[9px] font-normal">
                 ⇧⌘B
               </kbd>
             </>
@@ -356,10 +356,10 @@ export const Sidebar: React.FC = () => {
 
   return (
     <>
-      {/* Desktop */}
+      {/* Desktop & Tablet */}
       <aside
         className={cn(
-          "sticky top-0 hidden h-svh shrink-0 flex-col border-r border-edge bg-sidebar transition-[width] duration-200 ease-out-expo lg:flex",
+          "sticky top-0 hidden h-svh shrink-0 flex-col border-r border-border bg-surface transition-[width] duration-200 ease-out-expo md:flex",
           sidebarCollapsed ? "w-[68px]" : "w-[264px]"
         )}
         data-print-hide
@@ -380,7 +380,7 @@ export const Sidebar: React.FC = () => {
               exit={{ opacity: 0 }}
               transition={{ duration: reducedMotion ? 0 : 0.15 }}
               onClick={() => setMobileNavOpen(false)}
-              className="fixed inset-0 z-40 bg-black/55 backdrop-blur-sm lg:hidden"
+              className="fixed inset-0 z-40 bg-overlay backdrop-blur-sm lg:hidden"
               aria-hidden="true"
             />
             <motion.aside
@@ -393,7 +393,7 @@ export const Sidebar: React.FC = () => {
               animate={reducedMotion ? { opacity: 1 } : { x: 0 }}
               exit={reducedMotion ? { opacity: 0 } : { x: "-100%" }}
               transition={{ duration: reducedMotion ? 0 : 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="fixed inset-y-0 left-0 z-40 flex w-[280px] flex-col border-r border-edge bg-sidebar shadow-2xl lg:hidden"
+              className="fixed inset-y-0 left-0 z-40 flex w-[280px] flex-col border-r border-border bg-surface shadow-2xl lg:hidden"
             >
               <SidebarContent
                 collapsed={false}

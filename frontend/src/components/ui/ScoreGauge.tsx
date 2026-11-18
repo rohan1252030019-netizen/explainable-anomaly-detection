@@ -54,7 +54,7 @@ export const ScoreGauge: React.FC<ScoreGaugeProps> = ({
           <path
             d={`M ${strokeWidth / 2} ${size / 2} A ${radius} ${radius} 0 0 1 ${size - strokeWidth / 2} ${size / 2}`}
             fill="none"
-            stroke="var(--inset)"
+            stroke="var(--surface-muted)"
             strokeWidth={strokeWidth}
             strokeLinecap="round"
           />
@@ -78,7 +78,7 @@ export const ScoreGauge: React.FC<ScoreGaugeProps> = ({
               y1={size / 2 - radius - 6}
               x2={thresholdX}
               y2={size / 2 + 3}
-              stroke="var(--accent)"
+              stroke="var(--primary)"
               strokeWidth={1.5}
               strokeDasharray="3 3"
               opacity={0.9}
@@ -93,15 +93,15 @@ export const ScoreGauge: React.FC<ScoreGaugeProps> = ({
           >
             {normScore.toFixed(4)}
           </span>
-          <span className="mt-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-ink-faint">
+          <span className="mt-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-subtle-foreground">
             Normalised score
           </span>
         </div>
       </div>
 
-      <div className="mt-3 flex w-full max-w-[220px] items-center justify-between text-[9px] tabular text-ink-faint">
+      <div className="mt-3 flex w-full max-w-[220px] items-center justify-between text-[9px] tabular text-subtle-foreground">
         <span>0.00</span>
-        <span className="font-semibold text-accent">
+        <span className="font-semibold text-primary">
           threshold {threshold.toFixed(3)}
         </span>
         <span>1.00</span>

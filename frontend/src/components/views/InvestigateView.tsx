@@ -59,15 +59,15 @@ const QUALITY_STYLE: Record<
     icon: React.ComponentType<{ size?: number; className?: string }>;
   }
 > = {
-  STRONG: { hex: "var(--good)", label: "Clears the bar", icon: ShieldCheck },
+  STRONG: { hex: "var(--success)", label: "Clears the bar", icon: ShieldCheck },
   PARTIAL: {
     hex: "var(--caution)",
     label: "Helps, not enough",
     icon: ShieldAlert,
   },
-  WEAK: { hex: "var(--warn)", label: "Poor match", icon: ShieldAlert },
-  UNVERIFIED: { hex: "var(--ink-faint)", label: "Unverified", icon: Info },
-  NONE: { hex: "var(--ink-faint)", label: "None", icon: Info },
+  WEAK: { hex: "var(--warning)", label: "Poor match", icon: ShieldAlert },
+  UNVERIFIED: { hex: "var(--subtle-foreground)", label: "Unverified", icon: Info },
+  NONE: { hex: "var(--subtle-foreground)", label: "None", icon: Info },
 };
 
 const CounterfactualPanel: React.FC<{
@@ -78,12 +78,12 @@ const CounterfactualPanel: React.FC<{
     return (
       <Card className="p-5">
         <div className="flex items-start gap-3">
-          <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-edge bg-inset text-ink-faint">
+          <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-border bg-surface-muted text-subtle-foreground">
             <Target size={15} aria-hidden="true" />
           </span>
           <div>
             <SectionLabel>What would fix this record</SectionLabel>
-            <p className="mt-1.5 text-xs leading-relaxed text-ink-muted">
+            <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
               No counterfactual was returned for this observation. The feature
               evidence and raw values are still available below.
             </p>
@@ -102,18 +102,18 @@ const CounterfactualPanel: React.FC<{
     return (
       <Card className="p-5">
         <div className="flex items-start gap-3">
-          <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-edge bg-inset text-ink-faint">
+          <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-border bg-surface-muted text-subtle-foreground">
             <Target size={15} aria-hidden="true" />
           </span>
           <div>
             <SectionLabel>What would fix this record</SectionLabel>
-            <p className="mt-1.5 text-xs leading-relaxed text-ink-muted">
+            <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
               {counterfactual.reason ??
                 (isAnomaly
                   ? "No nearby non-flagged record could be located for this row."
                   : "This record is not flagged, so no corrective change is required.")}
             </p>
-            <p className="mt-1 text-[10px] leading-relaxed text-ink-faint">
+            <p className="mt-1 text-[10px] leading-relaxed text-subtle-foreground">
               A missing recommendation is a valid result for an outlier that sits
               far from every normal prototype.
             </p>
@@ -127,14 +127,14 @@ const CounterfactualPanel: React.FC<{
 
   return (
     <Card>
-      <div className="border-b border-edge p-5">
+      <div className="border-b border-border p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <Target size={13} className="text-accent" aria-hidden="true" />
+              <Target size={13} className="text-primary" aria-hidden="true" />
               <SectionLabel>What would fix this record</SectionLabel>
             </div>
-            <p className="mt-2 text-xs leading-relaxed text-ink">
+            <p className="mt-2 text-xs leading-relaxed text-foreground">
               {counterfactual.text}
             </p>
           </div>
@@ -154,33 +154,33 @@ const CounterfactualPanel: React.FC<{
 
         {counterfactual.score_before !== null &&
           counterfactual.score_before !== undefined && (
-            <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-edge bg-inset p-3">
+            <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-surface-muted p-3">
               <SectionLabel>Score effect</SectionLabel>
-              <span className="text-sm font-extrabold tabular-nums text-critical">
+              <span className="text-sm font-extrabold tabular-nums text-danger">
                 {counterfactual.score_before.toFixed(3)}
               </span>
               <ArrowRight
                 size={13}
-                className="text-ink-faint"
+                className="text-subtle-foreground"
                 aria-hidden="true"
               />
-              <span className="text-sm font-extrabold tabular-nums text-good">
+              <span className="text-sm font-extrabold tabular-nums text-success">
                 {counterfactual.score_after?.toFixed(3) ?? "—"}
               </span>
               {counterfactual.score_threshold !== null &&
                 counterfactual.score_threshold !== undefined && (
-                  <span className="text-[11px] text-ink-faint">
+                  <span className="text-[11px] text-subtle-foreground">
                     detection threshold{" "}
                     {counterfactual.score_threshold.toFixed(3)}
                   </span>
                 )}
               {typeof counterfactual.score_reduction === "number" && (
-                <span className="ml-auto rounded bg-surface px-2 py-0.5 text-[10px] font-semibold tabular text-ink-muted">
+                <span className="ml-auto rounded bg-surface px-2 py-0.5 text-[10px] font-semibold tabular text-muted-foreground">
                   −{counterfactual.score_reduction.toFixed(3)} score
                 </span>
               )}
               {typeof counterfactual.intervention_cost === "number" && (
-                <span className="rounded bg-surface px-2 py-0.5 text-[10px] font-semibold tabular text-accent border border-accent/20">
+                <span className="rounded bg-surface px-2 py-0.5 text-[10px] font-semibold tabular text-primary border border-primary-line">
                   Intervention Cost: {counterfactual.intervention_cost.toFixed(3)}
                 </span>
               )}
@@ -193,7 +193,7 @@ const CounterfactualPanel: React.FC<{
           <div className="flex flex-wrap items-center justify-between gap-2">
             <SectionLabel>Fields to change</SectionLabel>
             {counterfactual.immutable_features_enforced && counterfactual.immutable_features_enforced.length > 0 && (
-              <span className="text-[10px] text-ink-faint font-mono">
+              <span className="text-[10px] text-subtle-foreground font-mono">
                 Immutable features locked: {counterfactual.immutable_features_enforced.join(", ")}
               </span>
             )}
@@ -216,25 +216,25 @@ const CounterfactualPanel: React.FC<{
               return (
                 <li
                   key={change.feature}
-                  className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-edge bg-inset px-3 py-2"
+                  className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-border bg-surface-muted px-3 py-2"
                 >
-                  <span className="w-44 shrink-0 truncate text-xs font-semibold text-ink">
+                  <span className="w-44 shrink-0 truncate text-xs font-semibold text-foreground">
                     {change.feature}
                   </span>
-                  <span className="flex items-center gap-1.5 font-mono text-xs tabular-nums text-ink-muted">
+                  <span className="flex items-center gap-1.5 font-mono text-xs tabular-nums text-muted-foreground">
                     {Number(base).toFixed(2)}
                     <Icon
                       size={12}
-                      className={increasing ? "text-warn" : "text-signal"}
+                      className={increasing ? "text-warning" : "text-info"}
                       aria-hidden="true"
                     />
-                    <span className="font-bold text-ink">
+                    <span className="font-bold text-foreground">
                       {Number(shown).toFixed(2)}
                     </span>
                   </span>
                   {change.change_pct !== null &&
                     change.change_pct !== undefined && (
-                      <span className="text-[11px] tabular-nums text-ink-faint">
+                      <span className="text-[11px] tabular-nums text-subtle-foreground">
                         {change.change_pct > 0 ? "+" : ""}
                         {change.change_pct.toFixed(1)}%
                       </span>
@@ -247,12 +247,12 @@ const CounterfactualPanel: React.FC<{
       )}
 
       {counterfactual.quality?.detail && (
-        <p className="border-t border-edge px-5 py-3 text-[11px] leading-relaxed text-ink-muted">
+        <p className="border-t border-border px-5 py-3 text-[11px] leading-relaxed text-muted-foreground">
           {counterfactual.quality.detail}
         </p>
       )}
       {counterfactual.caveat && (
-        <p className="border-t border-edge px-5 py-3 text-[11px] leading-relaxed text-ink-faint">
+        <p className="border-t border-border px-5 py-3 text-[11px] leading-relaxed text-subtle-foreground">
           {counterfactual.caveat}
         </p>
       )}
@@ -271,16 +271,16 @@ const VerificationPanel: React.FC<{
     return (
       <Card className="p-5">
         <div className="flex items-start gap-3">
-          <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-edge bg-inset text-ink-faint">
+          <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-border bg-surface-muted text-subtle-foreground">
             <ShieldCheck size={15} aria-hidden="true" />
           </span>
           <div>
             <SectionLabel>Explanation check</SectionLabel>
-            <p className="mt-1.5 text-xs leading-relaxed text-ink-muted">
+            <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
               {verification?.summary ||
                 "No behavioural verification was run for this record, so the explanation is unverified rather than endorsed."}
             </p>
-            <p className="mt-1 text-[10px] text-ink-faint">
+            <p className="mt-1 text-[10px] text-subtle-foreground">
               The feature evidence below still shows why the model scored this
               row, independent of the verification result.
             </p>
@@ -293,12 +293,12 @@ const VerificationPanel: React.FC<{
   const tone =
     verification.overall === "VERIFIED" ||
     verification.overall === "BEHAVIOURALLY FAITHFUL"
-      ? "var(--good)"
+      ? "var(--success)"
       : verification.overall === "PARTIALLY VERIFIED"
         ? "var(--caution)"
         : verification.overall === "UNKNOWN"
-          ? "var(--ink-faint)"
-          : "var(--critical)";
+          ? "var(--subtle-foreground)"
+          : "var(--danger)";
 
   const faithfulness = verification.faithfulness;
 
@@ -310,19 +310,19 @@ const VerificationPanel: React.FC<{
             {verification.overall === "UNVERIFIED" ? (
               <ShieldAlert
                 size={13}
-                className="text-critical"
+                className="text-danger"
                 aria-hidden="true"
               />
             ) : (
               <ShieldCheck
                 size={13}
-                className="text-accent"
+                className="text-primary"
                 aria-hidden="true"
               />
             )}
             <SectionLabel>Explanation check</SectionLabel>
           </div>
-          <p className="mt-2 text-xs leading-relaxed text-ink">
+          <p className="mt-2 text-xs leading-relaxed text-foreground">
             {verification.summary}
           </p>
         </div>
@@ -335,28 +335,28 @@ const VerificationPanel: React.FC<{
       </div>
 
       {faithfulness && faithfulness.deletion_auc_explained !== null && (
-        <div className="grid grid-cols-1 gap-px border-t border-edge bg-edge sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-px border-t border-border bg-border sm:grid-cols-2">
           <div className="bg-surface p-4">
             <SectionLabel>Removal AUC — explained order</SectionLabel>
-            <p className="mt-1 text-lg font-extrabold tabular-nums text-good">
+            <p className="mt-1 text-lg font-extrabold tabular-nums text-success">
               {faithfulness.deletion_auc_explained.toFixed(3)}
             </p>
-            <p className="mt-0.5 text-[10px] text-ink-faint">
+            <p className="mt-0.5 text-[10px] text-subtle-foreground">
               Lower is better: the score should collapse as the named features
               are removed.
             </p>
           </div>
           <div className="bg-surface p-4">
             <SectionLabel>Removal AUC — random order</SectionLabel>
-            <p className="mt-1 text-lg font-extrabold tabular-nums text-ink">
+            <p className="mt-1 text-lg font-extrabold tabular-nums text-foreground">
               {faithfulness.deletion_auc_random?.toFixed(3) ?? "—"}
               {typeof faithfulness.deletion_auc_random_std === "number" && (
-                <span className="ml-1 text-[10px] font-medium text-ink-faint">
+                <span className="ml-1 text-[10px] font-medium text-subtle-foreground">
                   ± {faithfulness.deletion_auc_random_std.toFixed(3)}
                 </span>
               )}
             </p>
-            <p className="mt-0.5 text-[10px] text-ink-faint">
+            <p className="mt-0.5 text-[10px] text-subtle-foreground">
               The baseline any explanation has to beat to be worth anything.
             </p>
           </div>
@@ -365,11 +365,11 @@ const VerificationPanel: React.FC<{
 
       {(faithfulness?.n_features !== undefined ||
         verification.additivity?.checked) && (
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-edge px-5 py-3 text-[10px] text-ink-faint">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-border px-5 py-3 text-[10px] text-subtle-foreground">
           {faithfulness?.n_features !== undefined && (
             <span>
               Ablated{" "}
-              <span className="font-semibold tabular text-ink-muted">
+              <span className="font-semibold tabular text-muted-foreground">
                 {faithfulness.n_features}
               </span>{" "}
               features
@@ -380,7 +380,7 @@ const VerificationPanel: React.FC<{
               {verification.additivity.passed ? (
                 <CheckCircle2
                   size={11}
-                  className="text-good"
+                  className="text-success"
                   aria-hidden="true"
                 />
               ) : (
@@ -525,7 +525,7 @@ export const InvestigateView: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveTab("anomalies")}
-            className="inline-flex w-fit items-center gap-2 text-xs font-semibold text-ink-muted transition-colors hover:text-ink"
+            className="inline-flex w-fit items-center gap-2 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft size={14} aria-hidden="true" />
             Back to anomalies table
@@ -538,7 +538,7 @@ export const InvestigateView: React.FC = () => {
             }}
             className="flex flex-wrap items-center gap-2"
           >
-            <label htmlFor="obs-index" className="text-[11px] text-ink-muted">
+            <label htmlFor="obs-index" className="text-[11px] text-muted-foreground">
               Observation
             </label>
             <div className="flex items-center gap-1">
@@ -564,7 +564,7 @@ export const InvestigateView: React.FC = () => {
                 aria-describedby={rowError ? "obs-index-error" : undefined}
                 className={cn(
                   "field field-mono h-8 w-20 text-center font-bold",
-                  rowError && "border-critical"
+                  rowError && "border-danger"
                 )}
               />
               <Button
@@ -581,7 +581,7 @@ export const InvestigateView: React.FC = () => {
               </Button>
             </div>
             {maxRow !== null && (
-              <span className="text-[10px] text-ink-faint">
+              <span className="text-[10px] text-subtle-foreground">
                 of {maxRow.toLocaleString()}
               </span>
             )}
@@ -591,7 +591,7 @@ export const InvestigateView: React.FC = () => {
           <p
             id="obs-index-error"
             role="alert"
-            className="mt-2 text-[10px] font-medium text-critical sm:text-right"
+            className="mt-2 text-[10px] font-medium text-danger sm:text-right"
           >
             {rowError}
           </p>
@@ -603,7 +603,7 @@ export const InvestigateView: React.FC = () => {
           <div className="space-y-4">
             <p
               role="status"
-              className="px-1 text-[11px] text-ink-faint"
+              className="px-1 text-[11px] text-subtle-foreground"
             >
               Loading evidence for observation #{rowId}…
             </p>
@@ -619,16 +619,16 @@ export const InvestigateView: React.FC = () => {
             role="alert"
             className="flex flex-col items-center gap-3 p-10 text-center"
           >
-            <span className="grid size-10 place-items-center rounded-xl border border-critical/30 bg-critical-soft text-critical">
+            <span className="grid size-10 place-items-center rounded-xl border border-danger-line bg-danger-soft text-danger">
               <AlertTriangle size={18} aria-hidden="true" />
             </span>
             <div>
-              <p className="text-sm font-bold text-ink">
+              <p className="text-sm font-bold text-foreground">
                 {outOfBounds
                   ? `Observation #${rowId} is outside the dataset`
                   : `Could not load observation #${rowId}`}
               </p>
-              <p className="mx-auto mt-1 max-w-lg break-words text-xs leading-relaxed text-ink-muted">
+              <p className="mx-auto mt-1 max-w-lg break-words text-xs leading-relaxed text-muted-foreground">
                 {error}
               </p>
             </div>
@@ -668,14 +668,14 @@ export const InvestigateView: React.FC = () => {
               }}
             >
               <div className="grid grid-cols-1 items-center gap-6 md:grid-cols-[15rem_minmax(0,1fr)]">
-                <div className="flex flex-col items-center border-b border-edge pb-5 md:border-b-0 md:border-r md:pb-0 md:pr-6">
+                <div className="flex flex-col items-center border-b border-border pb-5 md:border-b-0 md:border-r md:pb-0 md:pr-6">
                   <SeverityBadge severity={detail.severity} className="mb-3" />
                   <ScoreGauge
                     score={detail.normalized_score}
                     severity={detail.severity}
                     threshold={detail.threshold}
                   />
-                  <p className="mt-2 text-[11px] text-ink-muted">
+                  <p className="mt-2 text-[11px] text-muted-foreground">
                     Observation #{detail.row_id}
                     {detail.rank !== null && detail.rank !== undefined
                       ? ` · rank #${detail.rank}`
@@ -685,36 +685,36 @@ export const InvestigateView: React.FC = () => {
 
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <Sparkles size={13} className="text-accent" aria-hidden="true" />
+                    <Sparkles size={13} className="text-primary" aria-hidden="true" />
                     <SectionLabel>Transparent explainability</SectionLabel>
                   </div>
-                  <h2 className="text-base font-extrabold tracking-tight text-ink">
+                  <h2 className="text-base font-extrabold tracking-tight text-foreground">
                     Why was this record flagged as anomalous?
                   </h2>
-                  <p className="panel-inset p-4 text-xs leading-relaxed text-ink-muted">
+                  <p className="panel-inset p-4 text-xs leading-relaxed text-muted-foreground">
                     {detail.explanation_text ||
                       "Record exhibits statistical deviation from the baseline normal cluster."}
                   </p>
                   {detail.confidence_note && (
-                    <p className="flex items-start gap-2 text-[11px] leading-relaxed text-ink-muted">
+                    <p className="flex items-start gap-2 text-[11px] leading-relaxed text-muted-foreground">
                       <Info
                         size={13}
-                        className="mt-px shrink-0 text-accent"
+                        className="mt-px shrink-0 text-primary"
                         aria-hidden="true"
                       />
                       {detail.confidence_note}
                     </p>
                   )}
-                  <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-edge pt-3 text-[10px] text-ink-faint">
+                  <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-border pt-3 text-[10px] text-subtle-foreground">
                     <span>
                       Detector ·{" "}
-                      <span className="font-semibold text-ink-muted">
+                      <span className="font-semibold text-muted-foreground">
                         {detail.model_name}
                       </span>
                     </span>
                     <span>
                       Threshold ·{" "}
-                      <span className="font-semibold tabular text-ink-muted">
+                      <span className="font-semibold tabular text-muted-foreground">
                         {detail.threshold.toFixed(4)}
                       </span>
                     </span>
@@ -723,7 +723,7 @@ export const InvestigateView: React.FC = () => {
                       <span
                         className={cn(
                           "font-semibold",
-                          detail.is_anomaly ? "text-critical" : "text-good"
+                          detail.is_anomaly ? "text-danger" : "text-success"
                         )}
                       >
                         {detail.is_anomaly ? "Flagged" : "Not flagged"}
@@ -773,7 +773,7 @@ export const InvestigateView: React.FC = () => {
                       <SectionLabel>
                         Observation #{detail.row_id} attribute profile
                       </SectionLabel>
-                      <span className="text-[10px] text-ink-faint">
+                      <span className="text-[10px] text-subtle-foreground">
                         {Object.keys(detail.raw_record).length} fields
                       </span>
                     </div>
@@ -786,10 +786,10 @@ export const InvestigateView: React.FC = () => {
                             className="panel-inset min-w-0 truncate p-2.5"
                             title={`${key}: ${value}`}
                           >
-                            <dt className="block truncate font-sans text-[10px] uppercase text-ink-faint">
+                            <dt className="block truncate font-sans text-[10px] uppercase text-subtle-foreground">
                               {key}
                             </dt>
-                            <dd className="block truncate font-bold text-ink">
+                            <dd className="block truncate font-bold text-foreground">
                               {value !== null ? String(value) : "null"}
                             </dd>
                           </div>

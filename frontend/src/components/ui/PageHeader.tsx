@@ -4,12 +4,12 @@ import { cn } from "@/lib/cn";
 export type PageStatusTone = "ready" | "active" | "idle" | "warning";
 
 const STATUS_TONES: Record<PageStatusTone, { dot: string; chip: string }> = {
-  ready: { dot: "bg-good", chip: "border-good/25 bg-good-soft text-good" },
-  active: { dot: "bg-accent", chip: "border-accent-line bg-accent-soft text-accent" },
-  idle: { dot: "bg-ink-faint", chip: "border-edge bg-inset text-ink-muted" },
+  ready: { dot: "bg-success", chip: "border-success-line bg-success-soft text-success" },
+  active: { dot: "bg-primary", chip: "border-primary-line bg-primary-soft text-primary" },
+  idle: { dot: "bg-subtle-foreground", chip: "border-border bg-surface-muted text-muted-foreground" },
   warning: {
     dot: "bg-caution",
-    chip: "border-caution/25 bg-caution-soft text-caution",
+    chip: "border-caution-line bg-caution-soft text-caution",
   },
 };
 
@@ -39,17 +39,17 @@ export function PageHeader({
     <header
       data-print-hide
       className={cn(
-        "mb-6 flex flex-col gap-4 border-b border-edge pb-5 sm:flex-row sm:items-end sm:justify-between",
+        "mb-6 flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between",
         className
       )}
     >
       <div className="min-w-0">
         {group && <div className="eyebrow">{group}</div>}
-        <h1 className="mt-1 text-xl font-bold tracking-tight text-ink sm:text-[1.375rem]">
+        <h1 className="mt-1 text-xl font-bold tracking-tight text-foreground sm:text-[1.375rem]">
           {title}
         </h1>
         {description && (
-          <p className="mt-1.5 max-w-3xl text-xs leading-relaxed text-ink-muted">
+          <p className="mt-1.5 max-w-3xl text-xs leading-relaxed text-muted-foreground">
             {description}
           </p>
         )}

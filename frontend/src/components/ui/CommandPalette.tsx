@@ -174,8 +174,8 @@ function PalettePanel({ onClose }: { onClose: () => void }) {
       onClick={(event) => event.stopPropagation()}
       onKeyDown={onKeyDown}
     >
-      <div className="flex items-center gap-3 border-b border-edge px-4">
-        <Search size={16} className="shrink-0 text-ink-faint" aria-hidden="true" />
+      <div className="flex items-center gap-3 border-b border-border px-4">
+        <Search size={16} className="shrink-0 text-subtle-foreground" aria-hidden="true" />
         <input
           ref={inputRef}
           type="text"
@@ -193,9 +193,9 @@ function PalettePanel({ onClose }: { onClose: () => void }) {
             setQuery(event.target.value);
             setCursor(0);
           }}
-          className="w-full bg-transparent py-3.5 text-sm text-ink placeholder:text-ink-faint focus:outline-none"
+          className="w-full bg-transparent py-3.5 text-sm text-foreground placeholder:text-subtle-foreground focus:outline-none"
         />
-        <kbd className="hidden shrink-0 rounded border border-edge bg-inset px-1.5 py-0.5 font-mono text-[10px] text-ink-faint sm:block">
+        <kbd className="hidden shrink-0 rounded border border-border bg-surface-muted px-1.5 py-0.5 font-mono text-[10px] text-subtle-foreground sm:block">
           ESC
         </kbd>
       </div>
@@ -207,7 +207,7 @@ function PalettePanel({ onClose }: { onClose: () => void }) {
         className="data-scroll max-h-[min(24rem,60vh)] overflow-y-auto p-2"
       >
         {filtered.length === 0 ? (
-          <p className="py-8 text-center text-xs text-ink-faint">
+          <p className="py-8 text-center text-xs text-subtle-foreground">
             No matching commands.
           </p>
         ) : (
@@ -225,20 +225,20 @@ function PalettePanel({ onClose }: { onClose: () => void }) {
                 className={cn(
                   "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-xs font-medium transition-colors",
                   active
-                    ? "bg-accent-soft text-accent"
-                    : "text-ink-muted hover:bg-inset hover:text-ink"
+                    ? "bg-primary-soft text-primary"
+                    : "text-muted-foreground hover:bg-surface-muted hover:text-foreground"
                 )}
               >
                 <span
                   className={cn(
-                    "grid size-7 shrink-0 place-items-center rounded-md border border-edge bg-inset",
-                    active ? "text-accent" : "text-ink-faint"
+                    "grid size-7 shrink-0 place-items-center rounded-md border border-border bg-surface-muted",
+                    active ? "text-primary" : "text-subtle-foreground"
                   )}
                 >
                   <Icon size={14} />
                 </span>
                 <span className="flex-1 truncate">{item.name}</span>
-                <span className="shrink-0 text-[9px] uppercase tracking-[0.1em] text-ink-faint">
+                <span className="shrink-0 text-[9px] uppercase tracking-[0.1em] text-subtle-foreground">
                   {item.category}
                 </span>
               </button>
@@ -247,14 +247,14 @@ function PalettePanel({ onClose }: { onClose: () => void }) {
         )}
       </div>
 
-      <div className="flex items-center justify-between border-t border-edge bg-elevated px-4 py-2 text-[10px] text-ink-faint">
+      <div className="flex items-center justify-between border-t border-border bg-surface-muted px-4 py-2 text-[10px] text-subtle-foreground">
         <span className="flex items-center gap-1.5">
-          <kbd className="rounded border border-edge bg-inset px-1 font-mono text-[10px]">
+          <kbd className="rounded border border-border bg-surface-muted px-1 font-mono text-[10px]">
             ↑↓
           </kbd>
           navigate
         </span>
-        <span className="flex items-center gap-1 rounded border border-edge bg-inset px-1 font-mono text-[10px]">
+        <span className="flex items-center gap-1 rounded border border-border bg-surface-muted px-1 font-mono text-[10px]">
           <CornerDownLeft size={9} aria-hidden="true" /> run
         </span>
       </div>
@@ -274,7 +274,7 @@ export const CommandPalette: React.FC = () => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: reducedMotion ? 0 : 0.12 }}
-          className="fixed inset-0 z-50 flex items-start justify-center bg-black/55 p-4 pt-[10vh] backdrop-blur-sm sm:pt-[14vh]"
+          className="fixed inset-0 z-50 flex items-start justify-center bg-overlay p-4 pt-[10vh] backdrop-blur-sm sm:pt-[14vh]"
           onClick={() => setCommandPaletteOpen(false)}
         >
           <PalettePanel onClose={() => setCommandPaletteOpen(false)} />

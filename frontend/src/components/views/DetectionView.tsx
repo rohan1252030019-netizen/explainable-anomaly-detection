@@ -36,7 +36,7 @@ const MODELS = [
     desc: "Isolates anomalies via random splits — outliers need fewer partitions to isolate.",
     bestFor: "Global outliers, large datasets",
     complexity: "O(n log n)",
-    accent: "var(--accent)",
+    accent: "var(--primary)",
   },
   {
     id: "Local Outlier Factor",
@@ -46,7 +46,7 @@ const MODELS = [
     desc: "Compares each observation's local density with its k nearest neighbours.",
     bestFor: "Local outliers, varying density clusters",
     complexity: "O(n²)",
-    accent: "var(--signal)",
+    accent: "var(--info)",
   },
   {
     id: "One-Class SVM",
@@ -66,7 +66,7 @@ const MODELS = [
     desc: "Fits a robust covariance estimate and flags high Mahalanobis distances.",
     bestFor: "Approximately Gaussian features",
     complexity: "O(n · p²)",
-    accent: "var(--good)",
+    accent: "var(--success)",
   },
   {
     id: "k-Nearest Neighbors",
@@ -76,7 +76,7 @@ const MODELS = [
     desc: "Scores observations by Euclidean distance to the k-th nearest neighbour in scaled space.",
     bestFor: "Clustered outliers, distance-based novelty",
     complexity: "O(n log n)",
-    accent: "var(--signal)",
+    accent: "var(--info)",
   },
   {
     id: "PCA Reconstruction",
@@ -86,7 +86,7 @@ const MODELS = [
     desc: "Projects observations onto principal subspace and scores orthogonal reconstruction error.",
     bestFor: "Multivariate linear subspace violations",
     complexity: "O(n · p²)",
-    accent: "var(--accent)",
+    accent: "var(--primary)",
   },
   {
     id: "Histogram-Based Outlier Score",
@@ -96,7 +96,7 @@ const MODELS = [
     desc: "Builds univariate histograms assuming feature independence; ultra-fast for streaming & massive data.",
     bestFor: "High-throughput tabular data, large n",
     complexity: "O(n · p)",
-    accent: "var(--good)",
+    accent: "var(--success)",
   },
   {
     id: "Gaussian Mixture Model",
@@ -160,10 +160,10 @@ function RangeField({
   return (
     <div className={cn(disabled && "opacity-60")}>
       <div className="mb-1 flex items-baseline justify-between gap-2">
-        <label htmlFor={id} className="text-xs font-semibold text-ink">
+        <label htmlFor={id} className="text-xs font-semibold text-foreground">
           {label}
         </label>
-        <span className="rounded bg-inset px-1.5 py-0.5 font-mono text-[11px] font-bold tabular text-accent">
+        <span className="rounded bg-surface-muted px-1.5 py-0.5 font-mono text-[11px] font-bold tabular text-primary">
           {display}
         </span>
       </div>
@@ -181,7 +181,7 @@ function RangeField({
         onChange={(e) => onChange(Number(e.target.value))}
       />
       {hint && (
-        <p id={hintId} className="mt-1 text-[10px] leading-relaxed text-ink-faint">
+        <p id={hintId} className="mt-1 text-[10px] leading-relaxed text-subtle-foreground">
           {hint}
         </p>
       )}
@@ -334,7 +334,7 @@ export const DetectionView: React.FC = () => {
       {!matrixReady && (
         <div
           role="status"
-          className="flex flex-col gap-3 rounded-xl border border-caution/30 bg-caution-soft p-4 sm:flex-row sm:items-center sm:justify-between"
+          className="flex flex-col gap-3 rounded-xl border border-caution-line bg-caution-soft p-4 sm:flex-row sm:items-center sm:justify-between"
         >
           <div className="flex items-start gap-3">
             <Database
@@ -343,12 +343,12 @@ export const DetectionView: React.FC = () => {
               aria-hidden="true"
             />
             <div>
-              <p className="text-xs font-bold text-ink">
+              <p className="text-xs font-bold text-foreground">
                 {dataset?.loaded
                   ? "The feature matrix is not ready"
                   : "A dataset is required before detection"}
               </p>
-              <p className="mt-0.5 text-[11px] leading-relaxed text-ink-muted">
+              <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
                 {dataset?.loaded
                   ? "Run preprocessing on the dataset screen to build the matrix that every detector scores."
                   : "Upload a CSV or load the benchmark sample, then build its feature matrix."}
@@ -374,12 +374,12 @@ export const DetectionView: React.FC = () => {
             <SectionLabel>Step 1 · Detector</SectionLabel>
             <h2
               id="detector-heading"
-              className="mt-1 text-sm font-bold tracking-tight text-ink"
+              className="mt-1 text-sm font-bold tracking-tight text-foreground"
             >
               Choose an unsupervised algorithm
             </h2>
           </div>
-          <span className="text-[10px] text-ink-faint">
+          <span className="text-[10px] text-subtle-foreground">
             4 methods · no labels required
           </span>
         </div>
@@ -398,8 +398,8 @@ export const DetectionView: React.FC = () => {
                   className={cn(
                     "panel group relative flex h-full w-full flex-col justify-between overflow-hidden p-4 text-left transition-[border-color,box-shadow,transform] duration-200",
                     selected
-                      ? "border-accent-line shadow-[0_0_0_1px_var(--accent-line)]"
-                      : "hover:-translate-y-0.5 hover:border-edge-strong",
+                      ? "border-primary-line shadow-[0_0_0_1px_var(--primary)]"
+                      : "hover:-translate-y-0.5 hover:border-border-strong",
                     isRunning && "cursor-not-allowed opacity-60"
                   )}
                 >
@@ -414,21 +414,21 @@ export const DetectionView: React.FC = () => {
                   <span className="block">
                     <span className="mb-3 flex items-start justify-between gap-2">
                       <span
-                        className="grid size-8 place-items-center rounded-lg text-on-accent"
+                        className="grid size-8 place-items-center rounded-lg text-primary-foreground"
                         style={{ backgroundColor: item.accent }}
                       >
                         <Icon size={16} aria-hidden="true" />
                       </span>
                       <span className="flex items-center gap-2">
-                        <span className="rounded bg-inset px-1.5 py-0.5 font-mono text-[10px] font-bold text-ink-faint">
+                        <span className="rounded bg-surface-muted px-1.5 py-0.5 font-mono text-[10px] font-bold text-subtle-foreground">
                           {item.complexity}
                         </span>
                         <span
                           className={cn(
                             "grid size-5 place-items-center rounded-full border transition-colors",
                             selected
-                              ? "border-accent bg-accent text-on-accent"
-                              : "border-edge text-transparent"
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-border text-transparent"
                           )}
                           aria-hidden="true"
                         >
@@ -436,18 +436,18 @@ export const DetectionView: React.FC = () => {
                         </span>
                       </span>
                     </span>
-                    <span className="block text-sm font-bold text-ink">
+                    <span className="block text-sm font-bold text-foreground">
                       {item.id}
                     </span>
-                    <span className="mt-0.5 block text-[11px] font-semibold text-accent">
+                    <span className="mt-0.5 block text-[11px] font-semibold text-primary">
                       {item.tagline}
                     </span>
-                    <span className="mt-2 block text-[11px] leading-relaxed text-ink-muted">
+                    <span className="mt-2 block text-[11px] leading-relaxed text-muted-foreground">
                       {item.desc}
                     </span>
                   </span>
-                  <span className="mt-4 block border-t border-edge pt-3 text-[10px] leading-relaxed text-ink-faint">
-                    <span className="font-semibold text-ink-muted">
+                  <span className="mt-4 block border-t border-border pt-3 text-[10px] leading-relaxed text-subtle-foreground">
+                    <span className="font-semibold text-muted-foreground">
                       Best for:
                     </span>{" "}
                     {item.bestFor}
@@ -465,15 +465,15 @@ export const DetectionView: React.FC = () => {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Card className="p-5">
               <div className="flex items-start gap-3">
-                <span className="grid size-6 shrink-0 place-items-center rounded-md border border-edge bg-inset font-mono text-[10px] font-bold text-ink-faint">
+                <span className="grid size-6 shrink-0 place-items-center rounded-md border border-border bg-surface-muted font-mono text-[10px] font-bold text-subtle-foreground">
                   2
                 </span>
                 <div>
-                  <h3 className="flex items-center gap-1.5 text-xs font-bold text-ink">
+                  <h3 className="flex items-center gap-1.5 text-xs font-bold text-foreground">
                     <Sliders size={13} aria-hidden="true" />
                     Algorithm parameters
                   </h3>
-                  <p className="mt-0.5 text-[10px] leading-relaxed text-ink-faint">
+                  <p className="mt-0.5 text-[10px] leading-relaxed text-subtle-foreground">
                     Specific to {model.short} · {parameterSummary}
                   </p>
                 </div>
@@ -515,7 +515,7 @@ export const DetectionView: React.FC = () => {
                     <div>
                       <label
                         htmlFor="svm-kernel"
-                        className="mb-1.5 block text-xs font-semibold text-ink"
+                        className="mb-1.5 block text-xs font-semibold text-foreground"
                       >
                         Kernel function
                       </label>
@@ -549,7 +549,7 @@ export const DetectionView: React.FC = () => {
 
                 {selectedModel === "Elliptic Envelope" && (
                   <div className="panel-inset p-3">
-                    <p className="text-[11px] leading-relaxed text-ink-muted">
+                    <p className="text-[11px] leading-relaxed text-muted-foreground">
                       Fits a robust minimum-covariance-determinant estimate and
                       scores observations by Mahalanobis distance. Unsupervised;
                       it uses the configured contamination rate shown in the
@@ -562,14 +562,14 @@ export const DetectionView: React.FC = () => {
 
             <Card className="p-5">
               <div className="flex items-start gap-3">
-                <span className="grid size-6 shrink-0 place-items-center rounded-md border border-edge bg-inset font-mono text-[10px] font-bold text-ink-faint">
+                <span className="grid size-6 shrink-0 place-items-center rounded-md border border-border bg-surface-muted font-mono text-[10px] font-bold text-subtle-foreground">
                   3
                 </span>
                 <div>
-                  <h3 className="text-xs font-bold text-ink">
+                  <h3 className="text-xs font-bold text-foreground">
                     Decision threshold
                   </h3>
-                  <p className="mt-0.5 text-[10px] leading-relaxed text-ink-faint">
+                  <p className="mt-0.5 text-[10px] leading-relaxed text-subtle-foreground">
                     How scores become flagged records
                   </p>
                 </div>
@@ -579,7 +579,7 @@ export const DetectionView: React.FC = () => {
                 <div>
                   <label
                     htmlFor="threshold-method"
-                    className="mb-1.5 block text-xs font-semibold text-ink"
+                    className="mb-1.5 block text-xs font-semibold text-foreground"
                   >
                     Threshold method
                   </label>
@@ -600,7 +600,7 @@ export const DetectionView: React.FC = () => {
                       Fixed cutoff (exact score cutoff)
                     </option>
                   </select>
-                  <p className="mt-1 text-[10px] leading-relaxed text-ink-faint">
+                  <p className="mt-1 text-[10px] leading-relaxed text-subtle-foreground">
                     {threshold?.hint}
                   </p>
                 </div>
@@ -660,10 +660,10 @@ export const DetectionView: React.FC = () => {
                   />
                 )}
 
-                <div className="rounded-lg border border-edge bg-inset px-3 py-2">
+                <div className="rounded-lg border border-border bg-surface-muted px-3 py-2">
                   <div className="flex items-center justify-between gap-2 text-[10px]">
-                    <span className="text-ink-faint">Configured cutoff</span>
-                    <span className="font-mono font-bold text-ink">
+                    <span className="text-subtle-foreground">Configured cutoff</span>
+                    <span className="font-mono font-bold text-foreground">
                       {thresholdSetting}
                     </span>
                   </div>
@@ -676,14 +676,14 @@ export const DetectionView: React.FC = () => {
           <Card className="p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="flex items-start gap-3">
-                <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-edge bg-inset text-accent">
+                <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-border bg-surface-muted text-primary">
                   <Layers size={15} aria-hidden="true" />
                 </span>
                 <div>
-                  <h3 className="text-xs font-bold text-ink">
+                  <h3 className="text-xs font-bold text-foreground">
                     Ensemble multi-model scoring
                   </h3>
-                  <p className="mt-0.5 max-w-xl text-[11px] leading-relaxed text-ink-muted">
+                  <p className="mt-0.5 max-w-xl text-[11px] leading-relaxed text-muted-foreground">
                     Blends the selected detector with Isolation Forest, LOF and
                     One-Class SVM. Scores are normalised before weighting — useful
                     when no single method clearly fits the data.
@@ -692,7 +692,7 @@ export const DetectionView: React.FC = () => {
               </div>
 
               <label className="flex cursor-pointer select-none items-center gap-2.5">
-                <span className="text-[10px] font-semibold text-ink-muted">
+                <span className="text-[10px] font-semibold text-muted-foreground">
                   {useEnsemble ? "Enabled" : "Disabled"}
                 </span>
                 <input
@@ -704,9 +704,9 @@ export const DetectionView: React.FC = () => {
                 />
                 <span
                   className={cn(
-                    "relative h-5 w-9 rounded-full border border-edge bg-inset transition-colors",
-                    "peer-checked:border-accent peer-checked:bg-accent",
-                    "peer-focus-visible:ring-2 peer-focus-visible:ring-accent/40 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-surface",
+                    "relative h-5 w-9 rounded-full border border-border bg-surface-muted transition-colors",
+                    "peer-checked:border-primary peer-checked:bg-primary",
+                    "peer-focus-visible:ring-2 peer-focus-visible:ring-primary/40 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-surface",
                     "peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
                   )}
                   aria-hidden="true"
@@ -723,7 +723,7 @@ export const DetectionView: React.FC = () => {
             </div>
 
             {useEnsemble && (
-              <div className="mt-4 border-t border-edge pt-4">
+              <div className="mt-4 border-t border-border pt-4">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   {(
                     Object.keys(
@@ -746,9 +746,9 @@ export const DetectionView: React.FC = () => {
                     />
                   ))}
                 </div>
-                <p className="mt-3 text-[10px] text-ink-faint">
+                <p className="mt-3 text-[10px] text-subtle-foreground">
                   Relative weights sum to{" "}
-                  <span className="font-mono font-semibold tabular text-ink-muted">
+                  <span className="font-mono font-semibold tabular text-muted-foreground">
                     {ensembleWeightsTotal.toFixed(1)}
                   </span>
                   . The backend renormalises them to 1.0; an all-zero mix falls
@@ -764,7 +764,7 @@ export const DetectionView: React.FC = () => {
           <Card className="p-5" aria-busy={isRunning}>
             <div className="flex items-center justify-between gap-2">
               <SectionLabel>Run plan</SectionLabel>
-              <span className="inline-flex items-center gap-1 rounded-full border border-edge bg-inset px-2 py-0.5 text-[9px] font-semibold text-ink-faint">
+              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-muted px-2 py-0.5 text-[9px] font-semibold text-subtle-foreground">
                 <Cpu size={9} aria-hidden="true" />
                 Unsupervised
               </span>
@@ -772,58 +772,58 @@ export const DetectionView: React.FC = () => {
 
             <dl className="mt-4 space-y-2.5 text-[11px]">
               <div className="flex items-baseline justify-between gap-4">
-                <dt className="text-ink-faint">Dataset</dt>
+                <dt className="text-subtle-foreground">Dataset</dt>
                 <dd
-                  className="max-w-[11rem] truncate text-right font-semibold text-ink"
+                  className="max-w-[11rem] truncate text-right font-semibold text-foreground"
                   title={dataset?.dataset_name || "No dataset loaded"}
                 >
                   {dataset?.dataset_name || "None"}
                 </dd>
               </div>
               <div className="flex items-baseline justify-between gap-4">
-                <dt className="text-ink-faint">Records</dt>
-                <dd className="font-semibold tabular text-ink">
+                <dt className="text-subtle-foreground">Records</dt>
+                <dd className="font-semibold tabular text-foreground">
                   {nRows ? nRows.toLocaleString() : "—"}
                 </dd>
               </div>
               <div className="flex items-baseline justify-between gap-4">
-                <dt className="text-ink-faint">Features</dt>
-                <dd className="font-semibold tabular text-ink">
+                <dt className="text-subtle-foreground">Features</dt>
+                <dd className="font-semibold tabular text-foreground">
                   {matrixReady ? nFeatures.toLocaleString() : "—"}
                 </dd>
               </div>
               <div className="flex items-baseline justify-between gap-4">
-                <dt className="text-ink-faint">Detector</dt>
-                <dd className="max-w-[11rem] truncate text-right font-semibold text-ink">
+                <dt className="text-subtle-foreground">Detector</dt>
+                <dd className="max-w-[11rem] truncate text-right font-semibold text-foreground">
                   {model.id}
                 </dd>
               </div>
               <div className="flex items-baseline justify-between gap-4">
-                <dt className="text-ink-faint">Parameters</dt>
-                <dd className="text-right font-semibold text-ink">
+                <dt className="text-subtle-foreground">Parameters</dt>
+                <dd className="text-right font-semibold text-foreground">
                   {parameterSummary}
                 </dd>
               </div>
               <div className="flex items-baseline justify-between gap-4">
-                <dt className="text-ink-faint">Threshold</dt>
-                <dd className="text-right font-semibold text-ink">
+                <dt className="text-subtle-foreground">Threshold</dt>
+                <dd className="text-right font-semibold text-foreground">
                   {thresholdSetting}
                 </dd>
               </div>
               <div className="flex items-baseline justify-between gap-4">
-                <dt className="text-ink-faint">Target flagged</dt>
-                <dd className="font-semibold tabular text-ink">
+                <dt className="text-subtle-foreground">Target flagged</dt>
+                <dd className="font-semibold tabular text-foreground">
                   {targetFlags !== null
                     ? `≈ ${targetFlags.toLocaleString()}`
                     : "score-based"}
                 </dd>
               </div>
-              <div className="flex items-baseline justify-between gap-4 border-t border-edge pt-2.5">
-                <dt className="text-ink-faint">Ensemble</dt>
+              <div className="flex items-baseline justify-between gap-4 border-t border-border pt-2.5">
+                <dt className="text-subtle-foreground">Ensemble</dt>
                 <dd
                   className={cn(
                     "font-semibold",
-                    useEnsemble ? "text-accent" : "text-ink-muted"
+                    useEnsemble ? "text-primary" : "text-muted-foreground"
                   )}
                 >
                   {useEnsemble ? "Weighted blend" : "Off"}
@@ -847,10 +847,10 @@ export const DetectionView: React.FC = () => {
                 role="status"
                 aria-live="polite"
               >
-                <div className="h-1 overflow-hidden rounded-full bg-inset">
-                  <span className="block h-full w-full animate-pulse rounded-full bg-accent/70" />
+                <div className="h-1 overflow-hidden rounded-full bg-surface-muted">
+                  <span className="block h-full w-full animate-pulse rounded-full bg-primary/70" />
                 </div>
-                <p className="text-[10px] leading-relaxed text-ink-faint">
+                <p className="text-[10px] leading-relaxed text-subtle-foreground">
                   Fitting {model.short} and scoring{" "}
                   {nRows ? nRows.toLocaleString() : "the"} records. The backend
                   responds when scoring and thresholding finish.
@@ -869,18 +869,18 @@ export const DetectionView: React.FC = () => {
             {error && (
               <div
                 role="alert"
-                className="mt-3 flex items-start gap-2 rounded-lg border border-critical/30 bg-critical-soft px-3 py-2.5"
+                className="mt-3 flex items-start gap-2 rounded-lg border border-danger-line bg-danger-soft px-3 py-2.5"
               >
                 <AlertTriangle
                   size={13}
-                  className="mt-0.5 shrink-0 text-critical"
+                  className="mt-0.5 shrink-0 text-danger"
                   aria-hidden="true"
                 />
                 <div className="min-w-0">
-                  <p className="text-[11px] font-bold text-ink">
+                  <p className="text-[11px] font-bold text-foreground">
                     Detection failed
                   </p>
-                  <p className="mt-0.5 break-words text-[10px] leading-relaxed text-ink-muted">
+                  <p className="mt-0.5 break-words text-[10px] leading-relaxed text-muted-foreground">
                     {error}
                   </p>
                 </div>
@@ -890,10 +890,10 @@ export const DetectionView: React.FC = () => {
 
           <Card className="p-4">
             <div className="flex items-center gap-2">
-              <Gauge size={13} className="text-ink-faint" aria-hidden="true" />
+              <Gauge size={13} className="text-subtle-foreground" aria-hidden="true" />
               <SectionLabel>What the cutoff means</SectionLabel>
             </div>
-            <p className="mt-2 text-[10px] leading-relaxed text-ink-muted">
+            <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
               {thresholdMethod === "contamination" &&
                 "Scores are ranked and the top share is flagged. The severity tier is assigned within that flagged set, so every tier stays meaningful."}
               {thresholdMethod === "quantile" &&
@@ -911,14 +911,14 @@ export const DetectionView: React.FC = () => {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          className="panel flex flex-col gap-4 border-good/25 bg-good-soft p-4 sm:flex-row sm:items-center sm:justify-between"
+          className="panel flex flex-col gap-4 border-success-line bg-success-soft p-4 sm:flex-row sm:items-center sm:justify-between"
         >
           <div className="flex items-start gap-3">
-            <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-good/25 bg-surface text-good">
+            <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-success-line bg-surface text-success">
               <CheckCircle2 size={16} aria-hidden="true" />
             </span>
             <div>
-              <p className="text-xs font-bold text-ink">
+              <p className="text-xs font-bold text-foreground">
                 {runCompleted ? "Detection complete" : "Latest detection run"}:{" "}
                 {(overview.n_anomalies ?? 0).toLocaleString()} anomalies
                 identified
@@ -926,7 +926,7 @@ export const DetectionView: React.FC = () => {
                   ? ` (${(overview.anomaly_rate * 100).toFixed(2)}%)`
                   : ""}
               </p>
-              <p className="mt-0.5 text-[11px] text-ink-muted">
+              <p className="mt-0.5 text-[11px] text-muted-foreground">
                 {overview.model_name}
                 {overview.threshold_val !== undefined
                   ? ` · threshold ${overview.threshold_val.toFixed(4)}`
@@ -956,7 +956,7 @@ export const DetectionView: React.FC = () => {
 
       {/* Quick path for first-time users */}
       {!dataset?.loaded && (
-        <div className="flex items-center gap-2 text-[10px] text-ink-faint">
+        <div className="flex items-center gap-2 text-[10px] text-subtle-foreground">
           <Sparkles size={11} aria-hidden="true" />
           New here? The benchmark sample loads 880 records and a ready feature
           matrix in one step from the dataset screen.

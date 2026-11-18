@@ -65,7 +65,7 @@ def export_predictions():
     return Response(
         content=csv_bytes,
         media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=xaud_predictions.csv"},
+        headers={"Content-Disposition": "attachment; filename=sentinel_predictions.csv"},
     )
 
 
@@ -80,7 +80,7 @@ def export_anomalies():
     return Response(
         content=csv_bytes,
         media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=xaud_anomalies_only.csv"},
+        headers={"Content-Disposition": "attachment; filename=sentinel_anomalies_only.csv"},
     )
 
 
@@ -107,5 +107,5 @@ def export_explanations():
     return Response(
         content=json_bytes,
         media_type="application/json",
-        headers={"Content-Disposition": "attachment; filename=xaud_explanations.json"},
+        headers={"Content-Disposition": "attachment; filename=sentinel_explanations.json"},
     )

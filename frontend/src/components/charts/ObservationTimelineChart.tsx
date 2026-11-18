@@ -71,7 +71,7 @@ export const ObservationTimelineChart: React.FC<ObservationTimelineChartProps> =
       }
       legend={
         <>
-          <LegendItem color={SERIES.normal} shape="dot" label="Normal" />
+          <LegendItem color={SERIES.normalPoint} shape="dot" label="Normal" />
           <LegendItem color={SERIES.anomaly} shape="dot" label="Flagged" />
           <LegendItem
             color={SERIES.threshold}
@@ -109,7 +109,7 @@ export const ObservationTimelineChart: React.FC<ObservationTimelineChartProps> =
                   x={padLeft - 8}
                   y={y + 3}
                   textAnchor="end"
-                  className="fill-ink-faint text-[9px] tabular"
+                  className="fill-subtle-foreground text-[9px] tabular"
                 >
                   {val.toFixed(1)}
                 </text>
@@ -130,7 +130,7 @@ export const ObservationTimelineChart: React.FC<ObservationTimelineChartProps> =
             x={width - padRight}
             y={thresholdY - 4}
             textAnchor="end"
-            className="fill-accent text-[9px] font-semibold tabular"
+            className="fill-primary text-[9px] font-semibold tabular"
           >
             τ {threshold.toFixed(2)}
           </text>
@@ -165,8 +165,8 @@ export const ObservationTimelineChart: React.FC<ObservationTimelineChartProps> =
                     cx={x}
                     cy={y}
                     r={active ? 3.5 : 1.8}
-                    fill={SERIES.normal}
-                    opacity={active ? 0.95 : 0.4}
+                    fill={SERIES.normalPoint}
+                    opacity={active ? 1 : 0.75}
                     className="pointer-events-none"
                     style={{ transition: "r 120ms ease, opacity 120ms ease" }}
                   />
@@ -178,20 +178,22 @@ export const ObservationTimelineChart: React.FC<ObservationTimelineChartProps> =
 
         {hover && (
           <TooltipCard x={hover.x} y={hover.y} width={width} height={height}>
-            <div className="mb-1 font-semibold text-ink">
+            <div className="mb-1 font-semibold text-foreground">
               Observation #{hover.pt.index}
             </div>
             <TooltipRow
               label="Score"
               value={hover.pt.score.toFixed(4)}
-              color={hover.pt.is_anomaly ? SERIES.anomaly : SERIES.normal}
+              color={
+                hover.pt.is_anomaly ? SERIES.anomaly : SERIES.normalPoint
+              }
             />
             <div
               className="mt-0.5 text-[10px] font-bold"
               style={{
                 color: hover.pt.is_anomaly
-                  ? "var(--critical)"
-                  : "var(--signal)",
+                  ? "var(--danger)"
+                  : "var(--muted-foreground)",
               }}
             >
               {hover.pt.is_anomaly ? hover.pt.severity : "Normal"}
@@ -200,7 +202,7 @@ export const ObservationTimelineChart: React.FC<ObservationTimelineChartProps> =
         )}
       </div>
 
-      <div className="mt-1 flex justify-between px-8 text-[10px] text-ink-faint tabular">
+      <div className="mt-1 flex justify-between px-8 text-[10px] text-subtle-foreground tabular">
         <span>Observation #0</span>
         <span>#{maxIdx.toLocaleString()}</span>
       </div>

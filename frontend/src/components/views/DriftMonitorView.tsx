@@ -100,36 +100,36 @@ export const DriftMonitorView: React.FC = () => {
 
   const severityAccent =
     report?.overall_severity === "HIGH"
-      ? "var(--critical)"
+      ? "var(--danger)"
       : report?.overall_severity === "MODERATE" ||
           report?.overall_severity === "LOW"
         ? "var(--caution)"
-        : "var(--good)";
+        : "var(--success)";
 
   return (
     <div className="space-y-6">
       {/* Top action header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-edge bg-surface p-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-surface p-4">
         <div>
-          <h2 className="text-sm font-semibold text-ink flex items-center gap-2">
-            <Activity size={16} className="text-accent" />
+          <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Activity size={16} className="text-primary" />
             Covariate & Score Drift Intelligence
           </h2>
-          <p className="text-xs text-ink-faint mt-0.5">
+          <p className="text-xs text-subtle-foreground mt-0.5">
             Compares training baseline distributions against evaluation batches using Population Stability Index (PSI) and Kolmogorov-Smirnov 2-sample tests.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-xs text-ink-muted">
-            <Sliders size={13} className="text-ink-faint" />
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Sliders size={13} className="text-subtle-foreground" />
             <span>PSI Bins:</span>
             <select
               aria-label="PSI Bins"
               value={psiBins}
               onChange={(e) => setPsiBins(Number(e.target.value))}
               disabled={loading}
-              className="rounded border border-edge bg-canvas px-2 py-1 text-xs text-ink"
+              className="rounded border border-border bg-background px-2 py-1 text-xs text-foreground"
             >
               <option value={5}>5 bins</option>
               <option value={10}>10 bins (standard)</option>
@@ -188,12 +188,12 @@ export const DriftMonitorView: React.FC = () => {
 
           {/* Recommendations Banner */}
           {report.actions && report.actions.length > 0 && (
-            <Card className="border-l-4 border-l-accent p-4">
+            <Card className="border-l-4 border-l-primary p-4">
               <div className="flex items-start gap-3">
-                <Info size={16} className="text-accent shrink-0 mt-0.5" />
+                <Info size={16} className="text-primary shrink-0 mt-0.5" />
                 <div className="space-y-1">
                   <SectionLabel>Statistical Guidance & Remediation</SectionLabel>
-                  <ul className="list-disc pl-4 text-xs text-ink-muted space-y-1">
+                  <ul className="list-disc pl-4 text-xs text-muted-foreground space-y-1">
                     {report.actions.map((rec, i) => (
                       <li key={i}>{rec}</li>
                     ))}
@@ -205,9 +205,9 @@ export const DriftMonitorView: React.FC = () => {
 
           {/* Feature Breakdown Table */}
           <Card className="overflow-hidden">
-            <div className="border-b border-edge p-4">
+            <div className="border-b border-border p-4">
               <SectionLabel>Per-Feature Drift Diagnostics</SectionLabel>
-              <p className="text-xs text-ink-faint mt-1">
+              <p className="text-xs text-subtle-foreground mt-1">
                 PSI values below 0.1 indicate stability; 0.1–0.25 indicate moderate change; &gt;0.25 indicate severe shift requiring detector recalibration.
               </p>
             </div>
@@ -215,7 +215,7 @@ export const DriftMonitorView: React.FC = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-edge bg-canvas text-ink-faint">
+                  <tr className="border-b border-border bg-background text-subtle-foreground">
                     <th className="py-2.5 px-4 font-semibold">Feature</th>
                     <th className="py-2.5 px-4 font-semibold">PSI Metric</th>
                     <th className="py-2.5 px-4 font-semibold">PSI Level</th>
@@ -224,7 +224,7 @@ export const DriftMonitorView: React.FC = () => {
                     <th className="py-2.5 px-4 font-semibold">Verdict</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-edge">
+                <tbody className="divide-y divide-border">
                   {reportsList.map((item) => {
                     const isSevere = item.drift_status === "HIGH";
                     const isMod = item.drift_status === "MODERATE";
@@ -239,18 +239,18 @@ export const DriftMonitorView: React.FC = () => {
                       <tr
                         key={item.feature}
                         className={cn(
-                          "transition-colors hover:bg-surface-elevated/40",
-                          isSevere && "bg-critical/5",
+                          "transition-colors hover:bg-surface-muted/40",
+                          isSevere && "bg-danger/5",
                           isMod && "bg-caution/5"
                         )}
                       >
-                        <td className="py-2.5 px-4 font-mono font-medium text-ink">
+                        <td className="py-2.5 px-4 font-mono font-medium text-foreground">
                           {item.feature}
                         </td>
-                        <td className="py-2.5 px-4 font-mono tabular-nums text-ink">
+                        <td className="py-2.5 px-4 font-mono tabular-nums text-foreground">
                           {metricValue}
                           {item.type === "categorical" && (
-                            <span className="ml-1 text-[9px] text-ink-faint">JS</span>
+                            <span className="ml-1 text-[9px] text-subtle-foreground">JS</span>
                           )}
                         </td>
                         <td className="py-2.5 px-4">
@@ -260,12 +260,12 @@ export const DriftMonitorView: React.FC = () => {
                             {item.drift_status}
                           </Badge>
                         </td>
-                        <td className="py-2.5 px-4 font-mono tabular-nums text-ink-muted">
+                        <td className="py-2.5 px-4 font-mono tabular-nums text-muted-foreground">
                           {item.ks_statistic !== undefined
                             ? item.ks_statistic.toFixed(4)
                             : "—"}
                         </td>
-                        <td className="py-2.5 px-4 font-mono tabular-nums text-ink-muted">
+                        <td className="py-2.5 px-4 font-mono tabular-nums text-muted-foreground">
                           {item.p_value !== undefined
                             ? item.p_value < 0.001
                               ? "< 0.001"
@@ -279,7 +279,7 @@ export const DriftMonitorView: React.FC = () => {
                               Distribution Shift
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 text-good">
+                            <span className="inline-flex items-center gap-1 text-success">
                               <CheckCircle2 size={12} />
                               Stable
                             </span>
@@ -297,11 +297,11 @@ export const DriftMonitorView: React.FC = () => {
 
       {!report?.overall_severity && !loading && (
         <Card className="p-8 text-center">
-          <Activity size={28} className="mx-auto text-ink-faint" />
-          <h3 className="mt-2 text-sm font-semibold text-ink">
+          <Activity size={28} className="mx-auto text-subtle-foreground" />
+          <h3 className="mt-2 text-sm font-semibold text-foreground">
             No Drift Report Generated
           </h3>
-          <p className="mt-1 text-xs text-ink-muted max-w-md mx-auto">
+          <p className="mt-1 text-xs text-muted-foreground max-w-md mx-auto">
             Click &ldquo;Run Drift Analysis&rdquo; above to calculate Population Stability Index and 2-sample Kolmogorov-Smirnov test distributions across all dataset features.
           </p>
           <div className="mt-4">

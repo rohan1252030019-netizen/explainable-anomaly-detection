@@ -111,7 +111,7 @@ export const ReportsView: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `XAUD_Audit_Report_${new Date()
+    link.download = `SENTINEL_Audit_Report_${new Date()
       .toISOString()
       .slice(0, 10)}.md`;
     link.click();
@@ -157,14 +157,14 @@ export const ReportsView: React.FC = () => {
       <Card data-print-hide className="p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
-            <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-accent-line bg-accent-soft text-accent">
+            <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-primary bg-primary-soft text-primary">
               <FileText size={16} aria-hidden="true" />
             </span>
             <div>
-              <h2 className="text-sm font-bold tracking-tight text-ink">
+              <h2 className="text-sm font-bold tracking-tight text-foreground">
                 Audit &amp; demonstration report
               </h2>
-              <p className="mt-0.5 max-w-xl text-[11px] leading-relaxed text-ink-muted">
+              <p className="mt-0.5 max-w-xl text-[11px] leading-relaxed text-muted-foreground">
                 A presentation-ready summary of the current dataset, detector
                 configuration, findings and methodology — compiled from real
                 backend output, never reconstructed in the browser.
@@ -204,16 +204,16 @@ export const ReportsView: React.FC = () => {
         {error && (
           <div
             role="alert"
-            className="mt-4 flex flex-col gap-3 rounded-xl border border-critical/30 bg-critical-soft p-3.5 sm:flex-row sm:items-start"
+            className="mt-4 flex flex-col gap-3 rounded-xl border border-danger-line bg-danger-soft p-3.5 sm:flex-row sm:items-start"
           >
             <AlertTriangle
               size={14}
-              className="mt-0.5 shrink-0 text-critical"
+              className="mt-0.5 shrink-0 text-danger"
               aria-hidden="true"
             />
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold text-ink">Report generation failed</p>
-              <p className="mt-0.5 break-words text-[11px] leading-relaxed text-ink-muted">
+              <p className="text-xs font-bold text-foreground">Report generation failed</p>
+              <p className="mt-0.5 break-words text-[11px] leading-relaxed text-muted-foreground">
                 {error}
               </p>
             </div>
@@ -241,17 +241,17 @@ export const ReportsView: React.FC = () => {
               <div className="skeleton h-3 w-5/6" />
               <div className="skeleton h-24 w-full" />
             </div>
-            <p className="mt-5 text-center text-[11px] text-ink-faint" role="status">
+            <p className="mt-5 text-center text-[11px] text-subtle-foreground" role="status">
               Compiling the audit report from the active detection run…
             </p>
           </Card>
         ) : (
           <Card className="p-10 text-center">
-            <span className="mx-auto grid size-11 place-items-center rounded-xl border border-edge bg-inset text-ink-faint">
+            <span className="mx-auto grid size-11 place-items-center rounded-xl border border-border bg-surface-muted text-subtle-foreground">
               <FileText size={19} aria-hidden="true" />
             </span>
-            <p className="mt-3 text-sm font-bold text-ink">No report compiled yet</p>
-            <p className="mx-auto mt-1 max-w-md text-xs leading-relaxed text-ink-muted">
+            <p className="mt-3 text-sm font-bold text-foreground">No report compiled yet</p>
+            <p className="mx-auto mt-1 max-w-md text-xs leading-relaxed text-muted-foreground">
               Compile the current run into a structured audit document with
               dataset specifications, detection findings, severity mix, top
               drivers and methodology notes.
@@ -267,7 +267,7 @@ export const ReportsView: React.FC = () => {
               value={report.detection.total_observations.toLocaleString()}
               sub={`${report.dataset.features_preprocessed} preprocessed features`}
               icon={Database}
-              accentColor="var(--signal)"
+              accentColor="var(--info)"
             />
             <StatCard
               label="Anomalies detected"
@@ -276,14 +276,14 @@ export const ReportsView: React.FC = () => {
                 2
               )}% of records`}
               icon={Gauge}
-              accentColor="var(--critical)"
+              accentColor="var(--danger)"
             />
             <StatCard
               label="Detector"
               value={report.detection.model}
               sub={`${report.detection.threshold_method} threshold`}
               icon={Sparkles}
-              accentColor="var(--accent)"
+              accentColor="var(--primary)"
               multiline
             />
             <StatCard
@@ -291,29 +291,29 @@ export const ReportsView: React.FC = () => {
               value={`${((report.detection.anomaly_rate || 0) * 100).toFixed(2)}%`}
               sub={`Threshold ${report.detection.threshold_value?.toFixed(4) ?? "—"}`}
               icon={Percent}
-              accentColor="var(--warn)"
+              accentColor="var(--warning)"
             />
           </div>
 
           <Card className="p-6 sm:p-8 print:break-inside-auto">
             {/* Print-only masthead */}
-            <div className="mb-5 hidden border-b border-edge pb-3 print:block">
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-ink-faint">
-                XAUD · Explainable Anomaly Detection
+            <div className="mb-5 hidden border-b border-border pb-3 print:block">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-subtle-foreground">
+                SENTINEL · Autonomous Anomaly Intelligence Platform
               </p>
-              <p className="text-[10px] text-ink-faint">
+              <p className="text-[10px] text-subtle-foreground">
                 Audit report · generated {report.generated_at}
               </p>
             </div>
 
-            <header className="border-b border-edge pb-5">
-              <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-accent">
+            <header className="border-b border-border pb-5">
+              <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-primary">
                 {report.framework}
               </div>
-              <h1 className="mt-1 text-2xl font-black tracking-tight text-ink">
+              <h1 className="mt-1 text-2xl font-black tracking-tight text-foreground">
                 {report.title}
               </h1>
-              <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-faint">
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-subtle-foreground">
                 <span>Generated {report.generated_at}</span>
                 <span aria-hidden="true">·</span>
                 <span>{report.dataset.name}</span>
@@ -337,11 +337,11 @@ export const ReportsView: React.FC = () => {
                     ["Feature scaler", report.dataset.scaler],
                   ].map(([label, value]) => (
                     <div key={label} className="panel-inset p-3">
-                      <dt className="text-[10px] uppercase tracking-wider text-ink-faint">
+                      <dt className="text-[10px] uppercase tracking-wider text-subtle-foreground">
                         {label}
                       </dt>
                       <dd
-                        className="mt-0.5 truncate font-bold text-ink"
+                        className="mt-0.5 truncate font-bold text-foreground"
                         title={value}
                       >
                         {value}
@@ -354,28 +354,28 @@ export const ReportsView: React.FC = () => {
               <section className="space-y-2">
                 <SectionLabel>2. Model &amp; detection findings</SectionLabel>
                 <div className="panel-inset space-y-3 p-4 text-xs">
-                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-edge pb-3">
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-border pb-3">
                     <span>
-                      <span className="text-ink-muted">Algorithm: </span>
-                      <span className="font-bold text-accent">
+                      <span className="text-muted-foreground">Algorithm: </span>
+                      <span className="font-bold text-primary">
                         {report.detection.model}
                       </span>
                     </span>
                     <span>
-                      <span className="text-ink-muted">Threshold: </span>
-                      <span className="font-bold tabular text-ink">
+                      <span className="text-muted-foreground">Threshold: </span>
+                      <span className="font-bold tabular text-foreground">
                         {report.detection.threshold_value?.toFixed(4) ?? "—"}
                       </span>{" "}
-                      <span className="text-[10px] text-ink-faint">
+                      <span className="text-[10px] text-subtle-foreground">
                         ({report.detection.threshold_method})
                       </span>
                     </span>
                     <span>
-                      <span className="text-ink-muted">Anomalies: </span>
-                      <span className="font-bold tabular text-critical">
+                      <span className="text-muted-foreground">Anomalies: </span>
+                      <span className="font-bold tabular text-danger">
                         {report.detection.anomalies_detected.toLocaleString()}
                       </span>{" "}
-                      <span className="text-[10px] text-ink-faint">
+                      <span className="text-[10px] text-subtle-foreground">
                         ({((report.detection.anomaly_rate || 0) * 100).toFixed(2)}
                         %)
                       </span>
@@ -383,7 +383,7 @@ export const ReportsView: React.FC = () => {
                   </div>
 
                   <div>
-                    <p className="mb-2 text-[10px] uppercase tracking-wider text-ink-faint">
+                    <p className="mb-2 text-[10px] uppercase tracking-wider text-subtle-foreground">
                       Severity mix
                     </p>
                     <ul className="grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-4">
@@ -414,7 +414,7 @@ export const ReportsView: React.FC = () => {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <SectionLabel>3. Top anomaly drivers</SectionLabel>
                   {report.top_drivers && report.top_drivers.length > 0 && (
-                    <span className="text-[10px] text-ink-faint">
+                    <span className="text-[10px] text-subtle-foreground">
                       Ranked by mean combined attribution score
                     </span>
                   )}
@@ -427,22 +427,22 @@ export const ReportsView: React.FC = () => {
                       return (
                         <li
                           key={`${driver.feature}-${index}`}
-                          className="rounded-lg border border-edge bg-inset p-3"
+                          className="rounded-lg border border-border bg-surface-muted p-3"
                         >
                           <div className="flex items-center gap-3">
-                            <span className="grid size-6 shrink-0 place-items-center rounded-md border border-edge bg-surface text-[10px] font-bold tabular text-ink-faint">
+                            <span className="grid size-6 shrink-0 place-items-center rounded-md border border-border bg-surface text-[10px] font-bold tabular text-subtle-foreground">
                               {index + 1}
                             </span>
                             <span
-                              className="min-w-0 flex-1 truncate text-xs font-semibold text-ink"
+                              className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground"
                               title={driver.feature}
                             >
                               {driver.feature}
                             </span>
-                            <span className="shrink-0 text-[11px] font-bold tabular text-accent">
+                            <span className="shrink-0 text-[11px] font-bold tabular text-primary">
                               {score.toFixed(3)}
                             </span>
-                            <span className="hidden shrink-0 text-[10px] text-ink-faint sm:inline">
+                            <span className="hidden shrink-0 text-[10px] text-subtle-foreground sm:inline">
                               {driver.frequency ?? 0} record
                               {(driver.frequency ?? 0) === 1 ? "" : "s"}
                             </span>
@@ -452,7 +452,7 @@ export const ReportsView: React.FC = () => {
                             aria-hidden="true"
                           >
                             <span
-                              className="block h-full rounded-full bg-accent"
+                              className="block h-full rounded-full bg-primary"
                               style={{
                                 width: `${Math.max(
                                   2,
@@ -466,11 +466,11 @@ export const ReportsView: React.FC = () => {
                     })}
                   </ol>
                 ) : (
-                  <div className="flex flex-col gap-2 rounded-lg border border-edge bg-inset p-4 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="flex items-start gap-2 text-[11px] leading-relaxed text-ink-muted">
+                  <div className="flex flex-col gap-2 rounded-lg border border-border bg-surface-muted p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="flex items-start gap-2 text-[11px] leading-relaxed text-muted-foreground">
                       <Info
                         size={13}
-                        className="mt-0.5 shrink-0 text-ink-faint"
+                        className="mt-0.5 shrink-0 text-subtle-foreground"
                         aria-hidden="true"
                       />
                       This report does not include a global driver summary. Run
@@ -489,9 +489,9 @@ export const ReportsView: React.FC = () => {
                 )}
               </section>
 
-              <section className="space-y-2 border-t border-edge pt-4">
+              <section className="space-y-2 border-t border-border pt-4">
                 <SectionLabel>4. Methodology notes</SectionLabel>
-                <p className="text-xs leading-relaxed text-ink-muted">
+                <p className="text-xs leading-relaxed text-muted-foreground">
                   {report.methodology_note}
                 </p>
               </section>

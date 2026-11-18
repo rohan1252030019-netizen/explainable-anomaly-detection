@@ -105,7 +105,7 @@ export const ScoreDistributionChart: React.FC<ScoreDistributionChartProps> = ({
                 x={padLeft - 10}
                 y={t.y + 3}
                 textAnchor="end"
-                className="fill-ink-faint text-[9px] tabular"
+                className="fill-subtle-foreground text-[9px] tabular"
               >
                 {t.value}
               </text>
@@ -181,7 +181,7 @@ export const ScoreDistributionChart: React.FC<ScoreDistributionChartProps> = ({
               x={padLeft + tick * chartWidth}
               y={height - 14}
               textAnchor="middle"
-              className="fill-ink-faint text-[10px] tabular"
+              className="fill-subtle-foreground text-[10px] tabular"
             >
               {tick.toFixed(1)}
             </text>
@@ -191,7 +191,7 @@ export const ScoreDistributionChart: React.FC<ScoreDistributionChartProps> = ({
             x={padLeft + chartWidth / 2}
             y={height - 2}
             textAnchor="middle"
-            className="fill-ink-faint text-[9px]"
+            className="fill-subtle-foreground text-[9px]"
           >
             Normalised anomaly score
           </text>
@@ -199,7 +199,7 @@ export const ScoreDistributionChart: React.FC<ScoreDistributionChartProps> = ({
           <text
             x={thresholdX + 4}
             y={padTop + 9}
-            className="fill-accent text-[9px] font-semibold tabular"
+            className="fill-primary text-[9px] font-semibold tabular"
             aria-hidden="true"
           >
             τ {threshold.toFixed(2)}
@@ -208,11 +208,11 @@ export const ScoreDistributionChart: React.FC<ScoreDistributionChartProps> = ({
 
         {hover && (
           <TooltipCard x={hover.x} y={hover.y} width={width} height={height}>
-            <div className="mb-1 flex items-baseline justify-between gap-3 font-semibold text-ink">
+            <div className="mb-1 flex items-baseline justify-between gap-3 font-semibold text-foreground">
               <span>
                 {hover.bin.bin_start.toFixed(3)} – {hover.bin.bin_end.toFixed(3)}
               </span>
-              <span className="text-[9px] font-normal text-ink-faint tabular">
+              <span className="text-[9px] font-normal text-subtle-foreground tabular">
                 {(
                   hover.bin.normal_count + hover.bin.anomaly_count
                 ).toLocaleString()}{" "}
@@ -235,7 +235,7 @@ export const ScoreDistributionChart: React.FC<ScoreDistributionChartProps> = ({
         )}
       </div>
 
-      <p className="mt-1 text-center text-[10px] text-ink-faint">
+      <p className="mt-1 text-center text-[10px] text-subtle-foreground">
         0.0 = typical behaviour · 1.0 = most anomalous in this run
       </p>
     </ChartFrame>

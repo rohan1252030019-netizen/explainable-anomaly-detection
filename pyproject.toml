@@ -3,14 +3,12 @@ requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "explainable-anomaly-detection"
+name = "sentinel-anomaly"
 # Single source of truth: src/__init__.py.__version__.
 dynamic = ["version"]
-description = "Explainable framework for unsupervised tabular anomaly detection, with SHAP attribution, fidelity checks and counterfactual recommendations."
+description = "SENTINEL — Autonomous Anomaly Intelligence Platform. Detect. Explain. Verify. Act."
 readme = "README.md"
 requires-python = ">=3.11"
-# Apache 2.0 is what README.md promised; pyproject.toml said MIT, and no LICENSE
-# file shipped at all.  Both are now aligned, and the licence text is packaged.
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 
@@ -39,16 +37,26 @@ dev = [
     "types-requests",
     "pandas-stubs",
 ]
+boost = [
+    "xgboost>=2.0",
+]
+deep = [
+    "torch>=2.0",
+]
+optuna = [
+    "optuna>=3.0",
+]
+full = [
+    "xgboost>=2.0",
+    "torch>=2.0",
+    "optuna>=3.0",
+]
 
 [tool.setuptools.dynamic]
 version = { attr = "src.__version__" }
 
-# Discover every subpackage.  The previous `packages = ["src", "backend"]` listed
-# the two top-level directories as if they were flat modules: the wheel then
-# contained 6 files and `import backend.routers` / `import src.models` failed
-# from a clean install.  find-packages walks the tree instead.
 [tool.setuptools.packages.find]
-include = ["src*", "backend*"]
+include = ["src*", "backend*", "sentinel*"]
 namespaces = false
 
 [tool.ruff]

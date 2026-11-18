@@ -82,6 +82,6 @@ async def api_key_middleware(
         return JSONResponse(
             status_code=401,
             content={"detail": "A valid API key is required (X-API-Key header)."},
-            headers={"WWW-Authenticate": 'Bearer realm="xaud"'},
+            headers={"WWW-Authenticate": 'Bearer realm="sentinel"'},
         )
     return await call_next(request)

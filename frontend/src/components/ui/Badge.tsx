@@ -8,39 +8,39 @@ export const severityStyles: Record<
   { chip: string; dot: string; text: string; bar: string; hex: string }
 > = {
   CRITICAL: {
-    chip: "bg-critical-soft text-critical border-critical/30",
-    dot: "bg-critical",
-    text: "text-critical",
-    bar: "from-critical to-warn",
-    hex: "var(--critical)",
+    chip: "bg-danger-soft text-danger border-danger-line",
+    dot: "bg-danger",
+    text: "text-danger",
+    bar: "from-danger to-warning",
+    hex: "var(--danger)",
   },
   HIGH: {
-    chip: "bg-warn-soft text-warn border-warn/30",
-    dot: "bg-warn",
-    text: "text-warn",
-    bar: "from-warn to-caution",
-    hex: "var(--warn)",
+    chip: "bg-warning-soft text-warning border-warning-line",
+    dot: "bg-warning",
+    text: "text-warning",
+    bar: "from-warning to-caution",
+    hex: "var(--warning)",
   },
   MEDIUM: {
-    chip: "bg-caution-soft text-caution border-caution/30",
+    chip: "bg-caution-soft text-caution border-caution-line",
     dot: "bg-caution",
     text: "text-caution",
-    bar: "from-caution to-good",
+    bar: "from-caution to-success",
     hex: "var(--caution)",
   },
   LOW: {
-    chip: "bg-good-soft text-good border-good/30",
-    dot: "bg-good",
-    text: "text-good",
-    bar: "from-good to-signal",
-    hex: "var(--good)",
+    chip: "bg-success-soft text-success border-success-line",
+    dot: "bg-success",
+    text: "text-success",
+    bar: "from-success to-info",
+    hex: "var(--success)",
   },
   NORMAL: {
-    chip: "bg-signal-soft text-signal border-signal/30",
-    dot: "bg-signal",
-    text: "text-signal",
-    bar: "from-signal to-accent",
-    hex: "var(--signal)",
+    chip: "bg-info-soft text-info border-info-line",
+    dot: "bg-info",
+    text: "text-info",
+    bar: "from-info to-primary",
+    hex: "var(--info)",
   },
 };
 
@@ -96,11 +96,11 @@ export const Badge: React.FC<BadgeProps> = ({
   children,
 }) => {
   const tones = {
-    critical: "bg-critical-soft text-critical border-critical/30",
-    caution: "bg-caution-soft text-caution border-caution/30",
-    warning: "bg-warn-soft text-warn border-warn/30",
-    good: "bg-good-soft text-good border-good/30",
-    neutral: "bg-surface-elevated text-ink-muted border-edge",
+    critical: "bg-danger-soft text-danger border-danger-line",
+    caution: "bg-caution-soft text-caution border-caution-line",
+    warning: "bg-warning-soft text-warning border-warning-line",
+    good: "bg-success-soft text-success border-success-line",
+    neutral: "bg-surface-muted text-muted-foreground border-border",
   };
 
   return (

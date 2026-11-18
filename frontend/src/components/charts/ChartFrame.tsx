@@ -3,14 +3,22 @@
 import React from "react";
 import { cn } from "@/lib/cn";
 
-/** Semantic series colours resolved from the active theme. */
+/**
+ * Semantic series colours resolved from the active theme.
+ *
+ * `normal` is the data-series blue (histogram bars, "below typical" chips);
+ * `normalPoint` is the neutral slate used for scatter/timeline observations so
+ * that anomalies read as the only warm marks on the plot. Both stay legible
+ * against the white plot surface.
+ */
 export const SERIES = {
-  normal: "var(--signal)",
-  anomaly: "var(--critical)",
-  threshold: "var(--accent)",
+  normal: "var(--info)",
+  normalPoint: "var(--point-normal)",
+  anomaly: "var(--danger)",
+  threshold: "var(--primary)",
   info: "var(--info)",
-  grid: "var(--edge)",
-  axisText: "var(--ink-faint)",
+  grid: "var(--border)",
+  axisText: "var(--subtle-foreground)",
 } as const;
 
 export function ChartFrame({
@@ -32,11 +40,11 @@ export function ChartFrame({
     <figure className={cn("w-full", className)}>
       <figcaption className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="text-[13px] font-bold tracking-tight text-ink">
+          <h3 className="text-[13px] font-bold tracking-tight text-foreground">
             {title}
           </h3>
           {subtitle && (
-            <p className="mt-0.5 text-[11px] leading-relaxed text-ink-muted">
+            <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
               {subtitle}
             </p>
           )}
@@ -65,7 +73,7 @@ export function LegendItem({
   return (
     <span
       className={cn(
-        "flex items-center gap-1.5 text-[10.5px] font-medium text-ink-muted",
+        "flex items-center gap-1.5 text-[10.5px] font-medium text-muted-foreground",
         className
       )}
     >
@@ -99,7 +107,7 @@ export function ChartEmpty({
 }) {
   return (
     <div
-      className="grid place-items-center rounded-lg border border-dashed border-edge px-4 text-center text-xs text-ink-faint"
+      className="grid place-items-center rounded-lg border border-dashed border-border px-4 text-center text-xs text-subtle-foreground"
       style={{ minHeight: height }}
       role="status"
     >
@@ -128,7 +136,7 @@ export function TooltipCard({
   return (
     <div
       role="tooltip"
-      className="pointer-events-none absolute z-10 min-w-[9rem] -translate-y-1/2 rounded-lg border border-edge bg-elevated px-3 py-2 text-[11px] text-ink shadow-xl"
+      className="pointer-events-none absolute z-10 min-w-[9rem] -translate-y-1/2 rounded-lg border border-border bg-surface px-3 py-2 text-[11px] text-foreground shadow-lg"
       style={{
         left: flip ? undefined : `calc(${leftPct}% + 10px)`,
         right: flip ? `calc(${100 - leftPct}% + 10px)` : undefined,
@@ -151,7 +159,7 @@ export function TooltipRow({
 }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <span className="flex items-center gap-1.5 text-ink-muted">
+      <span className="flex items-center gap-1.5 text-muted-foreground">
         {color && (
           <span
             className="size-1.5 rounded-full"
@@ -161,7 +169,7 @@ export function TooltipRow({
         )}
         {label}
       </span>
-      <span className="font-bold tabular text-ink">{value}</span>
+      <span className="font-bold tabular text-foreground">{value}</span>
     </div>
   );
 }

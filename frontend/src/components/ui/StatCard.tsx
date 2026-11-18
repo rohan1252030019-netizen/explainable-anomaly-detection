@@ -31,7 +31,7 @@ export const StatCard: React.FC<StatCardProps> = ({
   return (
     <div
       className={cn(
-        "panel group relative overflow-hidden transition-colors duration-200 hover:border-edge-strong",
+        "panel group relative overflow-hidden transition-colors duration-200 hover:border-border-strong",
         compact ? "p-3.5" : "p-4",
         className
       )}
@@ -46,12 +46,12 @@ export const StatCard: React.FC<StatCardProps> = ({
 
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-faint">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-subtle-foreground">
             {label}
           </span>
           <div
             className={cn(
-              "mt-1.5 font-bold tracking-tight text-ink tabular",
+              "mt-1.5 font-bold tracking-tight text-foreground tabular",
               compact || multiline ? "text-lg leading-6" : "text-[1.4rem] leading-7",
               multiline ? "whitespace-normal break-words" : "truncate"
             )}
@@ -63,7 +63,7 @@ export const StatCard: React.FC<StatCardProps> = ({
 
         {Icon && (
           <span
-            className="grid size-8 shrink-0 place-items-center rounded-lg border border-edge bg-inset text-ink-faint transition-colors group-hover:text-ink-muted"
+            className="grid size-8 shrink-0 place-items-center rounded-lg border border-border bg-surface-muted text-subtle-foreground transition-colors group-hover:text-muted-foreground"
             style={accentColor ? { color: accentColor } : undefined}
           >
             <Icon size={15} aria-hidden="true" />
@@ -72,12 +72,12 @@ export const StatCard: React.FC<StatCardProps> = ({
       </div>
 
       {(trend || sub) && (
-        <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] leading-snug text-ink-muted">
+        <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] leading-snug text-muted-foreground">
           {trend && (
             <span
               className={cn(
                 "inline-flex items-center gap-1 font-bold tabular",
-                trend.positive ? "text-good" : "text-critical"
+                trend.positive ? "text-success" : "text-danger"
               )}
             >
               {trend.positive ? (

@@ -1,0 +1,24 @@
+{
+  "source_csv": "outputs/predictions/test_results.csv",
+  "n_rows": 880,
+  "model": "Isolation Forest",
+  "confusion": {
+    "tp": 44,
+    "fp": 0,
+    "fn": 36,
+    "tn": 800
+  },
+  "precision": 1.0,
+  "recall": 0.55,
+  "f1": 0.7097,
+  "roc_auc": 0.9911,
+  "pr_auc": 0.9405,
+  "baseline_prevalence": 0.0909,
+  "n_flagged": 44,
+  "severity_counts": {
+    "CRITICAL": 18,
+    "HIGH": 8,
+    "MEDIUM": 18,
+    "LOW": 0
+  }
+}

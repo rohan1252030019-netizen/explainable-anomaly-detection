@@ -1,18 +1,39 @@
 """
 backend/config.py
 
-Environment-driven configuration for the API.
+Environment-driven configuration for the SENTINEL API.
 
 Every value is read from an environment variable with a safe local default, so
 the project runs with no setup while remaining configurable for deployment. No
 secrets are stored here; see .env.example for the full list.
+
+SENTINEL_* is the primary environment variable namespace.
+XAUD_* variables are supported as backward-compatible fallbacks with deprecation warnings.
 """
 
 import os
+import warnings
 
 
-def _get_int(name: str, default: int) -> int:
-    raw = os.environ.get(name)
+def _get_env(name: str, fallback_name: str | None = None) -> str | None:
+    val = os.environ.get(name)
+    if val is not None and val.strip():
+        return val.strip()
+    if fallback_name:
+        old_val = os.environ.get(fallback_name)
+        if old_val is not None and old_val.strip():
+            warnings.warn(
+                f"Environment variable '{fallback_name}' is deprecated and will be removed "
+                f"in a future release. Use '{name}' instead.",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+            return old_val.strip()
+    return None
+
+
+def _get_int(name: str, default: int, fallback_name: str | None = None) -> int:
+    raw = _get_env(name, fallback_name)
     if raw is None or not raw.strip():
         return default
     try:
@@ -21,14 +42,14 @@ def _get_int(name: str, default: int) -> int:
         return default
 
 
-def _get_bool(name: str, default: bool) -> bool:
-    raw = os.environ.get(name)
+def _get_bool(name: str, default: bool, fallback_name: str | None = None) -> bool:
+    raw = _get_env(name, fallback_name)
     if raw is None or not raw.strip():
         return default
     return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 
-def _get_origins(raw: str, default: list[str]) -> list[str]:
+def _get_origins(raw: str | None, default: list[str]) -> list[str]:
     if not raw or not raw.strip():
         return default
     origins = [o.strip() for o in raw.split(",") if o.strip()]
@@ -57,43 +78,45 @@ class Settings:
     """
     Environment-driven settings, read when the object is constructed.
 
-    These were class attributes evaluated once at import time, which made the
-    class impossible to exercise without reloading the whole module and meant a
-    test could not ask "what would the server do with XAUD_PORT=9123?".  Reading
-    in ``__init__`` gives each instance its own snapshot; the module-level
-    ``settings`` is still created once, so runtime behaviour is unchanged.
+    Reading in ``__init__`` gives each instance its own snapshot; the module-level
+    ``settings`` is created once, so runtime behaviour is unchanged.
     """
 
     def __init__(self) -> None:
-        self.HOST: str = os.environ.get("XAUD_HOST", "127.0.0.1")
-        self.PORT: int = _get_int("XAUD_PORT", 8001)
-        self.RELOAD: bool = _get_bool("XAUD_RELOAD", True)
+        self.HOST: str = _get_env("SENTINEL_HOST", "XAUD_HOST") or "127.0.0.1"
+        self.PORT: int = _get_int("SENTINEL_PORT", 8000, "XAUD_PORT")
+        self.RELOAD: bool = _get_bool("SENTINEL_RELOAD", True, "XAUD_RELOAD")
 
-        # Shared-secret API key.  Empty means "open", which is the local default.
-        # Set XAUD_API_KEY to require X-API-Key (or a Bearer token) on every
-        # /api route except the health probe.
-        self.API_KEY: str = os.environ.get("XAUD_API_KEY", "").strip()
+        # Shared-secret API key. Empty means "open", which is the local default.
+        # Set SENTINEL_API_KEY (or legacy XAUD_API_KEY) to require authentication.
+        self.API_KEY: str = _get_env("SENTINEL_API_KEY", "XAUD_API_KEY") or ""
 
         # Comma-separated allow-list. Defaults to the local Next.js dev ports.
         self.CORS_ORIGINS: list[str] = _get_origins(
-            os.environ.get("XAUD_CORS_ORIGINS", ""), DEFAULT_ORIGINS
+            _get_env("SENTINEL_CORS_ORIGINS", "XAUD_CORS_ORIGINS"), DEFAULT_ORIGINS
         )
 
-        # Upload guard rails. An unbounded CSV read is a cheap way to exhaust RAM.
+        # Upload guard rails.
         self.MAX_UPLOAD_BYTES: int = _get_int(
-            "XAUD_MAX_UPLOAD_BYTES", 25 * 1024 * 1024
+            "SENTINEL_MAX_UPLOAD_BYTES", 25 * 1024 * 1024, "XAUD_MAX_UPLOAD_BYTES"
         )
-        self.MAX_ROWS: int = _get_int("XAUD_MAX_ROWS", 200_000)
+        self.MAX_ROWS: int = _get_int("SENTINEL_MAX_ROWS", 200_000, "XAUD_MAX_ROWS")
 
-        # Pagination guard rail. An unbounded page_size lets one request
-        # enumerate (and serialise) every row of a large dataset.
-        self.DEFAULT_PAGE_SIZE: int = _get_int("XAUD_DEFAULT_PAGE_SIZE", 25)
-        self.MAX_PAGE_SIZE: int = _get_int("XAUD_MAX_PAGE_SIZE", 200)
+        # Pagination guard rails.
+        self.DEFAULT_PAGE_SIZE: int = _get_int(
+            "SENTINEL_DEFAULT_PAGE_SIZE", 25, "XAUD_DEFAULT_PAGE_SIZE"
+        )
+        self.MAX_PAGE_SIZE: int = _get_int(
+            "SENTINEL_MAX_PAGE_SIZE", 200, "XAUD_MAX_PAGE_SIZE"
+        )
 
-        # Explainer budgets. SHAP's model-agnostic explainers grow with the
-        # background size and the row count, so both are capped.
-        self.SHAP_MAX_BACKGROUND: int = _get_int("XAUD_SHAP_MAX_BACKGROUND", 100)
-        self.MAX_EXPLANATIONS: int = _get_int("XAUD_MAX_EXPLANATIONS", 200)
+        # Explainer budgets.
+        self.SHAP_MAX_BACKGROUND: int = _get_int(
+            "SENTINEL_SHAP_MAX_BACKGROUND", 100, "XAUD_SHAP_MAX_BACKGROUND"
+        )
+        self.MAX_EXPLANATIONS: int = _get_int(
+            "SENTINEL_MAX_EXPLANATIONS", 200, "XAUD_MAX_EXPLANATIONS"
+        )
 
     @property
     def auth_required(self) -> bool:

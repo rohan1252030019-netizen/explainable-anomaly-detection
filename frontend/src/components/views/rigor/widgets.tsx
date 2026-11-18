@@ -57,7 +57,7 @@ export function DeltaChip({
 }) {
   if (!isNumber(value)) {
     return (
-      <span className="text-[10px] text-ink-faint" title="Not available">
+      <span className="text-[10px] text-subtle-foreground" title="Not available">
         n/a
       </span>
     );
@@ -67,16 +67,16 @@ export function DeltaChip({
   const meaningful = magnitude >= (percent ? 0.005 : 0.0005);
   const isImprovement = betterWhenLower ? value < 0 : value > 0;
   const tone = !meaningful
-    ? "text-ink-faint"
+    ? "text-subtle-foreground"
     : isImprovement
-      ? "text-good"
+      ? "text-success"
       : "text-caution";
   const Icon = !meaningful ? Minus : value < 0 ? TrendingDown : TrendingUp;
 
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border border-edge px-2 py-0.5 text-[10px] font-bold tabular",
+        "inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[10px] font-bold tabular",
         tone
       )}
       title={
@@ -107,17 +107,17 @@ export function MetricRow({
   gap?: number | null;
 }) {
   return (
-    <tr className="border-t border-edge">
+    <tr className="border-t border-border">
       <th
         scope="row"
-        className="py-2.5 pr-3 text-left text-xs font-semibold text-ink"
+        className="py-2.5 pr-3 text-left text-xs font-semibold text-foreground"
       >
         {label}
       </th>
-      <td className="py-2.5 pr-3 text-right text-xs tabular text-ink-muted">
+      <td className="py-2.5 pr-3 text-right text-xs tabular text-muted-foreground">
         {fmt(inSample)}
       </td>
-      <td className="py-2.5 pr-3 text-right text-xs font-bold tabular text-ink">
+      <td className="py-2.5 pr-3 text-right text-xs font-bold tabular text-foreground">
         {fmt(outOfSample)}
       </td>
       <td className="py-2.5 text-right">
@@ -147,16 +147,16 @@ export function InlineError({
   return (
     <div
       role="alert"
-      className="flex flex-col gap-3 rounded-xl border border-critical/30 bg-critical-soft p-4 sm:flex-row sm:items-start"
+      className="flex flex-col gap-3 rounded-xl border border-danger-line bg-danger-soft p-4 sm:flex-row sm:items-start"
     >
       <AlertTriangle
         size={15}
-        className="mt-0.5 shrink-0 text-critical"
+        className="mt-0.5 shrink-0 text-danger"
         aria-hidden="true"
       />
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-bold text-ink">{title}</p>
-        <p className="mt-0.5 break-words text-[11px] leading-relaxed text-ink-muted">
+        <p className="text-xs font-bold text-foreground">{title}</p>
+        <p className="mt-0.5 break-words text-[11px] leading-relaxed text-muted-foreground">
           {message}
         </p>
       </div>
@@ -199,10 +199,10 @@ export function TransferPanel({ holdout }: { holdout: HoldoutMetrics }) {
   }
 
   return (
-    <div className="mt-4 rounded-xl border border-edge bg-inset p-4">
+    <div className="mt-4 rounded-xl border border-border bg-surface-muted p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <SectionLabel>Distribution transfer</SectionLabel>
-        <span className="text-[10px] text-ink-faint">
+        <span className="text-[10px] text-subtle-foreground">
           Same threshold applied to both splits
         </span>
       </div>
@@ -222,10 +222,10 @@ export function TransferPanel({ holdout }: { holdout: HoldoutMetrics }) {
           return (
             <div key={row.label}>
               <div className="mb-1.5 flex items-center justify-between gap-3">
-                <span className="text-[11px] font-semibold text-ink">
+                <span className="text-[11px] font-semibold text-foreground">
                   {row.label}
                 </span>
-                <span className="text-[10px] text-ink-faint">
+                <span className="text-[10px] text-subtle-foreground">
                   {drift === null
                     ? "Drift unavailable"
                     : `${signed(
@@ -238,11 +238,11 @@ export function TransferPanel({ holdout }: { holdout: HoldoutMetrics }) {
 
               <div className="space-y-1.5">
                 {[
-                  { name: "In-sample", value: inValue, tone: "bg-signal/55" },
-                  { name: "Held-out", value: outValue, tone: "bg-accent" },
+                  { name: "In-sample", value: inValue, tone: "bg-info/55" },
+                  { name: "Held-out", value: outValue, tone: "bg-primary" },
                 ].map((bar) => (
                   <div key={bar.name} className="flex items-center gap-2">
-                    <span className="w-16 shrink-0 text-[10px] text-ink-faint">
+                    <span className="w-16 shrink-0 text-[10px] text-subtle-foreground">
                       {bar.name}
                     </span>
                     <span
@@ -262,7 +262,7 @@ export function TransferPanel({ holdout }: { holdout: HoldoutMetrics }) {
                         }}
                       />
                     </span>
-                    <span className="w-16 shrink-0 text-right text-[10px] font-semibold tabular text-ink-muted">
+                    <span className="w-16 shrink-0 text-right text-[10px] font-semibold tabular text-muted-foreground">
                       {bar.value === null ? "—" : row.format(bar.value)}
                     </span>
                   </div>

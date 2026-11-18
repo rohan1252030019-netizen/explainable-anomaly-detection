@@ -73,7 +73,7 @@ export const Topbar: React.FC = () => {
 
   return (
     <header
-      className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-edge bg-surface/90 px-4 backdrop-blur-xl sm:h-16 sm:px-6"
+      className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-border bg-surface/90 px-4 backdrop-blur-xl sm:h-16 sm:px-6"
       data-print-hide
     >
       {/* Left: mobile nav trigger + breadcrumb */}
@@ -82,29 +82,29 @@ export const Topbar: React.FC = () => {
           onClick={() => setMobileNavOpen(true)}
           variant="ghost"
           size="sm"
-          className="lg:hidden"
+          className="md:hidden"
           aria-label="Open navigation"
         >
           <Menu size={16} />
         </IconButton>
 
         <div className="hidden min-w-0 items-center gap-2 text-[11px] sm:flex">
-          <span className="font-semibold text-ink-faint">XAUD</span>
+          <span className="font-semibold text-subtle-foreground">SENTINEL</span>
           {navGroup && (
             <>
-              <span className="text-edge-strong" aria-hidden="true">
+              <span className="text-border-strong" aria-hidden="true">
                 /
               </span>
-              <span className="text-ink-faint">{navGroup}</span>
+              <span className="text-subtle-foreground">{navGroup}</span>
             </>
           )}
-          <span className="text-edge-strong" aria-hidden="true">
+          <span className="text-border-strong" aria-hidden="true">
             /
           </span>
-          <span className="truncate font-semibold text-ink">{pageLabel}</span>
+          <span className="truncate font-semibold text-foreground">{pageLabel}</span>
         </div>
 
-        <span className="truncate text-sm font-bold tracking-tight text-ink sm:hidden">
+        <span className="truncate text-sm font-bold tracking-tight text-foreground sm:hidden">
           {pageLabel}
         </span>
       </div>
@@ -114,8 +114,8 @@ export const Topbar: React.FC = () => {
         <button
           onClick={() => setCommandPaletteOpen(true)}
           className={cn(
-            "hidden items-center justify-between gap-2 rounded-lg border border-edge bg-inset px-3 py-1.5 text-[11px] text-ink-faint",
-            "transition-colors duration-150 hover:border-accent-line hover:text-ink",
+            "hidden items-center justify-between gap-2 rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-[11px] text-subtle-foreground",
+            "transition-colors duration-150 hover:border-primary hover:text-foreground",
             "md:flex md:w-64 lg:w-72"
           )}
           aria-label="Search views and actions"
@@ -124,7 +124,7 @@ export const Topbar: React.FC = () => {
             <Search size={13} aria-hidden="true" />
             <span>Search or jump to…</span>
           </span>
-          <kbd className="rounded border border-edge bg-surface px-1.5 py-0.5 font-mono text-[10px]">
+          <kbd className="rounded border border-border bg-surface px-1.5 py-0.5 font-mono text-[10px]">
             ⌘K
           </kbd>
         </button>
@@ -145,10 +145,10 @@ export const Topbar: React.FC = () => {
         {dataset?.loaded ? (
           <button
             onClick={() => setActiveTab("dataset")}
-            className="hidden max-w-[180px] items-center gap-1.5 rounded-full border border-edge bg-inset px-2.5 py-1 text-[11px] font-medium text-ink-muted transition-colors hover:border-accent-line hover:text-ink md:flex"
+            className="hidden max-w-[180px] items-center gap-1.5 rounded-full border border-border bg-surface-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:border-primary hover:text-foreground md:flex"
             title={`Active dataset: ${dataset.dataset_name ?? "Untitled"}`}
           >
-            <Database size={11} className="text-accent" aria-hidden="true" />
+            <Database size={11} className="text-primary" aria-hidden="true" />
             <span className="truncate">{dataset.dataset_name}</span>
           </button>
         ) : (
@@ -167,12 +167,12 @@ export const Topbar: React.FC = () => {
           <button
             onClick={() => setActiveTab("anomalies")}
             title={`${overview.n_anomalies} anomalies flagged by ${overview.model_name}`}
-            className="hidden items-center gap-1.5 rounded-full border border-edge bg-inset px-2.5 py-1 text-[11px] font-medium text-ink-muted transition-colors hover:border-critical/30 hover:text-ink lg:flex"
+            className="hidden items-center gap-1.5 rounded-full border border-border bg-surface-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:border-danger-line hover:text-foreground lg:flex"
           >
-            <Cpu size={11} className="text-good" aria-hidden="true" />
+            <Cpu size={11} className="text-success" aria-hidden="true" />
             <span className="max-w-[130px] truncate">{overview.model_name}</span>
-            <span className="h-3 w-px bg-edge" aria-hidden="true" />
-            <span className="font-bold tabular text-critical">
+            <span className="h-3 w-px bg-border" aria-hidden="true" />
+            <span className="font-bold tabular text-danger">
               {(overview.n_anomalies ?? 0).toLocaleString()}
             </span>
             <span className="sr-only">anomalies flagged</span>

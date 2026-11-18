@@ -35,12 +35,12 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         className
       )}
     >
-      <div className="mb-4 grid size-11 place-items-center rounded-xl border border-edge bg-inset text-ink-faint">
+      <div className="mb-4 grid size-11 place-items-center rounded-xl border border-border bg-surface-muted text-subtle-foreground">
         <Icon size={19} aria-hidden="true" />
       </div>
 
-      <h3 className="text-sm font-bold tracking-tight text-ink">{title}</h3>
-      <p className="mt-1.5 max-w-md text-xs leading-relaxed text-ink-muted">
+      <h3 className="text-sm font-bold tracking-tight text-foreground">{title}</h3>
+      <p className="mt-1.5 max-w-md text-xs leading-relaxed text-muted-foreground">
         {description}
       </p>
 

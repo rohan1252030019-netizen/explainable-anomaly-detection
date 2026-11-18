@@ -38,14 +38,14 @@ function RangeTrack({ item }: { item: FeatureComparisonItem }) {
   return (
     <div className="space-y-1.5">
       <div
-        className="relative h-3 rounded-full bg-inset"
+        className="relative h-3 rounded-full bg-surface-muted"
         role="img"
         aria-label={`Reference range ${fmt(low)} to ${fmt(
           high
         )}, median ${fmt(median)}, this record ${fmt(observed)}`}
       >
         <span
-          className="absolute inset-y-0 rounded-full border border-edge bg-edge/60"
+          className="absolute inset-y-0 rounded-full border border-border bg-border/60"
           style={{
             left: `${bandStart}%`,
             width: `${Math.max(1.5, bandEnd - bandStart)}%`,
@@ -53,20 +53,20 @@ function RangeTrack({ item }: { item: FeatureComparisonItem }) {
           aria-hidden="true"
         />
         <span
-          className="absolute inset-y-0 w-px bg-ink-faint"
+          className="absolute inset-y-0 w-px bg-subtle-foreground"
           style={{ left: `${medianPos}%` }}
           aria-hidden="true"
         />
         <span
           className={cn(
             "absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-surface",
-            outside ? "bg-critical" : "bg-signal"
+            outside ? "bg-danger" : "bg-info"
           )}
           style={{ left: `${observedPos}%` }}
           aria-hidden="true"
         />
       </div>
-      <div className="flex justify-between text-[9px] tabular text-ink-faint">
+      <div className="flex justify-between text-[9px] tabular text-subtle-foreground">
         <span>{fmt(domainLow)}</span>
         <span>
           reference {fmt(low)}–{fmt(high)}
@@ -88,10 +88,10 @@ export const ObservedVsTypicalRange: React.FC<ObservedVsTypicalRangeProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="text-[10px] font-bold uppercase tracking-[0.14em] text-ink-faint">
+        <h3 className="text-[10px] font-bold uppercase tracking-[0.14em] text-subtle-foreground">
           Observed value vs reference distribution
         </h3>
-        <p className="text-[10px] text-ink-faint">
+        <p className="text-[10px] text-subtle-foreground">
           Marker = this record · bar = reference min–max
         </p>
       </div>
@@ -103,43 +103,43 @@ export const ObservedVsTypicalRange: React.FC<ObservedVsTypicalRangeProps> = ({
           return (
             <li
               key={`${item.feature}-${index}`}
-              className="panel-flush space-y-3 p-4 transition-colors hover:border-edge-strong"
+              className="panel-flush space-y-3 p-4 transition-colors hover:border-border-strong"
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="truncate text-xs font-semibold text-ink">
+                <span className="truncate text-xs font-semibold text-foreground">
                   {item.feature}
                 </span>
                 <span
                   className={cn(
                     "shrink-0 rounded border px-1.5 py-0.5 text-[9.5px] font-bold",
                     isAbove
-                      ? "border-critical/30 bg-critical-soft text-critical"
-                      : "border-signal/30 bg-signal-soft text-signal"
+                      ? "border-danger-line bg-danger-soft text-danger"
+                      : "border-info-line bg-info-soft text-info"
                   )}
                 >
                   {item.deviation}
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 border-t border-edge pt-3">
+              <div className="grid grid-cols-2 gap-3 border-t border-border pt-3">
                 <div>
-                  <div className="text-[9px] font-semibold uppercase tracking-[0.1em] text-ink-faint">
+                  <div className="text-[9px] font-semibold uppercase tracking-[0.1em] text-subtle-foreground">
                     This record
                   </div>
                   <div
                     className={cn(
                       "mt-0.5 text-base font-bold tabular",
-                      isAbove ? "text-critical" : "text-signal"
+                      isAbove ? "text-danger" : "text-info"
                     )}
                   >
                     {fmt(item.observed)}
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-[9px] font-semibold uppercase tracking-[0.1em] text-ink-faint">
+                  <div className="text-[9px] font-semibold uppercase tracking-[0.1em] text-subtle-foreground">
                     Reference median
                   </div>
-                  <div className="mt-0.5 text-base font-bold tabular text-ink-muted">
+                  <div className="mt-0.5 text-base font-bold tabular text-muted-foreground">
                     {fmt(item.typical_median)}
                   </div>
                 </div>
@@ -147,7 +147,7 @@ export const ObservedVsTypicalRange: React.FC<ObservedVsTypicalRangeProps> = ({
 
               <RangeTrack item={item} />
 
-              <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-ink-muted">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-muted-foreground">
                 <span className="flex items-center gap-1">
                   {isAbove ? (
                     <ArrowUpRight size={10} aria-hidden="true" />
@@ -160,7 +160,7 @@ export const ObservedVsTypicalRange: React.FC<ObservedVsTypicalRangeProps> = ({
               </div>
 
               {item.interpretation && (
-                <p className="text-[11px] leading-relaxed text-ink-muted">
+                <p className="text-[11px] leading-relaxed text-muted-foreground">
                   {item.interpretation}
                 </p>
               )}

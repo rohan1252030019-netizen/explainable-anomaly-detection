@@ -85,10 +85,10 @@ export const SeverityDonutChart: React.FC<SeverityDonutChartProps> = ({
           </svg>
 
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-2xl font-extrabold tabular text-ink">
+            <span className="text-2xl font-extrabold tabular text-foreground">
               {active ? items.find((i) => i.key === active)?.count : total}
             </span>
-            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-faint">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-subtle-foreground">
               {active ?? "Anomalies"}
             </span>
           </div>
@@ -104,10 +104,10 @@ export const SeverityDonutChart: React.FC<SeverityDonutChartProps> = ({
                 onBlur={() => setActive(null)}
                 className={cn(
                   "flex w-full items-center justify-between gap-4 rounded-md px-2 py-1 text-xs transition-colors",
-                  active === item.key ? "bg-inset" : "hover:bg-inset"
+                  active === item.key ? "bg-surface-muted" : "hover:bg-surface-muted"
                 )}
               >
-                <span className="flex items-center gap-2 font-medium text-ink-muted">
+                <span className="flex items-center gap-2 font-medium text-muted-foreground">
                   <span
                     className="size-2.5 rounded-full"
                     style={{ backgroundColor: item.style.hex }}
@@ -115,9 +115,9 @@ export const SeverityDonutChart: React.FC<SeverityDonutChartProps> = ({
                   />
                   {item.label}
                 </span>
-                <span className="font-bold tabular text-ink">
+                <span className="font-bold tabular text-foreground">
                   {item.count}
-                  <span className="ml-1 text-[10px] font-normal text-ink-faint">
+                  <span className="ml-1 text-[10px] font-normal text-subtle-foreground">
                     {((item.count / total) * 100).toFixed(0)}%
                   </span>
                 </span>

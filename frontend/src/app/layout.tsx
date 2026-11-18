@@ -3,23 +3,21 @@ import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "XAUD — Explainable Anomaly Detection Platform",
+  title: "SENTINEL — Autonomous Anomaly Intelligence Platform",
   description:
-    "Production-quality explainable framework for unsupervised anomaly detection with multi-model benchmarking and transparent XAI.",
+    "SENTINEL — Autonomous Anomaly Intelligence Platform. Detect. Explain. Verify. Act. Unsupervised anomaly detection, conformal validation, and transparent XAI.",
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f2f6fa" },
-    { media: "(prefers-color-scheme: dark)", color: "#0b1020" },
-  ],
+  themeColor: "#f8fafc",
 };
 
 const themeScript = `
 (function () {
   try {
-    var stored = localStorage.getItem("xaud-theme");
-    var dark = stored ? stored === "dark" : true;
+    var stored = localStorage.getItem("sentinel-theme") || localStorage.getItem("xaud-theme");
+    // Light is the product default; dark is an explicit opt-in.
+    var dark = stored === "dark";
     document.documentElement.classList.toggle("dark", dark);
   } catch (e) {}
 })();
@@ -36,7 +34,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body
-        className="min-h-full bg-canvas font-sans text-ink"
+        className="min-h-full bg-background font-sans text-foreground"
         suppressHydrationWarning
       >
         <Providers>{children}</Providers>

@@ -1,15 +1,20 @@
-# XAUD 2.0 — Autonomous Anomaly Intelligence Platform
+<p align="center">
+  <img src="docs/sentinel-logo.svg" alt="SENTINEL Wordmark Logo" width="480"/>
+</p>
 
-> **Tagline:** Beyond Detection. Into Intelligence.  
+# SENTINEL — Autonomous Anomaly Intelligence Platform
+
+> **Tagline:** Detect. Explain. Verify. Act.  
+> **SENTINEL:** *Scientific, Explainable, Next-gen Threat & Irregularity Neutralization and Evaluation Layer*  
 > **Philosophy:** Mathematical correctness over flattering metrics. Explanation faithfulness over decorative charts. Evidence-backed conclusions over unverified claims.
 
 ---
 
 ## Executive Overview
 
-**XAUD 2.0** transforms conventional anomaly detection dashboards into a research-grade, full-stack anomaly intelligence system. Designed specifically for complex tabular data operating **without pre-existing ground-truth labels**, XAUD independently detects, investigates, validates, explains, challenges, and recommends actionable remediation for anomalous records.
+**SENTINEL** transforms conventional anomaly detection dashboards into an enterprise research-grade, full-stack anomaly intelligence system. Designed specifically for complex tabular data operating **without pre-existing ground-truth labels**, SENTINEL independently detects, investigates, validates, explains, challenges, and recommends actionable remediation for anomalous records.
 
-Unlike standard tools that report inflated in-sample scores or present arbitrary distance metrics as "posterior probabilities", XAUD maintains strict scientific integrity:
+Unlike standard tools that report inflated in-sample scores or present arbitrary distance metrics as "posterior probabilities", SENTINEL maintains strict scientific integrity:
 - **Zero Mock / Fake Metrics:** Unsupervised anomaly scores are relative ranking indices, never misrepresented as probabilities without calibrated conformal justification.
 - **Strict Data Leakage Prevention:** Preprocessing transforms, scalers, imputers, and threshold quantiles are fitted strictly on baseline training splits and applied deterministically to holdout partitions.
 - **Explanation Faithfulness:** Attribution importance is systematically audited using **Deletion-AUC** and **Insertion-AUC** perturbation curves.
@@ -22,7 +27,7 @@ Unlike standard tools that report inflated in-sample scores or present arbitrary
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                                XAUD 2.0 PLATFORM                                │
+│                                SENTINEL PLATFORM                                │
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │  DATA INTELLIGENCE                                                              │
 │  ├── Schema Discovery (Numerical, Categorical, Binary, Datetime, ID Candidates) │
@@ -69,7 +74,7 @@ Unlike standard tools that report inflated in-sample scores or present arbitrary
 
 ## Feature Comparison
 
-| Capability | Standard Anomaly Tools | XAUD 2.0 Platform |
+| Capability | Standard Anomaly Tools | SENTINEL Platform |
 |---|---|---|
 | **Anomaly Score Interpretation** | Often presented as "Probability of Anomaly" | Explicitly treated as relative ranking indices; normalized via reference quantiles |
 | **Leakage Prevention** | Scaler fit across entire dataset before splitting | Strict pipeline isolation; scalers & thresholds fit strictly on reference splits |
@@ -139,6 +144,21 @@ XAUD monitors distribution stability using:
 
 ## Installation & Quickstart
 
+### Real fraud dataset
+
+The repository ships with a synthetic demo set and a script that stages the real
+**ULB credit-card fraud** dataset (284,807 real transactions, 492 frauds) plus a
+20,000-row app sample that keeps every fraud:
+
+```bash
+python scripts/prepare_ulb_dataset.py          # download + verify + stage
+python scripts/run_ulb_benchmark.py            # all 8 detectors, time split
+python scripts/smoke_ulb_api.py                # full HTTP surface, in-process
+```
+
+Provenance, licences, measured PR-AUC/ROC-AUC per detector and the caveats that
+must be quoted alongside them are in [`docs/DATASETS.md`](docs/DATASETS.md).
+
 ### Prerequisites
 - Python 3.11+ (the floor declared by `requires-python` in `pyproject.toml`)
 - Node.js 20+ & npm
@@ -146,7 +166,7 @@ XAUD monitors distribution stability using:
 ### 1. Backend Setup
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/explainable-anomaly-detection.git
+git clone https://github.com/rohan1252030019-netizen/explainable-anomaly-detection.git
 cd explainable-anomaly-detection
 
 # Create and activate virtual environment

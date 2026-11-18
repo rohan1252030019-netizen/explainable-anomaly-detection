@@ -249,7 +249,7 @@ export const AnomaliesView: React.FC<AnomaliesViewProps> = ({
             </label>
             <Search
               size={15}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint"
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-subtle-foreground"
               aria-hidden="true"
             />
             <input
@@ -271,7 +271,7 @@ export const AnomaliesView: React.FC<AnomaliesViewProps> = ({
                   setPage(1);
                 }}
                 aria-label="Clear search"
-                className="absolute right-1 top-1/2 grid size-7 -translate-y-1/2 place-items-center rounded-md text-ink-faint transition-colors hover:bg-inset hover:text-ink"
+                className="absolute right-1 top-1/2 grid size-7 -translate-y-1/2 place-items-center rounded-md text-subtle-foreground transition-colors hover:bg-surface-muted hover:text-foreground"
               >
                 <X size={13} />
               </button>
@@ -279,14 +279,14 @@ export const AnomaliesView: React.FC<AnomaliesViewProps> = ({
           </form>
 
           <div className="flex flex-wrap items-center gap-2">
-            <span className="hidden items-center gap-1.5 rounded-full border border-edge bg-inset px-2.5 py-1 text-[10px] font-semibold text-ink-muted xl:inline-flex">
+            <span className="hidden items-center gap-1.5 rounded-full border border-border bg-surface-muted px-2.5 py-1 text-[10px] font-semibold text-muted-foreground xl:inline-flex">
               Detector · {overview?.model_name ?? "—"}
             </span>
             <a
               href={api.exportAnomaliesUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-edge bg-inset px-3 text-xs font-semibold text-ink transition-colors hover:border-edge-strong hover:bg-elevated"
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-surface-muted px-3 text-xs font-semibold text-foreground transition-colors hover:border-border-strong hover:bg-surface-muted"
             >
               <Download size={13} aria-hidden="true" />
               Export CSV
@@ -294,10 +294,10 @@ export const AnomaliesView: React.FC<AnomaliesViewProps> = ({
           </div>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-edge pt-3">
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
           <SlidersHorizontal
             size={13}
-            className="text-ink-faint"
+            className="text-subtle-foreground"
             aria-hidden="true"
           />
           <SectionLabel className="mr-1">Severity</SectionLabel>
@@ -320,14 +320,14 @@ export const AnomaliesView: React.FC<AnomaliesViewProps> = ({
                   "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-[opacity,border-color,background-color]",
                   active
                     ? severityStyle(severity).chip
-                    : "border-edge bg-inset text-ink-faint opacity-55 hover:opacity-100",
+                    : "border-border bg-surface-muted text-subtle-foreground opacity-55 hover:opacity-100",
                   !anomaliesOnly && "cursor-not-allowed opacity-40"
                 )}
               >
                 <span
                   className={cn(
                     "size-1.5 rounded-full",
-                    active ? severityStyle(severity).dot : "bg-edge-strong"
+                    active ? severityStyle(severity).dot : "bg-border-strong"
                   )}
                   aria-hidden="true"
                 />
@@ -337,7 +337,7 @@ export const AnomaliesView: React.FC<AnomaliesViewProps> = ({
             );
           })}
           {!anomaliesOnly && (
-            <span className="text-[10px] text-ink-faint">
+            <span className="text-[10px] text-subtle-foreground">
               Tier filters apply to flagged records only
             </span>
           )}
@@ -348,7 +348,7 @@ export const AnomaliesView: React.FC<AnomaliesViewProps> = ({
           )}
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-x-5 gap-y-3 border-t border-edge pt-3 text-xs text-ink-muted">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-x-5 gap-y-3 border-t border-border pt-3 text-xs text-muted-foreground">
           <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
             <label className="flex cursor-pointer select-none items-center gap-2">
               <input
@@ -360,7 +360,7 @@ export const AnomaliesView: React.FC<AnomaliesViewProps> = ({
                 className="size-3.5 rounded"
               />
               Flagged records only
-              <span className="rounded bg-inset px-1.5 py-0.5 text-[10px] font-semibold tabular text-ink-faint">
+              <span className="rounded bg-surface-muted px-1.5 py-0.5 text-[10px] font-semibold tabular text-subtle-foreground">
                 {overview?.n_anomalies ?? 0}
               </span>
             </label>
@@ -383,7 +383,7 @@ export const AnomaliesView: React.FC<AnomaliesViewProps> = ({
                 }
                 className="w-24"
               />
-              <span className="w-8 font-mono text-xs font-bold tabular text-accent">
+              <span className="w-8 font-mono text-xs font-bold tabular text-primary">
                 {minScore.toFixed(2)}
               </span>
             </div>
@@ -422,7 +422,7 @@ export const AnomaliesView: React.FC<AnomaliesViewProps> = ({
               <button
                 type="button"
                 onClick={clearFilters}
-                className="inline-flex items-center gap-1 font-semibold text-ink-faint transition-colors hover:text-ink"
+                className="inline-flex items-center gap-1 font-semibold text-subtle-foreground transition-colors hover:text-foreground"
               >
                 <X size={12} aria-hidden="true" />
                 Clear filters
@@ -430,7 +430,7 @@ export const AnomaliesView: React.FC<AnomaliesViewProps> = ({
             )}
           </div>
 
-          <p aria-live="polite" className="tabular text-[11px] text-ink-faint">
+          <p aria-live="polite" className="tabular text-[11px] text-subtle-foreground">
             {displayLoading ? (
               "Updating results…"
             ) : (
@@ -449,14 +449,14 @@ export const AnomaliesView: React.FC<AnomaliesViewProps> = ({
           role="alert"
           className="flex flex-col items-center gap-3 p-10 text-center"
         >
-          <span className="grid size-10 place-items-center rounded-xl border border-critical/30 bg-critical-soft text-critical">
+          <span className="grid size-10 place-items-center rounded-xl border border-danger-line bg-danger-soft text-danger">
             <AlertTriangle size={18} aria-hidden="true" />
           </span>
           <div>
-            <p className="text-sm font-bold text-ink">
+            <p className="text-sm font-bold text-foreground">
               Could not load anomalies
             </p>
-            <p className="mx-auto mt-1 max-w-lg break-words text-xs leading-relaxed text-ink-muted">
+            <p className="mx-auto mt-1 max-w-lg break-words text-xs leading-relaxed text-muted-foreground">
               {error}
             </p>
           </div>
@@ -476,7 +476,7 @@ export const AnomaliesView: React.FC<AnomaliesViewProps> = ({
         <Card className="overflow-hidden">
           <p
             data-print-hide
-            className="border-b border-edge bg-inset px-4 py-2 text-[10px] leading-relaxed text-ink-faint sm:hidden"
+            className="border-b border-border bg-surface-muted px-4 py-2 text-[10px] leading-relaxed text-subtle-foreground sm:hidden"
           >
             Swipe the table sideways for detector, feature samples and the
             Investigate action.
@@ -518,12 +518,12 @@ export const AnomaliesView: React.FC<AnomaliesViewProps> = ({
                   <tr>
                     <td
                       colSpan={7}
-                      className="px-6 py-12 text-center font-sans text-ink-muted"
+                      className="px-6 py-12 text-center font-sans text-muted-foreground"
                     >
-                      <p className="text-xs font-semibold text-ink">
+                      <p className="text-xs font-semibold text-foreground">
                         No severity tier selected
                       </p>
-                      <p className="mt-1 text-[11px] text-ink-faint">
+                      <p className="mt-1 text-[11px] text-subtle-foreground">
                         Choose at least one tier above, or clear the filters to
                         restore all four.
                       </p>
@@ -533,12 +533,12 @@ export const AnomaliesView: React.FC<AnomaliesViewProps> = ({
                   <tr>
                     <td
                       colSpan={7}
-                      className="px-6 py-12 text-center font-sans text-ink-muted"
+                      className="px-6 py-12 text-center font-sans text-muted-foreground"
                     >
-                      <p className="text-xs font-semibold text-ink">
+                      <p className="text-xs font-semibold text-foreground">
                         No records match these filters
                       </p>
-                      <p className="mt-1 text-[11px] text-ink-faint">
+                      <p className="mt-1 text-[11px] text-subtle-foreground">
                         Lower the minimum score, widen the severity tiers, or
                         clear the search.
                       </p>
@@ -560,20 +560,20 @@ export const AnomaliesView: React.FC<AnomaliesViewProps> = ({
 
                     return (
                       <tr key={`${rowId ?? "row"}-${index}`}>
-                        <td className="font-sans font-bold text-ink-faint">
+                        <td className="font-sans font-bold text-subtle-foreground">
                           {item.rank !== null && item.rank !== undefined
                             ? `#${item.rank}`
                             : "—"}
                         </td>
-                        <td className="text-ink-faint">
+                        <td className="text-subtle-foreground">
                           {rowId !== null ? `#${rowId}` : "—"}
                         </td>
                         <td>
-                          <span className="text-xs font-bold tabular text-ink">
+                          <span className="text-xs font-bold tabular text-foreground">
                             {score.toFixed(4)}
                           </span>
                           <span
-                            className="ml-2 inline-block h-1.5 w-14 overflow-hidden rounded-full bg-inset align-middle"
+                            className="ml-2 inline-block h-1.5 w-14 overflow-hidden rounded-full bg-surface-muted align-middle"
                             aria-hidden="true"
                           >
                             <span
@@ -588,18 +588,18 @@ export const AnomaliesView: React.FC<AnomaliesViewProps> = ({
                         <td>
                           <SeverityBadge severity={item.severity} size="sm" />
                         </td>
-                        <td className="text-ink-faint">
+                        <td className="text-subtle-foreground">
                           {item.model || overview?.model_name || "—"}
                         </td>
-                        <td className="text-ink-faint">
+                        <td className="text-subtle-foreground">
                           <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
                             {previewEntries.length > 0 ? (
                               previewEntries.map(([key, value]) => (
                                 <span key={key} className="truncate">
-                                  <span className="font-sans text-ink-faint">
+                                  <span className="font-sans text-subtle-foreground">
                                     {key}:
                                   </span>{" "}
-                                  <span className="font-semibold text-ink-muted">
+                                  <span className="font-semibold text-muted-foreground">
                                     {Number(value).toLocaleString(undefined, {
                                       maximumFractionDigits: 2,
                                     })}
@@ -635,11 +635,11 @@ export const AnomaliesView: React.FC<AnomaliesViewProps> = ({
             </table>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-edge px-4 py-3 text-xs text-ink-muted">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3 text-xs text-muted-foreground">
             <p className="tabular">
-              Page <span className="font-bold text-ink">{data.page}</span> of{" "}
-              <span className="font-bold text-ink">{data.total_pages}</span>
-              <span className="ml-2 text-ink-faint">
+              Page <span className="font-bold text-foreground">{data.page}</span> of{" "}
+              <span className="font-bold text-foreground">{data.total_pages}</span>
+              <span className="ml-2 text-subtle-foreground">
                 · {PAGE_SIZE} per page
               </span>
             </p>
@@ -676,7 +676,7 @@ export const AnomaliesView: React.FC<AnomaliesViewProps> = ({
       )}
 
       {data.total > 0 && !displayLoading && !noSeveritySelected && !error && (
-        <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-[10px] text-ink-faint">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-[10px] text-subtle-foreground">
           <span>
             Rank 1 is the most anomalous record. Scores are normalised to this
             run, not shared across datasets.
@@ -684,7 +684,7 @@ export const AnomaliesView: React.FC<AnomaliesViewProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab("investigate")}
-            className="inline-flex items-center gap-1 font-semibold text-ink-muted transition-colors hover:text-ink"
+            className="inline-flex items-center gap-1 font-semibold text-muted-foreground transition-colors hover:text-foreground"
           >
             Open the investigation workspace
             <ArrowRight size={11} aria-hidden="true" />

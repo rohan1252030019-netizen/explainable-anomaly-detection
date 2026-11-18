@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 120" width="100%" height="100%">
+  <defs>
+    <linearGradient id="sentinel-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="50%" stop-color="#0f7490" />
+      <stop offset="100%" stop-color="#083344" />
+    </linearGradient>
+    <linearGradient id="shield-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22d3ee" />
+      <stop offset="100%" stop-color="#0e7490" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Sentinel Emblem: Shield + Focal Node -->
+  <g transform="translate(16, 16)">
+    <!-- Shield Outer Path -->
+    <path d="M 44 4 L 80 16 C 80 56, 44 82, 44 84 C 44 82, 8 56, 8 16 Z" 
+          fill="url(#sentinel-grad)" stroke="#22d3ee" stroke-width="2" />
+    <!-- Inner Core Geometry -->
+    <polygon points="44,22 62,38 54,62 34,62 26,38" 
+             fill="#083344" stroke="#38bdf8" stroke-width="1.5" opacity="0.9" />
+    <!-- Dynamic Detection Radar Crosshair -->
+    <circle cx="44" cy="44" r="16" fill="none" stroke="#67e8f9" stroke-width="1" stroke-dasharray="3,3" />
+    <circle cx="44" cy="44" r="5" fill="#38bdf8" filter="url(#glow)" />
+    <!-- Scanning Apex -->
+    <line x1="44" y1="28" x2="44" y2="60" stroke="#a5f3fc" stroke-width="1.5" />
+    <line x1="28" y1="44" x2="60" y2="44" stroke="#a5f3fc" stroke-width="1.5" />
+  </g>
+
+  <!-- Typography -->
+  <text x="120" y="66" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI Variable Text', 'Inter', Roboto, sans-serif" 
+        font-size="44" font-weight="900" letter-spacing="4" fill="#0f172a">
+    SENTINEL
+  </text>
+  <!-- Version & Category Subtitle -->
+  <rect x="360" y="38" width="46" height="20" rx="4" fill="#0f7490" />
+  <text x="383" y="52" font-family="ui-monospace, 'SFMono-Regular', monospace" 
+        font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">3.0</text>
+  <text x="122" y="90" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
+        font-size="12" font-weight="700" letter-spacing="3" fill="#64748b">
+    AUTONOMOUS ANOMALY INTELLIGENCE
+  </text>
+  <!-- Tagline -->
+  <text x="122" y="108" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
+        font-size="10" font-weight="600" letter-spacing="1" fill="#0f7490">
+    DETECT · EXPLAIN · VERIFY · ACT
+  </text>
+</svg>

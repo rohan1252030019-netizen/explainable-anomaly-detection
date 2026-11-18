@@ -87,7 +87,7 @@ export const PcaScatterChart: React.FC<PcaScatterChartProps> = ({ data }) => {
       legend={
         <>
           <LegendItem
-            color={SERIES.normal}
+            color={SERIES.normalPoint}
             shape="dot"
             label={`Normal (${(data.points.length - anomalies).toLocaleString()})`}
           />
@@ -150,7 +150,7 @@ export const PcaScatterChart: React.FC<PcaScatterChartProps> = ({ data }) => {
                   x={x}
                   y={height - pad + 15}
                   textAnchor="middle"
-                  className="fill-ink-faint text-[9px] tabular"
+                  className="fill-subtle-foreground text-[9px] tabular"
                 >
                   {tickLabel(minX + rangeX * fraction)}
                 </text>
@@ -158,7 +158,7 @@ export const PcaScatterChart: React.FC<PcaScatterChartProps> = ({ data }) => {
                   x={pad - 8}
                   y={y + 3}
                   textAnchor="end"
-                  className="fill-ink-faint text-[9px] tabular"
+                  className="fill-subtle-foreground text-[9px] tabular"
                 >
                   {tickLabel(minY + rangeY * fraction)}
                 </text>
@@ -193,8 +193,8 @@ export const PcaScatterChart: React.FC<PcaScatterChartProps> = ({ data }) => {
                   cx={x}
                   cy={y}
                   r={active ? 4 : 2.4}
-                  fill={SERIES.normal}
-                  opacity={active ? 0.9 : 0.38}
+                  fill={SERIES.normalPoint}
+                  opacity={active ? 1 : 0.75}
                   style={{
                     transition: "r 120ms ease, opacity 120ms ease",
                     cursor: "pointer",
@@ -209,7 +209,7 @@ export const PcaScatterChart: React.FC<PcaScatterChartProps> = ({ data }) => {
             x={pad + chartWidth / 2}
             y={height - 4}
             textAnchor="middle"
-            className="fill-ink-faint text-[9px]"
+            className="fill-subtle-foreground text-[9px]"
           >
             PC1{varX ? ` · ${varX}% variance explained` : ""}
           </text>
@@ -218,7 +218,7 @@ export const PcaScatterChart: React.FC<PcaScatterChartProps> = ({ data }) => {
             y={pad + chartHeight / 2}
             textAnchor="middle"
             transform={`rotate(-90 10 ${pad + chartHeight / 2})`}
-            className="fill-ink-faint text-[9px]"
+            className="fill-subtle-foreground text-[9px]"
           >
             PC2{varY ? ` · ${varY}%` : ""}
           </text>
@@ -226,24 +226,26 @@ export const PcaScatterChart: React.FC<PcaScatterChartProps> = ({ data }) => {
 
         {hover && (
           <TooltipCard x={hover.x} y={hover.y} width={width} height={height}>
-            <div className="mb-1 font-semibold text-ink">
+            <div className="mb-1 font-semibold text-foreground">
               Observation #{hover.pt.id}
             </div>
             <div className="space-y-0.5">
               <TooltipRow
                 label="Score"
                 value={hover.pt.score.toFixed(4)}
-                color={hover.pt.is_anomaly ? SERIES.anomaly : SERIES.normal}
+                color={
+                  hover.pt.is_anomaly ? SERIES.anomaly : SERIES.normalPoint
+                }
               />
-              <div className="text-[10px] tabular text-ink-faint">
+              <div className="text-[10px] tabular text-subtle-foreground">
                 PC1 {hover.pt.pc1.toFixed(2)} · PC2 {hover.pt.pc2.toFixed(2)}
               </div>
               <div
                 className="text-[10px] font-bold"
                 style={{
                   color: hover.pt.is_anomaly
-                    ? "var(--critical)"
-                    : "var(--signal)",
+                    ? "var(--danger)"
+                    : "var(--muted-foreground)",
                 }}
               >
                 {hover.pt.is_anomaly ? hover.pt.severity : "Normal"}

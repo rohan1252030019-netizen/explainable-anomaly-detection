@@ -45,10 +45,10 @@ export const FeatureContributionChart: React.FC<FeatureContributionChartProps> =
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="text-[10px] font-bold uppercase tracking-[0.14em] text-ink-faint">
+        <h3 className="text-[10px] font-bold uppercase tracking-[0.14em] text-subtle-foreground">
           {title}
         </h3>
-        <p className="text-[10px] text-ink-faint">
+        <p className="text-[10px] text-subtle-foreground">
           Combined score, scaled to the largest contributor
         </p>
       </div>
@@ -66,25 +66,25 @@ export const FeatureContributionChart: React.FC<FeatureContributionChartProps> =
           return (
             <li key={`${item.feature}-${index}`} className="space-y-1.5">
               <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
-                <span className="min-w-0 truncate text-xs font-semibold text-ink">
+                <span className="min-w-0 truncate text-xs font-semibold text-foreground">
                   {item.feature}
                 </span>
                 <span className="flex shrink-0 items-center gap-2">
                   {item.robust_z_score !== undefined &&
                     item.robust_z_score !== null && (
-                      <span className="font-mono text-[10px] tabular text-ink-faint">
+                      <span className="font-mono text-[10px] tabular text-subtle-foreground">
                         z {item.robust_z_score.toFixed(2)}
                       </span>
                     )}
-                  <span className="font-mono text-[10px] font-bold tabular text-ink-muted">
+                  <span className="font-mono text-[10px] font-bold tabular text-muted-foreground">
                     {score.toFixed(3)}
                   </span>
                   <span
                     className={cn(
                       "inline-flex items-center gap-1 rounded border px-1.5 py-px text-[9.5px] font-bold",
                       isAbove
-                        ? "border-critical/30 bg-critical-soft text-critical"
-                        : "border-signal/30 bg-signal-soft text-signal"
+                        ? "border-danger-line bg-danger-soft text-danger"
+                        : "border-info-line bg-info-soft text-info"
                     )}
                   >
                     {isAbove ? (
@@ -98,7 +98,7 @@ export const FeatureContributionChart: React.FC<FeatureContributionChartProps> =
               </div>
 
               <div
-                className="h-2 overflow-hidden rounded-full bg-inset"
+                className="h-2 overflow-hidden rounded-full bg-surface-muted"
                 role="meter"
                 aria-valuemin={0}
                 aria-valuemax={Number(maxVal.toFixed(3))}
@@ -116,14 +116,14 @@ export const FeatureContributionChart: React.FC<FeatureContributionChartProps> =
                   className={cn(
                     "h-full rounded-full",
                     isAbove
-                      ? "bg-gradient-to-r from-critical/70 to-critical"
-                      : "bg-gradient-to-r from-signal/70 to-signal"
+                      ? "bg-gradient-to-r from-danger/70 to-danger"
+                      : "bg-gradient-to-r from-info/70 to-info"
                   )}
                 />
               </div>
 
               {item.deviation && (
-                <p className="text-[10px] leading-relaxed text-ink-faint">
+                <p className="text-[10px] leading-relaxed text-subtle-foreground">
                   {item.deviation}
                 </p>
               )}

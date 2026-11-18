@@ -12,16 +12,16 @@ type Size = "xs" | "sm" | "md" | "lg";
 
 const VARIANTS: Record<Variant, string> = {
   primary:
-    "bg-accent text-on-accent hover:bg-accent-strong border border-transparent shadow-sm",
+    "bg-primary text-primary-foreground hover:bg-primary-strong border border-transparent shadow-sm",
   secondary:
-    "bg-inset text-ink border border-edge hover:border-edge-strong hover:bg-elevated",
+    "bg-surface-muted text-foreground border border-border hover:border-border-strong hover:bg-surface-muted",
   outline:
-    "bg-transparent text-ink border border-edge-strong hover:bg-inset",
-  ghost: "bg-transparent text-ink-muted border border-transparent hover:bg-inset hover:text-ink",
+    "bg-surface text-foreground border border-border-strong hover:bg-surface-muted",
+  ghost: "bg-transparent text-muted-foreground border border-transparent hover:bg-surface-muted hover:text-foreground",
   danger:
-    "bg-critical text-white dark:text-ink-inverse border border-transparent hover:opacity-90 shadow-sm",
+    "bg-danger text-on-danger border border-transparent hover:opacity-90 shadow-sm",
   success:
-    "bg-good text-white dark:text-ink-inverse border border-transparent hover:opacity-90 shadow-sm",
+    "bg-success text-on-success border border-transparent hover:opacity-90 shadow-sm",
 };
 
 const SIZES: Record<Size, string> = {

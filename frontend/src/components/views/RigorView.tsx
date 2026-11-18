@@ -253,31 +253,31 @@ export const RigorView: React.FC = () => {
 
   const gapTone =
     !isNumber(rocGap)
-      ? "var(--ink-faint)"
+      ? "var(--subtle-foreground)"
       : rocGap <= 0.02
-        ? "var(--good)"
+        ? "var(--success)"
         : rocGap <= 0.06
           ? "var(--caution)"
-          : "var(--critical)";
+          : "var(--danger)";
 
   const flagDrift = currentHoldout?.flag_rate_drift;
   const flagDriftTone =
     !isNumber(flagDrift)
-      ? "var(--ink-faint)"
+      ? "var(--subtle-foreground)"
       : Math.abs(flagDrift) <= 0.01
-        ? "var(--good)"
+        ? "var(--success)"
         : Math.abs(flagDrift) <= 0.05
           ? "var(--caution)"
-          : "var(--critical)";
+          : "var(--danger)";
 
   const stabilityTone =
     !isNumber(stability?.mean_rank_correlation)
-      ? "border-edge bg-inset text-ink-muted"
+      ? "border-border bg-surface-muted text-muted-foreground"
       : stability.mean_rank_correlation >= 0.8
-        ? "border-good/30 bg-good-soft text-ink-muted"
+        ? "border-success-line bg-success-soft text-muted-foreground"
         : stability.mean_rank_correlation >= 0.5
-          ? "border-caution/30 bg-caution-soft text-ink-muted"
-          : "border-critical/30 bg-critical-soft text-ink-muted";
+          ? "border-caution-line bg-caution-soft text-muted-foreground"
+          : "border-danger-line bg-danger-soft text-muted-foreground";
 
   const comparisonStale =
     comparison !== null &&
@@ -288,16 +288,16 @@ export const RigorView: React.FC = () => {
       {/* ── Why this page exists ───────────────────────────────────────── */}
       <Card className="relative overflow-hidden p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-          <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-accent-line bg-accent-soft text-accent">
+          <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-primary bg-primary-soft text-primary">
             <ShieldCheck size={17} aria-hidden="true" />
           </span>
 
           <div className="min-w-0 flex-1">
             <SectionLabel>Out-of-sample check</SectionLabel>
-            <h2 className="mt-1 text-sm font-bold tracking-tight text-ink">
+            <h2 className="mt-1 text-sm font-bold tracking-tight text-foreground">
               Every metric elsewhere is computed in-sample
             </h2>
-            <p className="mt-1.5 max-w-3xl text-xs leading-relaxed text-ink-muted">
+            <p className="mt-1.5 max-w-3xl text-xs leading-relaxed text-muted-foreground">
               The detectors are fitted and then asked to score the very same
               rows, which flatters them. Here the model is fitted on one split
               and scored on rows it has never seen. Explanations get the same
@@ -306,20 +306,20 @@ export const RigorView: React.FC = () => {
             </p>
           </div>
 
-          <dl className="grid shrink-0 grid-cols-2 gap-x-6 gap-y-2 border-edge sm:border-l sm:pl-5">
+          <dl className="grid shrink-0 grid-cols-2 gap-x-6 gap-y-2 border-border sm:border-l sm:pl-5">
             <div>
-              <dt className="text-[10px] uppercase tracking-wider text-ink-faint">
+              <dt className="text-[10px] uppercase tracking-wider text-subtle-foreground">
                 Detector
               </dt>
-              <dd className="max-w-40 truncate text-[11px] font-semibold text-ink">
+              <dd className="max-w-40 truncate text-[11px] font-semibold text-foreground">
                 {overview?.model_name || "Active run"}
               </dd>
             </div>
             <div>
-              <dt className="text-[10px] uppercase tracking-wider text-ink-faint">
+              <dt className="text-[10px] uppercase tracking-wider text-subtle-foreground">
                 Ground truth
               </dt>
-              <dd className="max-w-40 truncate text-[11px] font-semibold text-ink">
+              <dd className="max-w-40 truncate text-[11px] font-semibold text-foreground">
                 {dataset.label_col ? dataset.label_col : "No label column"}
               </dd>
             </div>
@@ -335,7 +335,7 @@ export const RigorView: React.FC = () => {
             value={fmt(oos.roc_auc)}
             sub={`In-sample ${fmt(ins.roc_auc)}`}
             icon={ShieldCheck}
-            accentColor="var(--accent)"
+            accentColor="var(--primary)"
           />
           <StatCard
             label="Optimism gap"
@@ -361,7 +361,7 @@ export const RigorView: React.FC = () => {
               0
             )} split`}
             icon={Database}
-            accentColor="var(--signal)"
+            accentColor="var(--info)"
           />
         </div>
       )}
@@ -397,7 +397,7 @@ export const RigorView: React.FC = () => {
           <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-3">
             <span
               id="test-size-label"
-              className="text-[11px] font-semibold text-ink-muted"
+              className="text-[11px] font-semibold text-muted-foreground"
             >
               Held-out fraction
             </span>
@@ -405,7 +405,7 @@ export const RigorView: React.FC = () => {
             <div
               role="group"
               aria-labelledby="test-size-label"
-              className="inline-flex rounded-lg border border-edge bg-inset p-0.5"
+              className="inline-flex rounded-lg border border-border bg-surface-muted p-0.5"
             >
               {TEST_SIZES.map((size) => (
                 <button
@@ -421,8 +421,8 @@ export const RigorView: React.FC = () => {
                   className={cn(
                     "rounded-md px-2.5 py-1 text-[11px] font-semibold tabular transition-colors disabled:opacity-50",
                     size === testSize
-                      ? "bg-surface text-ink shadow-sm"
-                      : "text-ink-muted hover:text-ink"
+                      ? "bg-surface text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {Math.round(size * 100)}%
@@ -431,22 +431,22 @@ export const RigorView: React.FC = () => {
             </div>
 
             {busy === "holdout" ? (
-              <span className="inline-flex items-center gap-1.5 text-[11px] text-ink-faint">
+              <span className="inline-flex items-center gap-1.5 text-[11px] text-subtle-foreground">
                 <Spinner className="size-3" />
                 Recomputing at {pct(testSize, 0)}…
               </span>
             ) : holdoutError ? (
-              <span className="text-[11px] text-critical">
+              <span className="text-[11px] text-danger">
                 Held-out report unavailable
               </span>
             ) : currentHoldout ? (
-              <span className="text-[11px] tabular text-ink-faint">
+              <span className="text-[11px] tabular text-subtle-foreground">
                 {currentHoldout.n_fit?.toLocaleString()} train ·{" "}
                 {currentHoldout.n_test?.toLocaleString()} test rows ·{" "}
                 {currentHoldout.model || overview?.model_name}
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 text-[11px] text-ink-faint">
+              <span className="inline-flex items-center gap-1.5 text-[11px] text-subtle-foreground">
                 <Spinner className="size-3" />
                 Loading held-out report…
               </span>
@@ -468,24 +468,24 @@ export const RigorView: React.FC = () => {
           {!currentHoldout && !holdoutError ? (
             <div aria-busy="true">
               <SkeletonRows rows={5} />
-              <p className="mt-4 text-center text-[10px] text-ink-faint">
+              <p className="mt-4 text-center text-[10px] text-subtle-foreground">
                 Fitting the detector on the training split and scoring unseen
                 rows…
               </p>
             </div>
           ) : currentHoldout && !currentHoldout.available ? (
             <div className="space-y-3">
-              <div className="flex items-start gap-3 rounded-xl border border-caution/30 bg-caution-soft p-3.5">
+              <div className="flex items-start gap-3 rounded-xl border border-caution-line bg-caution-soft p-3.5">
                 <AlertTriangle
                   size={14}
                   className="mt-0.5 shrink-0 text-caution"
                   aria-hidden="true"
                 />
                 <div>
-                  <p className="text-xs font-bold text-ink">
+                  <p className="text-xs font-bold text-foreground">
                     Accuracy metrics cannot be computed
                   </p>
-                  <p className="mt-0.5 text-[11px] leading-relaxed text-ink-muted">
+                  <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
                     {currentHoldout.reason ||
                       currentHoldout.summary ||
                       "This split has no ground-truth anomalies or labels."}
@@ -502,7 +502,7 @@ export const RigorView: React.FC = () => {
                     In-sample and held-out detection metrics with optimism gaps
                   </caption>
                   <thead>
-                    <tr className="text-[10px] uppercase tracking-wider text-ink-faint">
+                    <tr className="text-[10px] uppercase tracking-wider text-subtle-foreground">
                       <th scope="col" className="pb-2 text-left font-bold">
                         Metric
                       </th>
@@ -554,7 +554,7 @@ export const RigorView: React.FC = () => {
 
               <TransferPanel holdout={currentHoldout} />
 
-              <p className="mt-4 flex items-start gap-2 text-[11px] leading-relaxed text-ink-faint">
+              <p className="mt-4 flex items-start gap-2 text-[11px] leading-relaxed text-subtle-foreground">
                 <Info size={12} className="mt-0.5 shrink-0" aria-hidden="true" />
                 <span>{currentHoldout.note}</span>
               </p>
@@ -602,20 +602,20 @@ export const RigorView: React.FC = () => {
           {busy === "comparison" && !comparison ? (
             <div aria-busy="true">
               <SkeletonRows rows={4} />
-              <p className="mt-4 text-center text-[10px] text-ink-faint">
+              <p className="mt-4 text-center text-[10px] text-subtle-foreground">
                 Fitting every detector on the training split…
               </p>
             </div>
           ) : !comparison ? (
             !comparisonError && (
               <div className="py-8 text-center">
-                <span className="mx-auto grid size-10 place-items-center rounded-xl border border-edge bg-inset text-ink-faint">
+                <span className="mx-auto grid size-10 place-items-center rounded-xl border border-border bg-surface-muted text-subtle-foreground">
                   <FlaskConical size={18} aria-hidden="true" />
                 </span>
-                <p className="mt-3 text-xs font-bold text-ink">
+                <p className="mt-3 text-xs font-bold text-foreground">
                   No comparison run yet
                 </p>
-                <p className="mx-auto mt-1 max-w-md text-[11px] leading-relaxed text-ink-muted">
+                <p className="mx-auto mt-1 max-w-md text-[11px] leading-relaxed text-muted-foreground">
                   Fit all four detectors on the same training split to see which
                   one actually generalises, not which one memorised the training
                   rows.
@@ -626,12 +626,12 @@ export const RigorView: React.FC = () => {
             <>
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full border border-edge bg-inset px-2.5 py-1 text-[10px] font-semibold text-ink-muted">
+                  <span className="rounded-full border border-border bg-surface-muted px-2.5 py-1 text-[10px] font-semibold text-muted-foreground">
                     {pct(comparison.test_size, 0)} held-out ·{" "}
                     {comparison.random_state} seed
                   </span>
                   {bestModel && (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-accent-line bg-accent-soft px-2.5 py-1 text-[10px] font-semibold text-accent">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-primary-line bg-primary-soft px-2.5 py-1 text-[10px] font-semibold text-primary">
                       <CheckCircle2 size={11} aria-hidden="true" />
                       Best held-out: {bestModel.model} ·{" "}
                       {bestModel.value.toFixed(3)}
@@ -701,13 +701,13 @@ export const RigorView: React.FC = () => {
                           <tr key={`${model}-${index}`}>
                             <th
                               scope="row"
-                              className="font-sans font-bold text-ink"
+                              className="font-sans font-bold text-foreground"
                             >
                               {model}
                             </th>
                             <td
                               colSpan={6}
-                              className="text-ink-muted"
+                              className="text-muted-foreground"
                               title={reason ?? undefined}
                             >
                               {reason ?? "Held-out metrics unavailable."}
@@ -719,34 +719,34 @@ export const RigorView: React.FC = () => {
                       return (
                         <tr
                           key={`${model}-${index}`}
-                          className={isBest ? "bg-accent-soft/60" : undefined}
+                          className={isBest ? "bg-primary-soft/60" : undefined}
                         >
                           <th
                             scope="row"
-                            className="font-sans font-bold text-ink"
+                            className="font-sans font-bold text-foreground"
                           >
                             <span className="flex flex-wrap items-center gap-2">
                               {model}
                               {isBest && (
-                                <span className="rounded-full border border-accent-line bg-surface px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-accent">
+                                <span className="rounded-full border border-primary-line bg-surface px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary">
                                   Best
                                 </span>
                               )}
                             </span>
                           </th>
-                          <td className="text-right font-bold tabular text-ink">
+                          <td className="text-right font-bold tabular text-foreground">
                             {outRoc.toFixed(3)}
                           </td>
-                          <td className="text-right tabular text-ink-muted">
+                          <td className="text-right tabular text-muted-foreground">
                             {isNumber(inRoc) ? inRoc.toFixed(3) : "—"}
                           </td>
-                          <td className="text-right tabular text-ink-muted">
+                          <td className="text-right tabular text-muted-foreground">
                             {isNumber(outPr) ? outPr.toFixed(3) : "—"}
                           </td>
-                          <td className="text-right tabular text-ink-muted">
+                          <td className="text-right tabular text-muted-foreground">
                             {isNumber(f1) ? f1.toFixed(3) : "—"}
                           </td>
-                          <td className="text-right tabular text-ink-muted">
+                          <td className="text-right tabular text-muted-foreground">
                             {isNumber(recall) ? recall.toFixed(3) : "—"}
                           </td>
                           <td className="text-right">
@@ -763,7 +763,7 @@ export const RigorView: React.FC = () => {
                 </table>
               </div>
 
-              <p className="mt-3 flex items-start gap-2 text-[11px] leading-relaxed text-ink-faint">
+              <p className="mt-3 flex items-start gap-2 text-[11px] leading-relaxed text-subtle-foreground">
                 <Info size={12} className="mt-0.5 shrink-0" aria-hidden="true" />
                 <span>{comparison.note}</span>
               </p>
@@ -811,20 +811,20 @@ export const RigorView: React.FC = () => {
           {busy === "stability" && !stability ? (
             <div aria-busy="true">
               <SkeletonRows rows={3} />
-              <p className="mt-4 text-center text-[10px] text-ink-faint">
+              <p className="mt-4 text-center text-[10px] text-subtle-foreground">
                 Refitting the detector under multiple seeds…
               </p>
             </div>
           ) : !stability ? (
             !stabilityError && (
               <div className="py-8 text-center">
-                <span className="mx-auto grid size-10 place-items-center rounded-xl border border-edge bg-inset text-ink-faint">
+                <span className="mx-auto grid size-10 place-items-center rounded-xl border border-border bg-surface-muted text-subtle-foreground">
                   <Repeat size={18} aria-hidden="true" />
                 </span>
-                <p className="mt-3 text-xs font-bold text-ink">
+                <p className="mt-3 text-xs font-bold text-foreground">
                   Stability not measured yet
                 </p>
-                <p className="mx-auto mt-1 max-w-md text-[11px] leading-relaxed text-ink-muted">
+                <p className="mx-auto mt-1 max-w-md text-[11px] leading-relaxed text-muted-foreground">
                   Re-fit the detector under several seeds and compare the
                   resulting feature rankings. Low agreement means the
                   explanation is partly noise.
@@ -833,11 +833,11 @@ export const RigorView: React.FC = () => {
             )
           ) : !isNumber(stability.mean_rank_correlation) ||
             stability.n_fits < 2 ? (
-            <div className="rounded-xl border border-caution/30 bg-caution-soft p-4">
-              <p className="text-xs font-bold text-ink">
+            <div className="rounded-xl border border-caution-line bg-caution-soft p-4">
+              <p className="text-xs font-bold text-foreground">
                 Not enough successful refits
               </p>
-              <p className="mt-1 text-[11px] leading-relaxed text-ink-muted">
+              <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
                 {stability.verdict ||
                   "At least two successful fits are required to compare feature rankings."}
               </p>
@@ -850,30 +850,30 @@ export const RigorView: React.FC = () => {
               className="space-y-4"
             >
               <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                <div className="rounded-lg border border-edge bg-inset p-3">
+                <div className="rounded-lg border border-border bg-surface-muted p-3">
                   <SectionLabel>Mean rank correlation</SectionLabel>
-                  <p className="mt-1 text-lg font-extrabold tabular text-ink">
+                  <p className="mt-1 text-lg font-extrabold tabular text-foreground">
                     {fmt(stability.mean_rank_correlation)}
                   </p>
                 </div>
-                <div className="rounded-lg border border-edge bg-inset p-3">
+                <div className="rounded-lg border border-border bg-surface-muted p-3">
                   <SectionLabel>Worst pair</SectionLabel>
-                  <p className="mt-1 text-lg font-extrabold tabular text-ink">
+                  <p className="mt-1 text-lg font-extrabold tabular text-foreground">
                     {fmt(stability.min_rank_correlation)}
                   </p>
                 </div>
-                <div className="rounded-lg border border-edge bg-inset p-3">
+                <div className="rounded-lg border border-border bg-surface-muted p-3">
                   <SectionLabel>Top-3 retention</SectionLabel>
-                  <p className="mt-1 text-lg font-extrabold tabular text-ink">
+                  <p className="mt-1 text-lg font-extrabold tabular text-foreground">
                     {pct(stability.top_k_retention)}
                   </p>
                 </div>
-                <div className="rounded-lg border border-edge bg-inset p-3">
+                <div className="rounded-lg border border-border bg-surface-muted p-3">
                   <SectionLabel>Fits compared</SectionLabel>
-                  <p className="mt-1 text-lg font-extrabold tabular text-ink">
+                  <p className="mt-1 text-lg font-extrabold tabular text-foreground">
                     {stability.n_fits}
                   </p>
-                  <p className="mt-0.5 text-[10px] text-ink-faint">
+                  <p className="mt-0.5 text-[10px] text-subtle-foreground">
                     {stability.n_anomalies_probed
                       ? `${stability.n_anomalies_probed} anomalies probed`
                       : "Same rows in every fit"}
@@ -900,17 +900,17 @@ export const RigorView: React.FC = () => {
                         className="flex items-center gap-3"
                       >
                         <span
-                          className="w-36 truncate text-xs text-ink sm:w-44"
+                          className="w-36 truncate text-xs text-foreground sm:w-44"
                           title={feature.feature}
                         >
                           {feature.feature}
                         </span>
                         <span
-                          className="h-1.5 flex-1 overflow-hidden rounded-full bg-inset"
+                          className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-muted"
                           aria-hidden="true"
                         >
                           <motion.span
-                            className="block h-full rounded-full bg-accent"
+                            className="block h-full rounded-full bg-primary"
                             initial={{ width: 0 }}
                             animate={{
                               width: `${Math.max(
@@ -924,7 +924,7 @@ export const RigorView: React.FC = () => {
                             }}
                           />
                         </span>
-                        <span className="w-14 text-right text-[11px] tabular text-ink-muted">
+                        <span className="w-14 text-right text-[11px] tabular text-muted-foreground">
                           {pct(feature.share, 0)}
                         </span>
                       </li>
@@ -940,12 +940,12 @@ export const RigorView: React.FC = () => {
                     {stability.per_fit_leader.map((leader, index) => (
                       <li
                         key={`${leader}-${index}`}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-edge bg-inset px-2.5 py-1 text-[10px] text-ink-muted"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-muted px-2.5 py-1 text-[10px] text-muted-foreground"
                       >
-                        <span className="font-mono text-ink-faint">
+                        <span className="font-mono text-subtle-foreground">
                           {stability.seeds?.[index] ?? index + 1}
                         </span>
-                        <span className="font-semibold text-ink">
+                        <span className="font-semibold text-foreground">
                           {leader}
                         </span>
                       </li>
@@ -961,26 +961,26 @@ export const RigorView: React.FC = () => {
       {/* ── Reading guide ──────────────────────────────────────────────── */}
       <Card className="p-5">
         <SectionLabel>Reading these numbers</SectionLabel>
-        <ul className="mt-3 grid gap-3 text-xs leading-relaxed text-ink-muted sm:grid-cols-2">
-          <li className="rounded-lg border border-edge bg-inset p-3">
-            <span className="font-semibold text-ink">Held-out gap</span>{" "}
+        <ul className="mt-3 grid gap-3 text-xs leading-relaxed text-muted-foreground sm:grid-cols-2">
+          <li className="rounded-lg border border-border bg-surface-muted p-3">
+            <span className="font-semibold text-foreground">Held-out gap</span>{" "}
             compares a model scored on its own training rows against one scored
             on unseen rows. A small gap means the headline figure is
             trustworthy.
           </li>
-          <li className="rounded-lg border border-edge bg-inset p-3">
-            <span className="font-semibold text-ink">Precision vs recall</span>{" "}
+          <li className="rounded-lg border border-border bg-surface-muted p-3">
+            <span className="font-semibold text-foreground">Precision vs recall</span>{" "}
             at a fixed contamination rate trades false alarms against missed
             anomalies. Held-out recall well below 1 means flagged conditions are
             being missed, whatever ROC-AUC suggests.
           </li>
-          <li className="rounded-lg border border-edge bg-inset p-3">
-            <span className="font-semibold text-ink">Stability</span> answers a
+          <li className="rounded-lg border border-border bg-surface-muted p-3">
+            <span className="font-semibold text-foreground">Stability</span> answers a
             different question from accuracy: whether you would get the same
             story if you re-ran the pipeline tomorrow.
           </li>
-          <li className="rounded-lg border border-edge bg-inset p-3">
-            <span className="font-semibold text-ink">Domain truth</span> is not
+          <li className="rounded-lg border border-border bg-surface-muted p-3">
+            <span className="font-semibold text-foreground">Domain truth</span> is not
             measured here. These checks show whether the model behaves as
             reported, which is the part that can be verified.
           </li>

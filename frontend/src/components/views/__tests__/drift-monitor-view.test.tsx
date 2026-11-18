@@ -78,8 +78,8 @@ function renderView() {
 beforeEach(() => {
   vi.mocked(api.getHealth).mockResolvedValue({
     status: "healthy",
-    framework: "XAUD",
-    version: "2.1.0",
+    framework: "SENTINEL",
+    version: "3.0.0",
     dataset_loaded: false,
     detection_ready: false,
     active_model: "Isolation Forest",

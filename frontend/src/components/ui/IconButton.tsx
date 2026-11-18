@@ -6,11 +6,11 @@ type Size = "sm" | "md";
 
 const VARIANTS: Record<Variant, string> = {
   ghost:
-    "border border-transparent bg-transparent text-ink-muted hover:bg-inset hover:text-ink",
+    "border border-transparent bg-transparent text-muted-foreground hover:bg-surface-muted hover:text-foreground",
   outline:
-    "border border-edge bg-surface text-ink-muted hover:border-edge-strong hover:bg-inset hover:text-ink",
+    "border border-border bg-surface text-muted-foreground hover:border-border-strong hover:bg-surface-muted hover:text-foreground",
   solid:
-    "border border-accent-line bg-accent-soft text-accent hover:border-accent/40 hover:bg-accent-soft/80",
+    "border border-primary bg-primary-soft text-primary hover:border-primary hover:bg-surface",
 };
 
 const SIZES: Record<Size, string> = {

@@ -100,33 +100,33 @@ export const AnalyticsView: React.FC = () => {
       {/* Context strip */}
       <Card className="flex flex-wrap items-center gap-x-8 gap-y-3 p-4">
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-edge bg-inset text-accent">
+          <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-border bg-surface-muted text-primary">
             <LineChart size={15} aria-hidden="true" />
           </span>
           <div className="min-w-0">
             <SectionLabel>Dataset</SectionLabel>
-            <p className="truncate text-xs font-semibold text-ink">
+            <p className="truncate text-xs font-semibold text-foreground">
               {dataset?.dataset_name || "Untitled"}
             </p>
           </div>
         </div>
 
-        <div className="hidden h-8 w-px bg-edge sm:block" aria-hidden="true" />
+        <div className="hidden h-8 w-px bg-border sm:block" aria-hidden="true" />
 
         <div>
           <SectionLabel>PCA variance</SectionLabel>
-          <p className="text-xs font-semibold tabular text-ink">
+          <p className="text-xs font-semibold tabular text-foreground">
             {pcaVariance !== null
               ? `${(pcaVariance * 100).toFixed(1)}% in two components`
               : "Not available"}
           </p>
         </div>
 
-        <div className="hidden h-8 w-px bg-edge sm:block" aria-hidden="true" />
+        <div className="hidden h-8 w-px bg-border sm:block" aria-hidden="true" />
 
         <div>
           <SectionLabel>Correlation scope</SectionLabel>
-          <p className="text-xs font-semibold tabular text-ink">
+          <p className="text-xs font-semibold tabular text-foreground">
             {data.corr?.features?.length
               ? `${data.corr.features.length} numeric features`
               : "Not available"}
@@ -135,7 +135,7 @@ export const AnalyticsView: React.FC = () => {
 
         <div className="ml-auto flex items-center gap-2">
           <span
-            className="rounded-full border border-edge bg-inset px-2.5 py-1 text-[10px] font-semibold text-ink-muted"
+            className="rounded-full border border-border bg-surface-muted px-2.5 py-1 text-[10px] font-semibold text-muted-foreground"
             title={
               ready
                 ? "Points are coloured by the active detector's output."
@@ -158,13 +158,13 @@ export const AnalyticsView: React.FC = () => {
       </Card>
 
       {!ready && (
-        <div className="flex items-start gap-3 rounded-xl border border-info/25 bg-info-soft p-3.5">
+        <div className="flex items-start gap-3 rounded-xl border border-info-line bg-info-soft p-3.5">
           <Info
             size={14}
             className="mt-0.5 shrink-0 text-info"
             aria-hidden="true"
           />
-          <p className="text-[11px] leading-relaxed text-ink-muted">
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
             Detection has not run for this dataset, so the projection is shown
             without anomaly labels. Run detection to overlay scores and
             severity.
@@ -175,11 +175,11 @@ export const AnalyticsView: React.FC = () => {
       {!data.loaded ? (
         <div className="space-y-5">
           <Card className="p-6">
-            <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.14em] text-ink-faint">
+            <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.14em] text-subtle-foreground">
               Projection
             </p>
             <SkeletonRows rows={5} />
-            <p className="mt-4 text-center text-[10px] text-ink-faint" role="status">
+            <p className="mt-4 text-center text-[10px] text-subtle-foreground" role="status">
               Computing PCA projection and correlation matrix…
             </p>
           </Card>
@@ -195,14 +195,14 @@ export const AnalyticsView: React.FC = () => {
               role="alert"
               className="flex flex-col items-center gap-3 p-8 text-center"
             >
-              <span className="grid size-9 place-items-center rounded-xl border border-critical/30 bg-critical-soft text-critical">
+              <span className="grid size-9 place-items-center rounded-xl border border-danger-line bg-danger-soft text-danger">
                 <AlertTriangle size={16} aria-hidden="true" />
               </span>
               <div>
-                <p className="text-xs font-bold text-ink">
+                <p className="text-xs font-bold text-foreground">
                   Projection unavailable
                 </p>
-                <p className="mx-auto mt-1 max-w-lg break-words text-[11px] leading-relaxed text-ink-muted">
+                <p className="mx-auto mt-1 max-w-lg break-words text-[11px] leading-relaxed text-muted-foreground">
                   {data.pcaError}
                 </p>
               </div>
@@ -224,7 +224,7 @@ export const AnalyticsView: React.FC = () => {
               </div>
             </Card>
           ) : (
-            <Card className="p-8 text-center text-xs text-ink-faint">
+            <Card className="p-8 text-center text-xs text-subtle-foreground">
               No projection data was returned for this dataset.
             </Card>
           )}
@@ -241,14 +241,14 @@ export const AnalyticsView: React.FC = () => {
               role="alert"
               className="flex flex-col items-center gap-3 p-8 text-center"
             >
-              <span className="grid size-9 place-items-center rounded-xl border border-critical/30 bg-critical-soft text-critical">
+              <span className="grid size-9 place-items-center rounded-xl border border-danger-line bg-danger-soft text-danger">
                 <AlertTriangle size={16} aria-hidden="true" />
               </span>
               <div>
-                <p className="text-xs font-bold text-ink">
+                <p className="text-xs font-bold text-foreground">
                   Correlation matrix unavailable
                 </p>
-                <p className="mx-auto mt-1 max-w-lg break-words text-[11px] leading-relaxed text-ink-muted">
+                <p className="mx-auto mt-1 max-w-lg break-words text-[11px] leading-relaxed text-muted-foreground">
                   {data.corrError}
                 </p>
               </div>
@@ -259,10 +259,10 @@ export const AnalyticsView: React.FC = () => {
             </Card>
           ) : (
             <Card className="p-8 text-center">
-              <p className="text-xs font-semibold text-ink">
+              <p className="text-xs font-semibold text-foreground">
                 Not enough numeric features
               </p>
-              <p className="mx-auto mt-1 max-w-md text-[11px] leading-relaxed text-ink-muted">
+              <p className="mx-auto mt-1 max-w-md text-[11px] leading-relaxed text-muted-foreground">
                 The correlation matrix needs at least two numeric columns. This
                 dataset does not provide them.
               </p>

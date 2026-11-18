@@ -84,7 +84,7 @@ export function ConfirmDialog({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-overlay p-4 backdrop-blur-sm"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && !busy) onClose();
       }}
@@ -102,8 +102,8 @@ export function ConfirmDialog({
             <span
               className={
                 tone === "danger"
-                  ? "grid size-9 shrink-0 place-items-center rounded-lg border border-critical/25 bg-critical-soft text-critical"
-                  : "grid size-9 shrink-0 place-items-center rounded-lg border border-accent-line bg-accent-soft text-accent"
+                  ? "grid size-9 shrink-0 place-items-center rounded-lg border border-danger bg-danger-soft text-danger"
+                  : "grid size-9 shrink-0 place-items-center rounded-lg border border-primary bg-primary-soft text-primary"
               }
             >
               <AlertTriangle size={16} aria-hidden="true" />
@@ -111,13 +111,13 @@ export function ConfirmDialog({
             <div>
               <h2
                 id="confirm-dialog-title"
-                className="text-sm font-bold tracking-tight text-ink"
+                className="text-sm font-bold tracking-tight text-foreground"
               >
                 {title}
               </h2>
               <div
                 id="confirm-dialog-description"
-                className="mt-1 text-xs leading-relaxed text-ink-muted"
+                className="mt-1 text-xs leading-relaxed text-muted-foreground"
               >
                 {description}
               </div>
@@ -128,7 +128,7 @@ export function ConfirmDialog({
             onClick={onClose}
             disabled={busy}
             aria-label="Close dialog"
-            className="grid size-7 shrink-0 place-items-center rounded-md text-ink-faint transition-colors hover:bg-inset hover:text-ink disabled:opacity-40"
+            className="grid size-7 shrink-0 place-items-center rounded-md text-subtle-foreground transition-colors hover:bg-surface-muted hover:text-foreground disabled:opacity-40"
           >
             <X size={14} />
           </button>

@@ -10,7 +10,7 @@ describe("Badge", () => {
 
   it("applies the tone class for a known tone", () => {
     render(<Badge tone="good">STABLE</Badge>);
-    expect(screen.getByText("STABLE").className).toContain("text-good");
+    expect(screen.getByText("STABLE").className).toContain("text-success");
   });
 });
 
@@ -23,7 +23,7 @@ describe("SeverityBadge", () => {
   it("falls back to NORMAL for an unknown severity", () => {
     render(<SeverityBadge severity="banana" />);
     expect(screen.getByText("BANANA")).toBeInTheDocument();
-    expect(severityStyle("banana").hex).toBe("var(--signal)");
+    expect(severityStyle("banana").hex).toBe("var(--info)");
   });
 
   it("hides the dot when showDot is false", () => {
