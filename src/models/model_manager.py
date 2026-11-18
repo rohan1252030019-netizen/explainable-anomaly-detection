@@ -24,6 +24,17 @@ import numpy as np
 import sklearn
 
 from src.models.base_detector import BaseDetector
+from src.models.classical.copod_detector import COPODDetector
+from src.models.classical.dbscan_detector import DBSCANDetector
+from src.models.classical.ecod_detector import ECODDetector
+from src.models.classical.extended_isolation_forest import (
+    ExtendedIsolationForestDetector,
+)
+from src.models.classical.mahalanobis_detector import MahalanobisDetector
+from src.models.classical.suod_ensemble import SUODDetector
+from src.models.deep.autoencoder import AutoencoderDetector
+from src.models.deep.deep_svdd import DeepSVDDDetector
+from src.models.deep.vae import VAEDetector
 from src.models.elliptic_envelope import EllipticEnvelopeDetector
 from src.models.gmm_detector import GMMDetector
 from src.models.hbos_detector import HBOSDetector
@@ -47,6 +58,17 @@ DETECTOR_REGISTRY: dict[str, type] = {
     "PCA Reconstruction": PCADetector,
     "Histogram-Based Outlier Score": HBOSDetector,
     "Gaussian Mixture Model": GMMDetector,
+    # Classical detectors
+    "ECOD": ECODDetector,
+    "COPOD": COPODDetector,
+    "Shrinkage Mahalanobis": MahalanobisDetector,
+    "DBSCAN Noise": DBSCANDetector,
+    "Extended Isolation Forest": ExtendedIsolationForestDetector,
+    "SUOD Fast Ensemble": SUODDetector,
+    # Deep learning detectors
+    "Deep Autoencoder": AutoencoderDetector,
+    "Variational Autoencoder": VAEDetector,
+    "Deep SVDD": DeepSVDDDetector,
 }
 
 SUPERVISED_REGISTRY: dict[str, type] = {
@@ -102,6 +124,56 @@ DEFAULT_PARAMS: dict[str, dict[str, Any]] = {
         "contamination": 0.05,
         "random_state": 42,
     },
+    "ECOD": {
+        "contamination": 0.05,
+    },
+    "COPOD": {
+        "contamination": 0.05,
+    },
+    "Shrinkage Mahalanobis": {
+        "contamination": 0.05,
+    },
+    "DBSCAN Noise": {
+        "eps": 0.5,
+        "min_samples": 5,
+        "contamination": 0.05,
+    },
+    "Extended Isolation Forest": {
+        "n_estimators": 100,
+        "max_samples": 256,
+        "contamination": 0.05,
+        "random_state": 42,
+    },
+    "SUOD Fast Ensemble": {
+        "subspace_size": 0.75,
+        "contamination": 0.05,
+        "random_state": 42,
+    },
+    "Deep Autoencoder": {
+        "latent_dim": 4,
+        "hidden_dim": 32,
+        "epochs": 40,
+        "batch_size": 64,
+        "lr": 0.005,
+        "contamination": 0.05,
+    },
+    "Variational Autoencoder": {
+        "latent_dim": 4,
+        "hidden_dim": 32,
+        "beta": 0.01,
+        "epochs": 40,
+        "batch_size": 64,
+        "lr": 0.005,
+        "contamination": 0.05,
+    },
+    "Deep SVDD": {
+        "rep_dim": 16,
+        "hidden_dim": 32,
+        "epochs": 40,
+        "batch_size": 64,
+        "lr": 0.005,
+        "contamination": 0.05,
+    },
 }
 
 
@@ -130,6 +202,15 @@ MODEL_ROW_LIMITS: dict[str, int] = {
     "PCA Reconstruction": 200_000,
     "Histogram-Based Outlier Score": 200_000,
     "Gaussian Mixture Model": 200_000,
+    "ECOD": 200_000,
+    "COPOD": 200_000,
+    "Shrinkage Mahalanobis": 100_000,
+    "DBSCAN Noise": 25_000,
+    "Extended Isolation Forest": 100_000,
+    "SUOD Fast Ensemble": 200_000,
+    "Deep Autoencoder": 100_000,
+    "Variational Autoencoder": 100_000,
+    "Deep SVDD": 100_000,
 }
 
 
@@ -227,6 +308,105 @@ MODEL_CAPABILITIES: dict[str, dict[str, Any]] = {
         "score_direction": "lower_is_anomalous",
         "strengths": "Captures multi-modal clustered densities with true likelihood scores.",
         "limitations": "EM algorithm can get stuck in local optima; needs adequate samples per cluster.",
+    },
+    "ECOD": {
+        "family": "Empirical Cumulative Distribution Functions",
+        "time_complexity": "O(n * d)",
+        "space_complexity": "O(n * d)",
+        "scaling_required": False,
+        "sensitive_to_dim": False,
+        "explanation_methods": ["Tail Probability Decomposition", "Kernel SHAP"],
+        "score_direction": "lower_is_anomalous",
+        "strengths": "Parameter-free, deterministic, ultra-fast linear time O(n*d) computation.",
+        "limitations": "Assumes dimensional tail independence; can underestimate complex multivariate joint outliers.",
+    },
+    "COPOD": {
+        "family": "Empirical Copula Tail Dependence",
+        "time_complexity": "O(n * d)",
+        "space_complexity": "O(n * d)",
+        "scaling_required": False,
+        "sensitive_to_dim": False,
+        "explanation_methods": ["Copula Tail Decomposition", "Kernel SHAP"],
+        "score_direction": "lower_is_anomalous",
+        "strengths": "Parameter-free, models multivariate tail dependence without Gaussianity assumptions.",
+        "limitations": "Empirical copulas degrade when extreme joint tail events have zero training coverage.",
+    },
+    "Shrinkage Mahalanobis": {
+        "family": "Robust Covariance / Regularized Distance",
+        "time_complexity": "O(n * d^2 + d^3)",
+        "space_complexity": "O(d^2)",
+        "scaling_required": True,
+        "sensitive_to_dim": True,
+        "explanation_methods": ["Distance Component Decomposition", "Kernel SHAP"],
+        "score_direction": "lower_is_anomalous",
+        "strengths": "Ledoit-Wolf shrinkage avoids singular covariance breakdown, robust to collinear features.",
+        "limitations": "Assumes unimodal elliptical density structure.",
+    },
+    "DBSCAN Noise": {
+        "family": "Density-Based Clustering",
+        "time_complexity": "O(n^2 * d) to O(n * log(n) * d)",
+        "space_complexity": "O(n * d)",
+        "scaling_required": True,
+        "sensitive_to_dim": True,
+        "explanation_methods": ["Nearest Core Distance Decomposition"],
+        "score_direction": "lower_is_anomalous",
+        "strengths": "Identifies arbitrary geometric non-linear cluster boundaries and isolates noise points.",
+        "limitations": "Sensitive to eps and min_samples hyperparameters; quadratic distance scaling.",
+    },
+    "Extended Isolation Forest": {
+        "family": "Random Hyperplane Isolation Trees",
+        "time_complexity": "O(T * n * d)",
+        "space_complexity": "O(T * s)",
+        "scaling_required": False,
+        "sensitive_to_dim": False,
+        "explanation_methods": ["Hyperplane Depth Decomposition", "Kernel SHAP"],
+        "score_direction": "lower_is_anomalous",
+        "strengths": "Overcomes axis-parallel cut artifacts by cutting along random multi-feature hyperplanes.",
+        "limitations": "Slightly higher computation per tree node than standard axis-parallel iForest.",
+    },
+    "SUOD Fast Ensemble": {
+        "family": "Scalable Subspace Ensemble",
+        "time_complexity": "O(T * n * (d * subspace_size))",
+        "space_complexity": "O(T * s)",
+        "scaling_required": False,
+        "sensitive_to_dim": False,
+        "explanation_methods": ["Subspace Model Consensus Analysis"],
+        "score_direction": "lower_is_anomalous",
+        "strengths": "Accelerates quadratic base models via random subspace projections and rank consensus.",
+        "limitations": "Ensemble variance depends on random subspace sampling coverage.",
+    },
+    "Deep Autoencoder": {
+        "family": "Deep Neural Reconstruction",
+        "time_complexity": "O(epochs * n * d * hidden)",
+        "space_complexity": "O(weights)",
+        "scaling_required": True,
+        "sensitive_to_dim": False,
+        "explanation_methods": ["Native Per-Feature Reconstruction Error", "Kernel SHAP"],
+        "score_direction": "lower_is_anomalous",
+        "strengths": "Non-linear manifold bottleneck; exact native per-feature error attribution without perturbation.",
+        "limitations": "Requires gradient descent optimization; hyperparameter tuning (epochs, lr, latent dim).",
+    },
+    "Variational Autoencoder": {
+        "family": "Deep Probabilistic Latent Generative",
+        "time_complexity": "O(epochs * n * d * hidden)",
+        "space_complexity": "O(weights)",
+        "scaling_required": True,
+        "sensitive_to_dim": False,
+        "explanation_methods": ["Native Per-Feature Reconstruction Error", "Latent KL Divergence"],
+        "score_direction": "lower_is_anomalous",
+        "strengths": "Learns continuous probabilistic latent distribution; combines reconstruction with KL density.",
+        "limitations": "Stochastic latent sampling; sensitive to beta trade-off parameter.",
+    },
+    "Deep SVDD": {
+        "family": "Deep One-Class Hypersphere",
+        "time_complexity": "O(epochs * n * d * hidden)",
+        "space_complexity": "O(weights)",
+        "scaling_required": True,
+        "sensitive_to_dim": False,
+        "explanation_methods": ["Representation Center Distance Decomposition"],
+        "score_direction": "lower_is_anomalous",
+        "strengths": "Directly minimizes latent hypersphere volume around nominal representations.",
+        "limitations": "Requires careful representation collapse prevention (fixed center, no bias).",
     },
     "Pseudo-Label Surrogate": {
         "family": "Gradient Boosted Trees (Surrogate)",

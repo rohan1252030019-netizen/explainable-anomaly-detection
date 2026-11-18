@@ -72,8 +72,16 @@ def compare_models(
             "Runtime (s)": f"{fit_time:.3f}",
             "Score Sep.": f"{unsup['score_separation']:.4f}",
             "Norm. Sep.": f"{unsup['normalised_separation']:.3f}",
-            "Anom. Score Mean": f"{unsup.get('anomaly_score_mean', 0.0):.3f}",
-            "Normal Score Mean": f"{unsup.get('normal_score_mean', 0.0):.3f}",
+            "Anom. Score Mean": (
+                f"{unsup['anomaly_score_mean']:.3f}"
+                if unsup.get("anomaly_score_mean") is not None
+                else "N/A"
+            ),
+            "Normal Score Mean": (
+                f"{unsup['normal_score_mean']:.3f}"
+                if unsup.get("normal_score_mean") is not None
+                else "N/A"
+            ),
         }
 
         # Supervised metrics (only if labels available)
