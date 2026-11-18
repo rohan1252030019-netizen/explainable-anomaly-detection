@@ -108,8 +108,14 @@ class HybridStackingDetector(BaseSupervisedDetector):
         X: np.ndarray,
         y: np.ndarray,
         feature_names: list[str] | None = None,
+        is_pseudo_label: bool = False,
         **kwargs: Any,
     ) -> "HybridStackingDetector":
+        if is_pseudo_label or kwargs.get("provenance") == "pseudo_label":
+            raise ValueError(
+                "HybridStackingDetector refuses ensemble pseudo-label targets. "
+                "Meta-learner stacking requires ground-truth labels to prevent circular self-reinforcing leakage."
+            )
         t0 = time.perf_counter()
         X_arr = np.asarray(X, dtype=np.float64)
         y_arr = np.asarray(y, dtype=int)

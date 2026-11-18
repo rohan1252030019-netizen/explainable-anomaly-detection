@@ -184,6 +184,7 @@ class AutoencoderDetector(BaseDetector):
         X_arr = np.asarray(X, dtype=np.float32)
         X_scaled = self.scaler_.transform(X_arr).astype(np.float32) if self.scaler_ else X_arr
 
+        assert self.model_ is not None
         self.model_.eval()
         with torch.no_grad():
             tensor_x = torch.from_numpy(X_scaled).to(self.device)

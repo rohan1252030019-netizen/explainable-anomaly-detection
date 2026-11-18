@@ -512,14 +512,20 @@ class ErrorResponse(BaseModel):
 class FidelityReportResponse(_OpenModel):
     provenance: str = "surrogate of ensemble"
     is_ground_truth: bool = False
-    spearman_rank_corr: float
-    spearman_pvalue: float
-    top_k_overlaps: dict[str, float]
-    pseudo_label_accuracy: float
-    pseudo_label_f1: float
-    surrogate_mean_score: float
-    ensemble_mean_score: float
-    n_samples: int
+    agreement_spearman: float = 0.0
+    agreement_pvalue: float = 0.0
+    agreement_top_k_overlaps: dict[str, float] = {}
+    agreement_accuracy: float = 0.0
+    agreement_f1: float = 0.0
+    agreement_pr_auc: float = 0.0
+    spearman_rank_corr: float = 0.0
+    spearman_pvalue: float = 0.0
+    top_k_overlaps: dict[str, float] = {}
+    pseudo_label_accuracy: float = 0.0
+    pseudo_label_f1: float = 0.0
+    surrogate_mean_score: float = 0.0
+    ensemble_mean_score: float = 0.0
+    n_samples: int = 0
 
 
 class SurrogateTrainRequest(BaseModel):
@@ -577,6 +583,7 @@ class SupervisedTrainResponse(_OpenModel):
 
 class HybridStackingRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
+    label_column: str | None = Field(None, description="Optional column containing real ground truth labels. Pseudo-labels are strictly refused with 422.")
     passthrough: bool = Field(True, description="Concatenate original features with 8 unsupervised meta-features")
     n_estimators: int = Field(150, ge=10, le=1000)
     max_depth: int = Field(4, ge=1, le=12)
@@ -633,6 +640,7 @@ class ConformalCalibrationResponse(_OpenModel):
     threshold_at_alpha: float
     is_mondrian: bool
     groups: list[str] = []
+    fallback_groups: list[str] = []
     coverage_statement: str
 
 

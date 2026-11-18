@@ -11,26 +11,17 @@ export function ModelCardsView() {
   const [card, setCard] = useState<any>(null);
   const [copied, setCopied] = useState(false);
   const [stage, setStage] = useState<string>("staging");
+  const [error, setError] = useState<string | null>(null);
 
   const generateCard = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await api.generateModelCard("3.0.0", "SENTINEL Auditor");
       setCard(res);
-    } catch {
-      // Fallback demo card
-      setCard({
-        model_name: overview?.model_name || "Isolation Forest",
-        version: "3.0.0",
-        author: "SENTINEL System Auditor",
-        timestamp: new Date().toISOString(),
-        dataset_fingerprint: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        lifecycle_stage: stage,
-        intended_use: "Unsupervised anomaly detection and tabular outlier ranking under strict zero-leakage constraints.",
-        out_of_scope_use: "Direct causal attribution or automated autonomous disciplinary punitive action without human verification.",
-        factors_and_metrics: "Conformal p-values with guaranteed finite-sample coverage at nominal error rate alpha = 0.05.",
-        limitations: "Assumes exchangeability between reference calibration points and test observations. Conformal guarantees degrade under unaddressed non-stationary covariate shift.",
-      });
+    } catch (err: any) {
+      setError(err?.message || "Failed to generate model card. Fit a detector on a dataset first.");
+      setCard(null);
     } finally {
       setLoading(false);
     }

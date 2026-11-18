@@ -234,13 +234,27 @@ def train_hybrid_stacking(req: HybridStackingRequest) -> HybridStackingResponse:
             detail="No preprocessed dataset loaded. Please upload or load a dataset first.",
         )
 
-    # Derive pseudo-labels from ensemble or true labels if available
-    if state.norm_scores is None:
-        state.run_detection(use_ensemble=True)
+    # Target label resolution: HybridStacking refuses ensemble pseudo-labels (HTTP 422)
+    y: np.ndarray | None = None
+    if req.label_column and state.df_raw is not None and req.label_column in state.df_raw.columns:
+        y = state.df_raw[req.label_column].to_numpy(dtype=int)
+    elif state.y_true is not None:
+        y = np.asarray(state.y_true, dtype=int)
+    elif state.df_raw is not None and "is_anomaly" in state.df_raw.columns:
+        y = state.df_raw["is_anomaly"].to_numpy(dtype=int)
+    elif state.df_raw is not None and "Class" in state.df_raw.columns:
+        y = state.df_raw["Class"].to_numpy(dtype=int)
 
-    ensemble_scores = state.norm_scores
-    thresh = float(np.quantile(ensemble_scores, 0.95))
-    y = (ensemble_scores >= thresh).astype(int)
+    if y is None:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "HybridStackingDetector refuses ensemble pseudo-label targets (HTTP 422). "
+                "Hybrid stacking meta-learners require verified ground-truth labels "
+                "(from a user label column or synthetic benchmark lab). Training a meta-learner "
+                "on pseudo-labels derived from the same base ensemble creates circular leakage."
+            ),
+        )
 
     stacker = HybridStackingDetector(
         passthrough=req.passthrough,
@@ -310,6 +324,8 @@ def tune_hyperparameters(req: HyperparameterTuneRequest) -> HyperparameterTuneRe
         if state.norm_scores is None:
             state.run_detection(use_ensemble=True)
         ensemble_scores = state.norm_scores
+        if ensemble_scores is None:
+            raise HTTPException(status_code=500, detail="Failed to compute ensemble scores.")
         thresh = float(np.quantile(ensemble_scores, 0.95))
         y = (ensemble_scores >= thresh).astype(int)
 

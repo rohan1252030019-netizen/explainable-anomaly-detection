@@ -67,7 +67,7 @@ class ModelRegistry:
         try:
             joblib.dump(model_obj, weights_path)
         except Exception:
-            # If model object itself cannot be serialized directly, save dummy indicator
+            # If model object itself cannot be serialized directly, save placeholder indicator
             with open(weights_path, "wb") as f:
                 f.write(b"SENTINEL_WEIGHTS_PLACEHOLDER")
 

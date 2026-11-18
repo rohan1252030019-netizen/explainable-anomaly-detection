@@ -33,34 +33,14 @@ export function RootCauseView() {
         setNoiseCount(res.noise_count ?? 0);
       } else if (Array.isArray(res)) {
         setClusters(res);
+        setNoiseCount(0);
       } else {
-        // Fallback demo clusters
-        setClusters([
-          {
-            cluster_id: 0,
-            name: "Archetype A: High Transaction Value Spikes",
-            size: 28,
-            dominant_features: [
-              { feature: "transaction_amount", mean_shap: 0.842 },
-              { feature: "daily_velocity", mean_shap: 0.512 },
-            ],
-            archetype_description: "Anomalies driven primarily by extreme single-event transaction values coupled with high velocity.",
-          },
-          {
-            cluster_id: 1,
-            name: "Archetype B: Nighttime Geographic Shift",
-            size: 19,
-            dominant_features: [
-              { feature: "hour_of_day", mean_shap: 0.723 },
-              { feature: "ip_distance_km", mean_shap: 0.618 },
-            ],
-            archetype_description: "Off-hours operations originating from distant geographic IP locations.",
-          },
-        ]);
-        setNoiseCount(7);
+        setClusters([]);
+        setNoiseCount(0);
       }
     } catch (err: any) {
       setError(err?.message || "Failed to cluster root causes");
+      setClusters([]);
     } finally {
       setLoading(false);
     }

@@ -147,6 +147,8 @@ def test_suod_fast_ensemble(synthetic_data):
     assert np.mean(scores[-5:]) < np.mean(scores[:150])
 
 
+@pytest.mark.slow
+@pytest.mark.deep
 def test_deep_autoencoder_and_attribution(synthetic_data):
     """
     Verify PyTorch Autoencoder early stopping and native per-feature error attribution.
@@ -170,6 +172,8 @@ def test_deep_autoencoder_and_attribution(synthetic_data):
     assert np.all(attr >= 0.0)
 
 
+@pytest.mark.slow
+@pytest.mark.deep
 def test_variational_autoencoder(synthetic_data):
     """Verify PyTorch VAE fits and reconstructs nominal manifold."""
     detector = VAEDetector(
@@ -186,6 +190,8 @@ def test_variational_autoencoder(synthetic_data):
     assert np.mean(scores[-5:]) < np.mean(scores[:150])
 
 
+@pytest.mark.slow
+@pytest.mark.deep
 def test_deep_svdd_detector(synthetic_data):
     """Verify Deep SVDD pulls representations toward fixed center c."""
     detector = DeepSVDDDetector(

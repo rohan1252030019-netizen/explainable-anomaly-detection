@@ -328,3 +328,56 @@ def test_api_v2_supervised_endpoints(synthetic_anomaly_data):
     data_tune = r_tune.json()
     assert "best_params" in data_tune
     assert data_tune["n_trials"] == 3
+
+
+def test_hybrid_stacking_refuses_pseudo_labels(synthetic_anomaly_data):
+    """
+    HARDENING VERIFICATION (Item a):
+    HybridStackingDetector must refuse pseudo-label targets to prevent circular leakage.
+    - Detector raises ValueError when is_pseudo_label=True.
+    - REST API returns HTTP 422 when no verified ground-truth labels exist.
+    """
+    X, y, _, feature_names = synthetic_anomaly_data
+    stacker = HybridStackingDetector(n_estimators=10, max_depth=2, n_splits=2, random_state=42)
+
+    # 1. Direct Python API refusal
+    with pytest.raises(ValueError, match="refuses ensemble pseudo-label targets"):
+        stacker.fit(X, y, feature_names=feature_names, is_pseudo_label=True)
+
+    with pytest.raises(ValueError, match="refuses ensemble pseudo-label targets"):
+        stacker.fit(X, y, feature_names=feature_names, provenance="pseudo_label")
+
+    # 2. REST API refusal when dataset has no labels
+    client = TestClient(app)
+    # Upload or state without true labels
+    state.reset_all()
+    state.X = X
+    state.feature_names = feature_names
+    state.y_true = None
+    state.df_raw = None
+
+    r = client.post(
+        "/api/v2/supervised/stacking/train",
+        json={"passthrough": True, "n_estimators": 10, "max_depth": 2, "n_splits": 2},
+    )
+    assert r.status_code == 422
+    assert "refuses ensemble pseudo-label targets" in r.json()["detail"]
+
+
+def test_pseudo_label_metrics_named_agreement(synthetic_anomaly_data):
+    """
+    HARDENING VERIFICATION (Item b):
+    Metrics computed against pseudo-labels must be named agreement_* with is_ground_truth=False.
+    """
+    X, _, ensemble_scores, feature_names = synthetic_anomaly_data
+    surrogate = SurrogateDetector(n_estimators=20, max_depth=2, n_splits=3, random_state=42)
+    surrogate.fit_from_ensemble(X, ensemble_scores, feature_names=feature_names)
+
+    report = surrogate.fidelity_report_.to_dict()
+    assert report["is_ground_truth"] is False
+    assert "agreement_spearman" in report
+    assert "agreement_accuracy" in report
+    assert "agreement_f1" in report
+    assert "agreement_pr_auc" in report
+    assert "agreement_top_k_overlaps" in report
+    assert report["provenance"] == "surrogate of ensemble"

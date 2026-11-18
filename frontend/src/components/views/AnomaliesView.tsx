@@ -187,6 +187,7 @@ export const AnomaliesView: React.FC<AnomaliesViewProps> = ({
       if (onSelectAnomaly) {
         onSelectAnomaly(rowId);
       } else {
+        localStorage.setItem("sentinel-selected-anomaly", String(rowId));
         localStorage.setItem("xaud-selected-anomaly", String(rowId));
         setActiveTab("investigate");
       }

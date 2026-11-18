@@ -13,9 +13,11 @@ export function StreamingView() {
   const [ingestedCount, setIngestedCount] = useState<number>(0);
   const [recalibrating, setRecalibrating] = useState<boolean>(false);
   const [approvalModal, setApprovalModal] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<{ id: number; score: number; is_anomaly: boolean }[]>([]);
 
   const handleSimulateBatch = async () => {
+    setError(null);
     try {
       // Generate synthetic feature row
       const randomFeatures = [
@@ -32,14 +34,15 @@ export function StreamingView() {
 
       const res = await api.ingestStreaming(randomFeatures);
       if (res) {
-        const score = typeof res.score === "number" ? res.score : Math.random() * 0.8;
-        const anomaly = res.is_anomaly ?? score > 0.65;
-        const currentPsi = res.psi ?? (Math.random() * 0.15 + (score > 0.65 ? 0.12 : 0.02));
+        const score = typeof res.anomaly_score === "number" ? res.anomaly_score : (typeof res.score === "number" ? res.score : 0.0);
+        const anomaly = score > 0.65;
+        const currentPsi = typeof res.overall_psi === "number" ? res.overall_psi : (typeof res.psi === "number" ? res.psi : 0.0);
+        const drift = res.drift_alarm ?? res.drift_detected ?? (currentPsi > 0.20);
 
         setLatestScore(score);
         setIsAnomaly(anomaly);
         setPsi(currentPsi);
-        setDriftAlert(currentPsi > 0.20 || res.drift_detected);
+        setDriftAlert(drift);
         setIngestedCount((c) => c + 1);
 
         setHistory((prev) => [
@@ -47,26 +50,12 @@ export function StreamingView() {
           ...prev.slice(0, 19),
         ]);
 
-        if (currentPsi > 0.20 || res.drift_detected) {
+        if (drift || res.has_recalibration_proposal) {
           setApprovalModal(true);
         }
       }
     } catch (err: any) {
-      // Fallback local simulation if backend streaming isn't initialized with reference
-      const simScore = Math.random() < 0.2 ? 0.85 : 0.18;
-      const simAnomaly = simScore > 0.65;
-      const simPsi = simAnomaly ? 0.24 : 0.05;
-
-      setLatestScore(simScore);
-      setIsAnomaly(simAnomaly);
-      setPsi(simPsi);
-      setDriftAlert(simPsi > 0.20);
-      setIngestedCount((c) => c + 1);
-      setHistory((prev) => [
-        { id: Date.now(), score: simScore, is_anomaly: simAnomaly },
-        ...prev.slice(0, 19),
-      ]);
-      if (simPsi > 0.20) setApprovalModal(true);
+      setError(err?.message || "Streaming ingestion failed. Ensure a reference dataset is loaded.");
     }
   };
 

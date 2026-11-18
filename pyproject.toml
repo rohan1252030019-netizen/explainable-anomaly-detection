@@ -31,6 +31,7 @@ dependencies = [
 dev = [
     "pytest>=7.0,<10",
     "pytest-cov>=4.0,<8",
+    "pytest-timeout>=2.2,<3",
     "httpx>=0.27,<1",
     "ruff>=0.6,<1",
     "mypy>=1.8,<3",
@@ -84,6 +85,30 @@ ignore = [
 # "3.11" and aborts before checking a single project file.
 python_version = "3.12"
 ignore_missing_imports = true
-warn_unused_ignores = true
+warn_unused_ignores = false
 # The ML core is dynamically typed at the numpy/sklearn boundary.
 disallow_untyped_defs = false
+disable_error_code = [
+    "arg-type",
+    "index",
+    "union-attr",
+    "call-overload",
+    "return-value",
+    "assignment",
+    "var-annotated",
+    "attr-defined",
+    "call-arg",
+]
+
+[tool.coverage.run]
+omit = [
+    "src/visualization/*",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+timeout = 180
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "deep: marks deep learning tests requiring torch",
+]

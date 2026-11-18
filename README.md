@@ -128,9 +128,21 @@ For high-throughput inference and TreeSHAP acceleration, SENTINEL provides three
 
 ## Empirical Benchmarks on Real-World Datasets
 
-### 1. ULB Credit Card Fraud (284,807 Transactions, 492 Frauds)
+### 1. ULB Credit Card Fraud Benchmark Sample (20,000 Transactions, 492 Frauds)
 
-Evaluated under the **honest time-split protocol**: sorted chronologically by `Time`, fitted on the initial 70% window, and scored on the remaining 30% holdout window. Feature scaling and decision thresholds are computed strictly on the reference window ($Class$ column excluded during training; contamination set to training window prevalence of 2.74%).
+Evaluated under the **honest time-split protocol**: sorted chronologically by `Time`, fitted on the initial 70% window (14,000 transactions), and scored on the remaining 30% holdout window (6,000 transactions). Feature scaling and decision thresholds are computed strictly on the reference window ($Class$ column excluded during training; contamination set to training window prevalence of 2.74%).
+
+The repository includes the reproducible 20,000-row sample at `data/sample/creditcard_fraud_sample.csv` (SHA-256: `ede5aa5ca3656a79e724735dee2b02085fdcf6c60aa37d9d9792cbdfd12e7907`), preserving all 492 fraud occurrences. To reproduce these exact numbers or benchmark the complete 284,807-transaction dataset from Kaggle:
+
+```bash
+# Run on the included 20k sample:
+python scripts/run_ulb_benchmark.py
+
+# Or download the full dataset (creditcard.csv) from Kaggle and run:
+python scripts/run_ulb_benchmark.py --data path/to/creditcard.csv
+```
+
+For statistical guarantees, assumptions, and exchangeability limitations, see [Statistical Assumptions & Limitations](docs/STATISTICAL_ASSUMPTIONS.md).
 
 | Detector | PR-AUC | ROC-AUC | Precision | Recall | Precision@Top-1% | Fit Time (s) |
 |---|---:|---:|---:|---:|---:|---:|

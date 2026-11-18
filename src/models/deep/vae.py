@@ -196,11 +196,13 @@ class VAEDetector(BaseDetector):
         X_arr = np.asarray(X, dtype=np.float32)
         X_scaled = self.scaler_.transform(X_arr).astype(np.float32) if self.scaler_ else X_arr
 
-        self.model_.eval()
+        model: Any = self.model_
+        assert model is not None
+        model.eval()
         with torch.no_grad():
             tensor_x = torch.from_numpy(X_scaled).to(self.device)
-            mu, _ = self.model_.encode(tensor_x)
-            recon = self.model_.decode(mu).cpu().numpy()
+            mu, _ = model.encode(tensor_x)
+            recon = model.decode(mu).cpu().numpy()
 
         per_feature_error = (X_scaled - recon) ** 2
         per_sample_mse = np.mean(per_feature_error, axis=1)

@@ -48,6 +48,8 @@ from src.models.supervised.base import BaseSupervisedDetector
 class FidelityReport:
     """
     Fidelity summary comparing surrogate model predictions to the underlying ensemble.
+    Metrics computed against pseudo-labels are named agreement_* to prevent confusion
+    with true ground-truth evaluation metrics.
     """
 
     def __init__(
@@ -60,7 +62,16 @@ class FidelityReport:
         surrogate_mean_score: float,
         ensemble_mean_score: float,
         n_samples: int,
+        agreement_pr_auc: float = 0.0,
     ):
+        self.agreement_spearman = spearman_rank_corr
+        self.agreement_pvalue = spearman_pvalue
+        self.agreement_top_k_overlaps = top_k_overlaps
+        self.agreement_accuracy = pseudo_label_accuracy
+        self.agreement_f1 = pseudo_label_f1
+        self.agreement_pr_auc = agreement_pr_auc
+
+        # Legacy backward-compatible attributes
         self.spearman_rank_corr = spearman_rank_corr
         self.spearman_pvalue = spearman_pvalue
         self.top_k_overlaps = top_k_overlaps
@@ -74,6 +85,12 @@ class FidelityReport:
         return {
             "provenance": "surrogate of ensemble",
             "is_ground_truth": False,
+            "agreement_spearman": round(float(self.agreement_spearman), 4),
+            "agreement_pvalue": float(self.agreement_pvalue),
+            "agreement_top_k_overlaps": {k: round(float(v), 4) for k, v in self.agreement_top_k_overlaps.items()},
+            "agreement_accuracy": round(float(self.agreement_accuracy), 4),
+            "agreement_f1": round(float(self.agreement_f1), 4),
+            "agreement_pr_auc": round(float(self.agreement_pr_auc), 4),
             "spearman_rank_corr": round(float(self.spearman_rank_corr), 4),
             "spearman_pvalue": float(self.spearman_pvalue),
             "top_k_overlaps": {k: round(float(v), 4) for k, v in self.top_k_overlaps.items()},
@@ -305,6 +322,12 @@ class SurrogateDetector(BaseSupervisedDetector):
         recall = tp / max(1, tp + fn)
         f1 = (2 * precision * recall) / max(1e-8, precision + recall)
 
+        try:
+            from sklearn.metrics import average_precision_score
+            agreement_pr = float(average_precision_score(y_pseudo, oof_scores))
+        except Exception:
+            agreement_pr = 0.0
+
         return FidelityReport(
             spearman_rank_corr=float(rho),
             spearman_pvalue=float(pval),
@@ -314,6 +337,7 @@ class SurrogateDetector(BaseSupervisedDetector):
             surrogate_mean_score=float(np.mean(oof_scores)),
             ensemble_mean_score=float(np.mean(ensemble_scores)),
             n_samples=n,
+            agreement_pr_auc=agreement_pr,
         )
 
     def score_samples(self, X: np.ndarray) -> np.ndarray:

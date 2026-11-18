@@ -25,10 +25,12 @@ export function FeedbackQueueView() {
   });
   const [retraining, setRetraining] = useState(false);
   const [retrainedResult, setRetrainedResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchQueue = async () => {
     if (!overview?.ready) return;
     setLoading(true);
+    setError(null);
     try {
       const res = await api.getActiveLearningQueue(6, strategy);
       if (res && res.queue) {
@@ -36,12 +38,7 @@ export function FeedbackQueueView() {
       } else if (Array.isArray(res)) {
         setQueue(res);
       } else {
-        // Fallback default sample queue from current anomalies
-        setQueue([
-          { record_id: 12, uncertainty_score: 0.495, disagreement_score: 0.72, detector_score: 0.68 },
-          { record_id: 45, uncertainty_score: 0.502, disagreement_score: 0.65, detector_score: 0.66 },
-          { record_id: 89, uncertainty_score: 0.518, disagreement_score: 0.59, detector_score: 0.64 },
-        ]);
+        setQueue([]);
       }
       const summary = await api.getFeedbackSummary();
       if (summary) {
@@ -51,12 +48,9 @@ export function FeedbackQueueView() {
           rejected_fp: summary.rejected_false_positives ?? summary.rejected_fp ?? 0,
         });
       }
-    } catch {
-      // Fallback
-      setQueue([
-        { record_id: 12, uncertainty_score: 0.495, disagreement_score: 0.72, detector_score: 0.68 },
-        { record_id: 45, uncertainty_score: 0.502, disagreement_score: 0.65, detector_score: 0.66 },
-      ]);
+    } catch (err: any) {
+      setError(err?.message || "Failed to load active learning queue.");
+      setQueue([]);
     } finally {
       setLoading(false);
     }

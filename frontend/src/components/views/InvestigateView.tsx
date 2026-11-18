@@ -416,7 +416,9 @@ export const InvestigateView: React.FC = () => {
 
   const [rowId, setRowId] = useState<number>(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("xaud-selected-anomaly");
+      const saved =
+        localStorage.getItem("sentinel-selected-anomaly") ||
+        localStorage.getItem("xaud-selected-anomaly");
       const parsed = saved === null ? 0 : Number(saved);
       if (Number.isInteger(parsed) && parsed >= 0) return parsed;
     }
@@ -446,6 +448,7 @@ export const InvestigateView: React.FC = () => {
         setError(null);
         setDetail(result);
         setLoading(false);
+        localStorage.setItem("sentinel-selected-anomaly", String(rowId));
         localStorage.setItem("xaud-selected-anomaly", String(rowId));
       })
       .catch((err) => {

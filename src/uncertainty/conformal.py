@@ -186,6 +186,7 @@ class MondrianConformalCalibrator:
         self.global_calibrator_: ConformalAnomalyCalibrator = ConformalAnomalyCalibrator(alpha=alpha)
         self._is_calibrated: bool = False
         self.groups_: list[str] = []
+        self.fallback_groups_: list[str] = []
 
     def fit_calibration(
         self,
@@ -204,16 +205,21 @@ class MondrianConformalCalibrator:
         self.global_calibrator_.fit_calibration(scores)
         unique_groups = np.unique(groups_arr)
         self.groups_ = [str(g) for g in unique_groups]
+        self.fallback_groups_ = []
+
+        # Mathematical finite-sample threshold: n >= ceil(1 / alpha) - 1
+        # If n < ceil(1 / alpha) - 1, min possible p-value (1 / (n+1)) > alpha, so null cannot be rejected.
+        min_required_samples = max(1, int(np.ceil(1.0 / self.alpha)) - 1)
 
         for g in unique_groups:
             mask = groups_arr == g
             g_scores = scores[mask]
-            # Require at least 5 calibration samples per group, else fallback to global
-            if len(g_scores) >= 5:
+            if len(g_scores) >= min_required_samples:
                 cal = ConformalAnomalyCalibrator(alpha=self.alpha)
                 cal.fit_calibration(g_scores)
                 self.group_calibrators_[str(g)] = cal
             else:
+                self.fallback_groups_.append(str(g))
                 self.group_calibrators_[str(g)] = self.global_calibrator_
 
         self._is_calibrated = True
@@ -266,9 +272,11 @@ class MondrianConformalCalibrator:
             "is_anomaly": [bool(a) for a in is_anomaly],
             "alpha": target_alpha,
             "confidence_level": round(float(1.0 - target_alpha), 4),
+            "fallback_groups": list(self.fallback_groups_),
             "group_breakdown": group_breakdown,
             "coverage_statement": (
                 f"Mondrian conditional validity guaranteed across {len(self.groups_)} groups "
+                f"(fallback to global for {len(self.fallback_groups_)} small groups) "
                 f"at significance alpha={target_alpha}."
             ),
         }

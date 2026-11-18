@@ -82,10 +82,12 @@ def calibrate_conformal(req: ConformalCalibrationRequest) -> ConformalCalibratio
             threshold_at_alpha=calibrator.global_calibrator_.threshold_at_alpha_,
             is_mondrian=True,
             groups=calibrator.groups_,
+            fallback_groups=calibrator.fallback_groups_,
             coverage_statement=(
                 f"Mondrian group-conditional conformal calibration established across "
                 f"{len(calibrator.groups_)} groups with n={len(cal_indices)} reference points. "
-                f"Conditional Type-I error bounded by alpha={req.alpha}."
+                f"Conditional Type-I error bounded by alpha={req.alpha}. "
+                f"({len(calibrator.fallback_groups_)} small groups fell back to global calibrator)."
             ),
         )
     else:
@@ -108,6 +110,7 @@ def calibrate_conformal(req: ConformalCalibrationRequest) -> ConformalCalibratio
             threshold_at_alpha=calibrator.threshold_at_alpha_,
             is_mondrian=False,
             groups=[],
+            fallback_groups=[],
             coverage_statement=(
                 f"Split-conformal calibration established with n={len(cal_indices)} reference points. "
                 f"Under nominal exchangeability, Type-I false alarm rate is bounded by alpha={req.alpha} "
@@ -240,5 +243,11 @@ def get_conformal_status() -> dict[str, Any]:
             else cal.n_calibration_
         ),
         "groups": cal.groups_ if is_mondrian else [],
+        "fallback_groups": cal.fallback_groups_ if is_mondrian else [],
+        "contamination_warning": (
+            "Statistical Guarantee Note: If the reference calibration set contains undetected true "
+            "anomalies (unsupervised contamination), the empirical non-conformity threshold is shifted "
+            "rightward, making conformal p-values conservative (i.e. empirical Type-I error rate <= nominal alpha)."
+        ),
         "last_results_summary": state.conformal_results,
     }

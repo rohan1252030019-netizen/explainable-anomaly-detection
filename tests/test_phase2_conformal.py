@@ -212,3 +212,53 @@ def test_api_v2_conformal_endpoints():
     data_fdr = r_fdr.json()
     assert len(data_fdr["q_values"]) == 5
     assert data_fdr["n_discoveries"] >= 1
+
+
+def test_mondrian_fallback_insufficient_samples():
+    """
+    HARDENING VERIFICATION (Item c):
+    Mondrian fallback uses n < ceil(1/alpha) - 1 (not n < 5).
+    Response and calibrator list groups that fell back to global calibrator.
+    """
+    alpha = 0.05
+    # ceil(1/0.05) - 1 = 20 - 1 = 19 required calibration points
+    min_required = int(np.ceil(1.0 / alpha)) - 1
+    assert min_required == 19
+
+    # Group Large: 30 samples (>= 19 -> valid)
+    # Group Small: 10 samples (< 19 -> must fallback)
+    rng = np.random.RandomState(42)
+    scores_large = rng.normal(loc=0.0, scale=1.0, size=30)
+    groups_large = np.array(["large"] * 30)
+
+    scores_small = rng.normal(loc=1.0, scale=1.0, size=10)
+    groups_small = np.array(["small"] * 10)
+
+    cal_scores = np.concatenate([scores_large, scores_small])
+    cal_groups = np.concatenate([groups_large, groups_small])
+
+    mondrian = MondrianConformalCalibrator(alpha=alpha)
+    mondrian.fit_calibration(cal_scores, cal_groups)
+
+    assert "small" in mondrian.fallback_groups_
+    assert "large" not in mondrian.fallback_groups_
+
+    pred = mondrian.predict(cal_scores[:5], cal_groups[:5])
+    assert "fallback_groups" in pred
+    assert "small" in pred["fallback_groups"]
+
+
+def test_conformal_status_documents_contamination_conservative():
+    """
+    HARDENING VERIFICATION (Item d):
+    /status documents that contaminated calibration data makes p-values conservative.
+    """
+    client = TestClient(app)
+    client.post("/api/dataset/sample")
+    client.post("/api/v2/conformal/calibrate", json={"alpha": 0.05, "split_ratio": 0.3})
+
+    r = client.get("/api/v2/conformal/status")
+    assert r.status_code == 200
+    data = r.json()
+    assert "contamination_warning" in data
+    assert "conservative" in data["contamination_warning"]
