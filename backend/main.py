@@ -28,6 +28,7 @@ from backend.routers import (
     evaluation,
     experiments,
     explainability,
+    explainability_v2,
     export,
     models,
     reports,
@@ -76,6 +77,7 @@ app.include_router(benchmarks.router)
 app.include_router(experiments.router)
 app.include_router(supervised.router)
 app.include_router(conformal.router)
+app.include_router(explainability_v2.router)
 
 
 @app.get("/")

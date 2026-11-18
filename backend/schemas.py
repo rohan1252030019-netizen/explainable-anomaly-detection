@@ -679,3 +679,118 @@ class FDRControlResponse(_OpenModel):
     guarantee_statement: str
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# Advanced Explainability (SENTINEL Phase 4)
+# ──────────────────────────────────────────────────────────────────────────────
+
+class AgreementRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    record_index: int = Field(..., ge=0, description="Row index of anomaly to explain")
+    top_k: int = Field(5, ge=1, le=20)
+
+
+class AgreementResponse(_OpenModel):
+    record_index: int
+    spearman_rank_correlation: float
+    spearman_p_value: float
+    top_k_jaccard_overlap: float
+    sign_concordance: float
+    agreement_level: str
+    summary: str
+    agreed_top_features: list[str]
+    lime_attributions: dict[str, float]
+    shap_attributions: dict[str, float]
+
+
+class InteractionsRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    top_n_pairs: int = Field(5, ge=1, le=20)
+    max_samples: int = Field(50, ge=10, le=200)
+
+
+class InteractionPairItem(_OpenModel):
+    feature_1: str
+    feature_2: str
+    interaction_strength: float
+    method: str
+    interpretation: str
+
+
+class InteractionsResponse(_OpenModel):
+    model_name: str
+    n_evaluated_samples: int
+    top_interactions: list[InteractionPairItem]
+
+
+class CohortExplanationRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    cohort_name: str = Field("Severe Anomalies", description="Label for the target cohort")
+    cohort_indices: list[int] | None = Field(None, description="Optional explicit row indices; if None, uses flagged anomalies")
+    top_k: int = Field(5, ge=1, le=20)
+
+
+class CohortShiftItem(_OpenModel):
+    feature: str
+    cohort_mean: float
+    reference_mean: float
+    standardized_shift: float
+    effect_size_d: float
+    ks_statistic: float
+    ks_pvalue: float
+    direction: str
+
+
+class CohortExplanationResponse(_OpenModel):
+    cohort_name: str
+    n_cohort: int
+    n_reference: int
+    dominant_drivers: list[CohortShiftItem]
+    all_feature_shifts: list[CohortShiftItem]
+    summary: str
+
+
+class DiverseCounterfactualsRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    record_index: int = Field(..., ge=0)
+    k_diverse: int = Field(3, ge=1, le=5)
+    max_features_modified: int = Field(3, ge=1, le=10)
+    immutable_features: list[str] = Field(default_factory=list)
+
+
+class DiverseCounterfactualItem(_OpenModel):
+    candidate_id: int
+    target_score: float
+    achieves_normality: bool
+    is_in_distribution_plausible: bool
+    sparsity_l0: int
+    l2_distance: float
+    modifications: list[dict[str, Any]]
+
+
+class DiverseCounterfactualsResponse(_OpenModel):
+    record_index: int
+    observed_score: float
+    threshold: float
+    k_candidates_found: int
+    counterfactuals: list[DiverseCounterfactualItem]
+
+
+class NarrativeRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    record_index: int = Field(..., ge=0)
+    include_conformal: bool = True
+    include_counterfactual: bool = True
+
+
+class NarrativeResponse(_OpenModel):
+    record_index: int
+    anomaly_score: float
+    threshold: float
+    severity_tier: str
+    narrative_text: str
+    executive_summary: str
+    forensic_fingerprint: str
+    audit_provenance: dict[str, Any]
+
+
+
