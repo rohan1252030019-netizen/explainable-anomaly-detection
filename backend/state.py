@@ -116,6 +116,8 @@ class AppState(
         self.supervised_classifier: Any = None
         self.stacking_detector: Any = None
         self.surrogate_fidelity: dict[str, Any] | None = None
+        self.conformal_calibrator: Any = None
+        self.conformal_results: dict[str, Any] | None = None
         self.experiment_tracker: ExperimentTracker = ExperimentTracker(
             log_dir=os.path.join(PROJECT_ROOT, "outputs", "experiments")
         )

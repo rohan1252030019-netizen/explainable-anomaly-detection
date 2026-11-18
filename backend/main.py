@@ -21,6 +21,7 @@ from backend.routers import (
     analytics,
     anomalies,
     benchmarks,
+    conformal,
     dataset,
     detection,
     drift,
@@ -74,6 +75,7 @@ app.include_router(drift.router)
 app.include_router(benchmarks.router)
 app.include_router(experiments.router)
 app.include_router(supervised.router)
+app.include_router(conformal.router)
 
 
 @app.get("/")

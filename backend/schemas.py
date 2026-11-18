@@ -613,3 +613,69 @@ class HyperparameterTuneResponse(_OpenModel):
     metric: str
     tuning_history: list[dict[str, Any]]
 
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Calibrated Uncertainty & Conformal Prediction (SENTINEL Phase 2)
+# ──────────────────────────────────────────────────────────────────────────────
+
+class ConformalCalibrationRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    alpha: float = Field(0.05, gt=0.0, lt=1.0, description="Significance error budget (1 - confidence)")
+    split_ratio: float = Field(0.3, gt=0.05, lt=0.5, description="Fraction of reference split reserved for calibration")
+    group_column: str | None = Field(None, description="Optional column for Mondrian group-conditional calibration")
+
+
+class ConformalCalibrationResponse(_OpenModel):
+    is_calibrated: bool
+    alpha: float
+    confidence_level: float
+    n_calibration_samples: int
+    threshold_at_alpha: float
+    is_mondrian: bool
+    groups: list[str] = []
+    coverage_statement: str
+
+
+class ConformalScoreRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    alpha: float | None = Field(None, gt=0.0, lt=1.0)
+    target_fdr: float = Field(0.05, gt=0.0, lt=1.0, description="Target False Discovery Rate for Benjamini-Hochberg")
+
+
+class ConformalScoreItem(_OpenModel):
+    index: int
+    score: float
+    conformal_p_value: float
+    fdr_q_value: float
+    is_conformal_anomaly: bool
+    is_fdr_significant: bool
+
+
+class ConformalScoreResponse(_OpenModel):
+    total_samples: int
+    alpha: float
+    confidence_level: float
+    target_fdr: float
+    conformal_anomalies_flagged: int
+    fdr_discoveries_flagged: int
+    coverage_statement: str
+    fdr_statement: str
+    items: list[ConformalScoreItem]
+
+
+class FDRControlRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    p_values: list[float] = Field(..., description="Array of p-values to adjust")
+    target_fdr: float = Field(0.05, gt=0.0, lt=1.0)
+
+
+class FDRControlResponse(_OpenModel):
+    q_values: list[float]
+    is_discovery: list[bool]
+    n_discoveries: int
+    discovery_fraction: float
+    critical_p_cutoff: float
+    target_fdr: float
+    guarantee_statement: str
+
+
