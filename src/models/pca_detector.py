@@ -1,7 +1,7 @@
 """
 src/models/pca_detector.py
 
-PCA Reconstruction Error Anomaly Detector for XAUD 2.0.
+PCA Reconstruction Error Anomaly Detector for SENTINEL.
 
 Concept:
 Normal observations typically lie along a low-dimensional linear subspace
@@ -10,7 +10,7 @@ frequently deviate from this principal hyperplane and display high reconstructio
     E(x) = ||x - x_reconstructed||^2
 
 Score Convention:
-In XAUD, lower score = more anomalous.
+In SENTINEL, lower score = more anomalous.
 We return -reconstruction_error.
 """
 

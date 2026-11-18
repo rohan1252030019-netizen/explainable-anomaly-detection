@@ -1,7 +1,7 @@
 """
 scripts/run_ulb_benchmark.py
 
-End-to-end benchmark of the XAUD detector registry on the real ULB
+End-to-end benchmark of the SENTINEL detector registry on the real ULB
 credit-card fraud dataset (OpenML 1597).
 
 Design

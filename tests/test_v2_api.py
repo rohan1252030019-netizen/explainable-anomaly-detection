@@ -1,7 +1,7 @@
 """
 tests/test_v2_api.py
 
-Integration tests for XAUD 2.0 API endpoints:
+Integration tests for SENTINEL API endpoints:
 - /api/dataset/profile
 - /api/models/capabilities
 - /api/detection/ensemble

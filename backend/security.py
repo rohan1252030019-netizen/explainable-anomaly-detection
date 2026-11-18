@@ -1,14 +1,14 @@
 """
 backend/security.py
 
-Optional API-key authentication for the XAUD API.
+Optional API-key authentication for the SENTINEL API.
 
 The audit found every endpoint — including destructive ones such as
 ``/api/dataset/reset`` and expensive ones such as ``/api/models/benchmark`` —
 open to any caller that could reach the port.  Adding authentication without
 breaking existing local deployments is the constraint, so:
 
-* If ``XAUD_API_KEY`` is unset (the default), the API stays open and
+* If ``SENTINEL_API_KEY`` (or legacy ``XAUD_API_KEY``) is unset (the default), the API stays open and
   ``/api/health`` reports ``auth_required: false``.  Local development and the
   bundled frontend keep working with no setup.
 * If it is set, every ``/api`` route except the health probe requires the key in

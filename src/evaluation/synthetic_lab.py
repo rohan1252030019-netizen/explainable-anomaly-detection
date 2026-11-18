@@ -1,7 +1,7 @@
 """
 src/evaluation/synthetic_lab.py
 
-Synthetic Anomaly Injection and Benchmark Laboratory for XAUD 2.0.
+Synthetic Anomaly Injection and Benchmark Laboratory for SENTINEL.
 
 Provides controlled, traceable anomaly generation across distinct anomaly types:
 1. Point / global anomalies: severe deviations along marginal distributions.
@@ -325,7 +325,7 @@ class SyntheticInjectionLab:
                 )
                 preds = np.asarray(detector.predict(X_eval), dtype=int)
 
-                # Lower raw score is more anomalous in XAUD; invert for ROC/PR
+                # Lower raw score is more anomalous in SENTINEL; invert for ROC/PR
                 # where 1 is anomalous.
                 inverted_scores = -raw_scores
 

@@ -1,7 +1,7 @@
 """
 src/models/knn_detector.py
 
-k-Nearest Neighbors (k-NN) Distance-Based Anomaly Detector for XAUD 2.0.
+k-Nearest Neighbors (k-NN) Distance-Based Anomaly Detector for SENTINEL.
 
 Concept:
 Anomalous points lie far from their nearest neighbors in feature space.
@@ -11,7 +11,7 @@ compute the distance metric:
 - method="mean": Average Euclidean distance across all k neighbors.
 
 Score Convention:
-In XAUD, score_samples(X) follows the convention: lower score = more anomalous.
+In SENTINEL, score_samples(X) follows the convention: lower score = more anomalous.
 Since larger distance indicates greater abnormality, we return -distance.
 """
 

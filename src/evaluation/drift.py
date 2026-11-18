@@ -1,7 +1,7 @@
 """
 src/evaluation/drift.py
 
-Dataset and Anomaly Score Drift Monitoring Engine for XAUD 2.0.
+Dataset and Anomaly Score Drift Monitoring Engine for SENTINEL.
 
 Provides:
 - Population Stability Index (PSI) calculation for numerical features and anomaly scores.

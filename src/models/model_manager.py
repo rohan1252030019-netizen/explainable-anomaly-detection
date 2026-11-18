@@ -1,7 +1,7 @@
 """
 src/models/model_manager.py
 
-Central model manager and capability registry for XAUD 2.0.
+Central model manager and capability registry for SENTINEL.
 
 Responsibilities
 ----------------
@@ -219,7 +219,7 @@ def row_limit_for(model_name: str) -> int | None:
     return MODEL_ROW_LIMITS.get(model_name)
 
 
-# Model Capability Registry for XAUD 2.0
+# Model Capability Registry for SENTINEL
 MODEL_CAPABILITIES: dict[str, dict[str, Any]] = {
     "Isolation Forest": {
         "family": "Tree-based Ensemble",

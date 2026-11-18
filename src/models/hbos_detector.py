@@ -1,7 +1,7 @@
 """
 src/models/hbos_detector.py
 
-Histogram-Based Outlier Score (HBOS) Anomaly Detector for XAUD 2.0.
+Histogram-Based Outlier Score (HBOS) Anomaly Detector for SENTINEL.
 
 Concept:
 HBOS is a fast, linear-time O(N * D) unsupervised outlier detection algorithm
@@ -13,7 +13,7 @@ Observations falling into low-frequency bins across multiple features accumulate
 a large positive HBOS score.
 
 Score Convention:
-In XAUD, lower score = more anomalous.
+In SENTINEL, lower score = more anomalous.
 We return -HBOS(x).
 """
 

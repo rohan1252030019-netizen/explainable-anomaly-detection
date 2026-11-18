@@ -1,7 +1,7 @@
 """
 backend/experiments.py
 
-Reproducibility and Experiment Tracking Engine for XAUD 2.0.
+Reproducibility and Experiment Tracking Engine for SENTINEL.
 
 Provides:
 - Cryptographic SHA-256 dataset fingerprinting.

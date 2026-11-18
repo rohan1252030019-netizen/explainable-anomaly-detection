@@ -1,7 +1,7 @@
 """
 backend/schemas.py
 
-Pydantic request *and response* models for the XAUD API.
+Pydantic request *and response* models for the SENTINEL API.
 
 Two classes of defect are addressed here.
 

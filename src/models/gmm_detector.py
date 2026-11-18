@@ -1,7 +1,7 @@
 """
 src/models/gmm_detector.py
 
-Gaussian Mixture Model (GMM) Log-Likelihood Anomaly Detector for XAUD 2.0.
+Gaussian Mixture Model (GMM) Log-Likelihood Anomaly Detector for SENTINEL.
 
 Concept:
 Fits a multimodal Gaussian mixture to unlabelled feature distributions.
@@ -10,7 +10,7 @@ yield low log-likelihood values under the fitted mixture model:
     log p(x) = log sum_{k=1}^K w_k N(x; mu_k, Sigma_k)
 
 Score Convention:
-In XAUD, lower score = more anomalous.
+In SENTINEL, lower score = more anomalous.
 GMM's log_likelihood(x) naturally satisfies this: lower log-likelihood = more anomalous.
 """
 

@@ -1,7 +1,7 @@
 """
 scripts/smoke_ulb_api.py
 
-Exercise the full XAUD HTTP surface against the real ULB credit-card fraud
+Exercise the full SENTINEL HTTP surface against the real ULB credit-card fraud
 dataset, in-process, with FastAPI's TestClient.
 
 This is an integration smoke test, not a unit test: it asserts that the app's

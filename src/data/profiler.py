@@ -1,7 +1,7 @@
 """
 src/data/profiler.py
 
-Advanced Data Intelligence and Dataset Profiling Engine for XAUD 2.0.
+Advanced Data Intelligence and Dataset Profiling Engine for SENTINEL.
 
 Provides:
 - Automatic schema discovery (numeric, categorical, binary, datetime, id candidates).

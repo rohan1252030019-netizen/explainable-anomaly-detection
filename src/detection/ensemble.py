@@ -1,7 +1,7 @@
 """
 src/detection/ensemble.py
 
-Intelligent Ensemble and Consensus Engine for XAUD 2.0.
+Intelligent Ensemble and Consensus Engine for SENTINEL.
 
 Provides:
 - Rank-based Borda consensus aggregation.

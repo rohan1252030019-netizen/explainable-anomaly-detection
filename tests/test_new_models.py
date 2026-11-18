@@ -1,7 +1,7 @@
 """
 tests/test_new_models.py
 
-Unit tests for newly introduced XAUD 2.0 detectors:
+Unit tests for SENTINEL detectors:
 - KNNDetector
 - PCADetector
 - HBOSDetector

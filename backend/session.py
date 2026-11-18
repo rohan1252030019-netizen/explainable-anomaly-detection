@@ -1,7 +1,7 @@
 """
 backend/session.py
 
-Opt-in session isolation for the XAUD API.
+Opt-in session isolation for the SENTINEL API.
 
 The API serves one analysis session per process by default: ``backend.state.state``
 is shared by every request, which is exactly what the bundled single-user

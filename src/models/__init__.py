@@ -1,7 +1,7 @@
 """
 src/models/__init__.py
 
-Detector implementations and model management for XAUD 2.0.
+Detector implementations and model management for SENTINEL.
 """
 
 from src.models.base_detector import BaseDetector

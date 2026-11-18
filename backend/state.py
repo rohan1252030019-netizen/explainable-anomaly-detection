@@ -1,8 +1,7 @@
 """
 backend/state.py
 
-Thread-safe in-memory state manager for the Explainable Anomaly Detection
-Framework (XAUD).
+Thread-safe in-memory state manager for SENTINEL.
 
 ``AppState`` used to be a single ~1,500-line class that loaded datasets,
 trained detectors, computed explanations, ran the benchmark lab and wrote
