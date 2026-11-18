@@ -966,6 +966,50 @@ class RobustnessAuditResponse(_OpenModel):
     noise_robustness: dict[str, Any] | None = None
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# MLOps & Production Hardening (SENTINEL Phase 7)
+# ──────────────────────────────────────────────────────────────────────────────
+
+class ModelCardGenerateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    version: str = Field("3.0.0", description="Model release version")
+    author: str = Field("SENTINEL Platform Auditor", description="Auditor identity or CI runner")
+
+
+class ModelCardGenerateResponse(_OpenModel):
+    model_name: str
+    version: str
+    sha256_hash: str
+    model_card_data: dict[str, Any]
+    markdown: str
+
+
+class RegistrySaveRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    name: str | None = Field(None, description="Model identifier; defaults to active model")
+    version: str = Field("1.0.0", description="Semantic version string")
+    stage: Literal["development", "staging", "production", "archived"] = "staging"
+    tags: list[str] = Field(default_factory=lambda: ["sentinel-v3"])
+
+
+class RegistrySaveResponse(_OpenModel):
+    success: bool
+    metadata: dict[str, Any]
+
+
+class RegistryPromoteRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    name: str
+    version: str
+    stage: Literal["development", "staging", "production", "archived"]
+
+
+class RegistryPromoteResponse(_OpenModel):
+    success: bool
+    metadata: dict[str, Any]
+
+
+
 
 
 

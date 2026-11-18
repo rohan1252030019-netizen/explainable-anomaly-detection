@@ -31,6 +31,7 @@ from backend.routers import (
     explainability,
     explainability_v2,
     export,
+    mlops_v2,
     models,
     reports,
     supervised,
@@ -82,6 +83,7 @@ app.include_router(conformal.router)
 app.include_router(explainability_v2.router)
 app.include_router(timeseries_v2.router)
 app.include_router(active_learning_v2.router)
+app.include_router(mlops_v2.router)
 
 
 @app.get("/")

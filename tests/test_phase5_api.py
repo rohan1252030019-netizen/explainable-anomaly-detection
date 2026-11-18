@@ -64,7 +64,7 @@ def test_every_json_endpoint_declares_a_response_schema():
     paths = app.openapi()["paths"]
     undocumented = []
     for path, operations in paths.items():
-        if path.startswith("/api/export"):
+        if path.startswith("/api/export") or path == "/metrics" or path.endswith("/html"):
             continue
         for method, operation in operations.items():
             schema = (
