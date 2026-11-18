@@ -22,6 +22,13 @@ import { BenchmarkLabView } from "@/components/views/BenchmarkLabView";
 import { ExperimentsView } from "@/components/views/ExperimentsView";
 import { ReportsView } from "@/components/views/ReportsView";
 import { SettingsView } from "@/components/views/SettingsView";
+import { ModelZooView } from "@/components/views/ModelZooView";
+import { ConformalView } from "@/components/views/ConformalView";
+import { InteractionsView } from "@/components/views/InteractionsView";
+import { StreamingView } from "@/components/views/StreamingView";
+import { FeedbackQueueView } from "@/components/views/FeedbackQueueView";
+import { RootCauseView } from "@/components/views/RootCauseView";
+import { ModelCardsView } from "@/components/views/ModelCardsView";
 
 interface ViewProps {
   onSelectAnomaly?: (rowId: number) => void;
@@ -33,12 +40,19 @@ const VIEWS: Record<string, React.ComponentType<ViewProps>> = {
   detection: DetectionView,
   anomalies: AnomaliesView,
   investigate: InvestigateView,
+  modelzoo: ModelZooView,
   explainability: ExplainabilityView,
+  interactions: InteractionsView,
+  conformal: ConformalView,
+  rootcause: RootCauseView,
   analytics: AnalyticsView,
   models: ModelsView,
   drift: DriftMonitorView,
   benchmarks: BenchmarkLabView,
   rigor: RigorView,
+  streaming: StreamingView,
+  feedback: FeedbackQueueView,
+  modelcards: ModelCardsView,
   experiments: ExperimentsView,
   reports: ReportsView,
   settings: SettingsView,
@@ -68,6 +82,7 @@ export default function Home() {
       : { tone: "idle", label: "Awaiting dataset" };
 
   const handleSelectAnomaly = (rowId: number) => {
+    localStorage.setItem("sentinel-selected-anomaly", String(rowId));
     localStorage.setItem("xaud-selected-anomaly", String(rowId));
     setActiveTab("investigate");
   };
