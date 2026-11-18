@@ -94,7 +94,7 @@ async function stubApi(page: Page) {
       },
     })
   );
-  await page.route("**/api/v2/learning/active/queue*", (route) =>
+  await page.route("**/api/v2/active-learning/queue*", (route) =>
     route.fulfill({
       json: {
         queue: [
@@ -103,7 +103,7 @@ async function stubApi(page: Page) {
       },
     })
   );
-  await page.route("**/api/v2/learning/feedback/summary", (route) =>
+  await page.route("**/api/v2/active-learning/feedback/summary*", (route) =>
     route.fulfill({
       json: {
         total_feedback: 12,
@@ -112,7 +112,7 @@ async function stubApi(page: Page) {
       },
     })
   );
-  await page.route("**/api/v2/learning/root-cause/clusters*", (route) =>
+  await page.route("**/api/v2/active-learning/root-cause/cluster*", (route) =>
     route.fulfill({
       json: {
         clusters: [
@@ -125,6 +125,16 @@ async function stubApi(page: Page) {
           },
         ],
         noise_count: 2,
+      },
+    })
+  );
+  await page.route("**/api/v2/timeseries/streaming/ingest*", (route) =>
+    route.fulfill({
+      json: {
+        anomaly_score: 0.22,
+        is_anomaly: false,
+        overall_psi: 0.04,
+        drift_alarm: false,
       },
     })
   );
@@ -165,22 +175,22 @@ test.describe("SENTINEL 3.0 Views E2E Smoke", () => {
 
   test("SHAP Interactions view renders feature pair explorer", async ({ page }) => {
     await page.getByRole("button", { name: /SHAP Interactions/i }).click();
-    await expect(page.getByRole("heading", { name: /SHAP Interaction Values/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /SHAP Feature Interactions/i })).toBeVisible();
   });
 
   test("Streaming Monitor view renders real-time stream status", async ({ page }) => {
     await page.getByRole("button", { name: /Streaming Monitor/i }).click();
-    await expect(page.getByRole("heading", { name: /Streaming Anomaly Monitor/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Streaming Monitor & Concept Drift/i })).toBeVisible();
   });
 
   test("Feedback Queue view renders active learning candidates", async ({ page }) => {
-    await page.getByRole("button", { name: /Feedback Queue/i }).click();
-    await expect(page.getByRole("heading", { name: /Analyst Feedback & Active Learning/i })).toBeVisible();
+    await page.getByRole("button", { name: /Active Learning/i }).click();
+    await expect(page.getByRole("heading", { name: /Active Learning & Feedback Queue/i })).toBeVisible();
   });
 
   test("Root Cause view renders failure archetypes", async ({ page }) => {
-    await page.getByRole("button", { name: /Root Cause/i }).click();
-    await expect(page.getByRole("heading", { name: /Root-Cause Archetypes/i })).toBeVisible();
+    await page.getByRole("button", { name: /Root Causes/i }).click();
+    await expect(page.getByRole("heading", { name: /Root-Cause Archetype Clusters/i })).toBeVisible();
   });
 
   test("Model Cards view renders governance registry", async ({ page }) => {

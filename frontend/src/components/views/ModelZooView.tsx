@@ -28,6 +28,9 @@ export function ModelZooView() {
     { name: "Autoencoder", category: "Deep Learning", desc: "PyTorch bottleneck neural reconstruction MSE", complex: "O(epochs * n)", cpu: "Medium (CPU)" },
     { name: "Variational Autoencoder", category: "Deep Learning", desc: "PyTorch VAE with ELBO loss and latent sampling", complex: "O(epochs * n)", cpu: "Medium (CPU)" },
     { name: "Deep SVDD", category: "Deep Learning", desc: "PyTorch representation mapping into hypersphere c", complex: "O(epochs * n)", cpu: "Medium (CPU)" },
+    { name: "Pseudo-Label Surrogate", category: "Supervised / Hybrid", desc: "Out-of-fold XGBoost surrogate with exact TreeSHAP", complex: "O(T * n * d)", cpu: "Low" },
+    { name: "Supervised XGBoost", category: "Supervised / Hybrid", desc: "Gradient boosting with focal weights & cost-matrix tuning", complex: "O(T * n * d)", cpu: "Medium" },
+    { name: "Hybrid Stacking Meta-Learner", category: "Supervised / Hybrid", desc: "Boosted meta-learner stacking 8 out-of-fold unsupervised scores", complex: "O(K * n * (M + T*d))", cpu: "Medium" },
   ];
 
   const filtered = activeCategory === "all" ? DETECTORS : DETECTORS.filter(d => d.category.toLowerCase() === activeCategory.toLowerCase());
@@ -52,11 +55,11 @@ export function ModelZooView() {
             <Boxes className="w-6 h-6 text-primary" /> SENTINEL Model Zoo
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Compare 17 production detectors across Classical, Ensemble, and Deep Learning paradigms.
+            Compare 20 production detectors across Classical, Deep Learning, and Supervised/Hybrid paradigms.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {["all", "classical", "deep learning"].map((cat) => (
+          {["all", "classical", "deep learning", "supervised / hybrid"].map((cat) => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}

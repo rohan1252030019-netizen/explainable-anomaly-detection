@@ -86,29 +86,34 @@ flowchart TD
 
 ---
 
-## 17-Detector Model Zoo
+## 20-Detector Model Zoo
 
-SENTINEL incorporates 17 production detectors covering five distinct mathematical paradigms:
+SENTINEL incorporates **20 registered production detectors** covering five distinct mathematical paradigms. Detectors marked with `†` are evaluated in the ULB Credit Card Fraud benchmark table below:
 
-| Category | Detector Name | Registry Key | Algorithmic Formulation | Computational Complexity | Compute Profile |
-|---|---|---|---|---|---|
-| **Classical** | Isolation Forest | `Isolation Forest` | Recursive random hyperplane partitioning; path depth | $O(N \log N)$ | Low |
-| **Classical** | Local Outlier Factor | `Local Outlier Factor` | Local reachability density relative to $k$-nearest neighbors | $O(N^2)$ | Medium |
-| **Classical** | One-Class SVM | `One-Class SVM` | Kernel max-margin boundary separating dense origin | $O(N^2 - N^3)$ | High |
-| **Classical** | Elliptic Envelope | `Elliptic Envelope` | FastMCD robust covariance Gaussian Mahalanobis distance | $O(N \cdot P^2)$ | Low |
-| **Classical** | $k$-Nearest Neighbors | `k-Nearest Neighbors` | Distance to $k$-th nearest neighbor in standardized space | $O(N^2)$ | Medium |
-| **Classical** | PCA Reconstruction | `PCA Reconstruction` | Orthogonal residual subspace reconstruction error | $O(N \cdot P^2)$ | Low |
-| **Classical** | HBOS | `HBOS` | Inverse log marginal histogram density (parameter-free) | $O(N \cdot P)$ | Ultra-Low |
-| **Classical** | Gaussian Mixture Model | `Gaussian Mixture Model` | Expectation-Maximization negative log-likelihood | $O(N \cdot K \cdot P)$ | Medium |
-| **Classical** | ECOD | `ECOD` | Empirical Cumulative Distribution Function tail probabilities | $O(N \cdot P)$ | Ultra-Low |
-| **Classical** | COPOD | `COPOD` | Empirical copula transform with joint tail probabilities | $O(N \cdot P)$ | Ultra-Low |
-| **Classical** | Mahalanobis (Ledoit-Wolf) | `Mahalanobis (Ledoit-Wolf)` | Covariance shrinkage distance robust to collinearity ($\kappa < 30$) | $O(N \cdot P^2)$ | Low |
-| **Classical** | DBSCAN Noise Points | `DBSCAN Noise` | Density-based spatial clustering core-point noise isolation | $O(N \log N)$ | Medium |
-| **Classical** | Extended Isolation Forest | `Extended Isolation Forest` | Random hyperplane cuts at arbitrary slopes (resolves axis bias) | $O(N \log N)$ | Medium |
-| **Classical** | SUOD Fast Ensemble | `SUOD Ensemble` | Subspace fast approximation with Borda consensus | $O(N \cdot P)$ | Low |
-| **Deep Learning** | PyTorch Autoencoder | `Autoencoder` | Symmetric bottleneck neural network reconstruction MSE | $O(E \cdot N)$ | Medium (CPU) |
-| **Deep Learning** | Variational Autoencoder | `Variational Autoencoder` | Probabilistic encoder-decoder optimized via ELBO loss | $O(E \cdot N)$ | Medium (CPU) |
-| **Deep Learning** | Deep SVDD | `Deep SVDD` | Neural representation mapping into minimum-volume hypersphere | $O(E \cdot N)$ | Medium (CPU) |
+| Category | Detector Name | Registry Key | Benchmark Table | Algorithmic Formulation | Computational Complexity | Compute Profile |
+|---|---|---|:---:|---|---|---|
+| **Classical & Distance** | Isolation Forest | `Isolation Forest` | Yes † | Recursive random hyperplane partitioning; path depth | $O(N \log N)$ | Low |
+| **Classical & Distance** | Local Outlier Factor | `Local Outlier Factor` | Yes † | Local reachability density relative to $k$-nearest neighbors | $O(N^2)$ | Medium |
+| **Classical & Distance** | One-Class SVM | `One-Class SVM` | Yes † | Kernel max-margin boundary separating dense origin | $O(N^2 - N^3)$ | High |
+| **Classical & Distance** | Elliptic Envelope | `Elliptic Envelope` | Yes † | FastMCD robust covariance Gaussian Mahalanobis distance | $O(N \cdot P^2)$ | Low |
+| **Classical & Distance** | $k$-Nearest Neighbors | `k-Nearest Neighbors` | Yes † | Distance to $k$-th nearest neighbor in standardized space | $O(N^2)$ | Medium |
+| **Classical & Distance** | PCA Reconstruction | `PCA Reconstruction` | Yes † | Orthogonal residual subspace reconstruction error | $O(N \cdot P^2)$ | Low |
+| **Classical & Distance** | Histogram-Based Outlier Score (HBOS) | `Histogram-Based Outlier Score` | Yes † | Inverse log marginal histogram density (parameter-free) | $O(N \cdot P)$ | Ultra-Low |
+| **Classical & Distance** | Gaussian Mixture Model | `Gaussian Mixture Model` | Yes † | Expectation-Maximization negative log-likelihood | $O(N \cdot K \cdot P)$ | Medium |
+| **Classical & Fast Subspace** | ECOD | `ECOD` | No | Empirical Cumulative Distribution Function tail probabilities | $O(N \cdot P)$ | Ultra-Low |
+| **Classical & Fast Subspace** | COPOD | `COPOD` | No | Empirical copula transform with joint tail probabilities | $O(N \cdot P)$ | Ultra-Low |
+| **Classical & Fast Subspace** | Shrinkage Mahalanobis | `Shrinkage Mahalanobis` | No | Covariance shrinkage distance robust to collinearity ($\kappa < 30$) | $O(N \cdot P^2)$ | Low |
+| **Classical & Fast Subspace** | DBSCAN Noise Points | `DBSCAN Noise` | No | Density-based spatial clustering core-point noise isolation | $O(N \log N)$ | Medium |
+| **Classical & Fast Subspace** | Extended Isolation Forest | `Extended Isolation Forest` | No | Random hyperplane cuts at arbitrary slopes (resolves axis bias) | $O(N \log N)$ | Medium |
+| **Classical & Fast Subspace** | SUOD Fast Ensemble | `SUOD Fast Ensemble` | No | Subspace fast approximation with Borda consensus | $O(N \cdot P)$ | Low |
+| **Deep Learning** | PyTorch Autoencoder | `Deep Autoencoder` | No | Symmetric bottleneck neural network reconstruction MSE | $O(E \cdot N)$ | Medium (CPU) |
+| **Deep Learning** | Variational Autoencoder | `Variational Autoencoder` | No | Probabilistic encoder-decoder optimized via ELBO loss | $O(E \cdot N)$ | Medium (CPU) |
+| **Deep Learning** | Deep SVDD | `Deep SVDD` | No | Neural representation mapping into minimum-volume hypersphere | $O(E \cdot N)$ | Medium (CPU) |
+| **Supervised & Surrogate** | Pseudo-Label Surrogate | `Pseudo-Label Surrogate` | No | XGBoost surrogate trained on out-of-fold pseudo-labels | $O(T \cdot N \cdot P)$ | Low |
+| **Supervised & Surrogate** | Supervised XGBoost | `Supervised XGBoost` | No | Focal-weighted classifier with cost-matrix thresholding | $O(T \cdot N \cdot P)$ | Medium |
+| **Supervised & Surrogate** | Hybrid Stacking Meta-Learner | `Hybrid Stacking Meta-Learner` | No | Boosted meta-learner over out-of-fold unsupervised scores | $O(K \cdot N \cdot (M + T \cdot P))$ | Medium |
+
+*(Note: The Consensus Ensemble evaluated in the benchmark table aggregates the 8 Classical detectors via Rank Borda count).*
 
 *Deep learning models run on CPU by default with zero GPU requirements, supported by optional PyTorch extras (`pip install -e .[deep]`).*
 
@@ -132,7 +137,11 @@ For high-throughput inference and TreeSHAP acceleration, SENTINEL provides three
 
 Evaluated under the **honest time-split protocol**: sorted chronologically by `Time`, fitted on the initial 70% window (14,000 transactions), and scored on the remaining 30% holdout window (6,000 transactions). Feature scaling and decision thresholds are computed strictly on the reference window ($Class$ column excluded during training; contamination set to training window prevalence of 2.74%).
 
-The repository includes the reproducible 20,000-row sample at `data/sample/creditcard_fraud_sample.csv` (SHA-256: `ede5aa5ca3656a79e724735dee2b02085fdcf6c60aa37d9d9792cbdfd12e7907`), preserving all 492 fraud occurrences. To reproduce these exact numbers or benchmark the complete 284,807-transaction dataset from Kaggle:
+**Dataset Attribution & Sampling Provenance**:
+* **Source Dataset**: Real credit card transactions made by European cardholders in September 2013, curated by the Machine Learning Group at Université Libre de Bruxelles (MLG-ULB) and Worldline (Andrea Dal Pozzolo, Olivier Caelen, Reid A. Johnson, and Gianluca Bontempi, *"Calibrating Probability with Undersampling for Unbalanced Classification"*, IEEE SSCI, 2015).
+* **Sample vs. Full Dataset**: The full dataset contains 284,807 transactions with 492 frauds (**0.172% fraud rate**). To satisfy memory, compute, and quadratic distance budgets for all detectors (e.g. LOF row limits), `scripts/prepare_ulb_dataset.py` creates a deterministic stratified subsample (`data/sample/creditcard_fraud_sample.csv`, SHA-256: `ede5aa5ca3656a79e724735dee2b02085fdcf6c60aa37d9d9792cbdfd12e7907`) of 20,000 rows containing **all 492 frauds and 19,508 sampled normal records** (**2.46% sample fraud rate**).
+* **Random-Baseline PR-AUC**: The random classifier baseline PR-AUC equals the test holdout class prevalence: **0.0180 (1.80%)** (108 frauds in 6,000 test transactions).
+* **Comparability Notice**: Because the sample fraud prevalence (2.46%) is ~14× higher than the full dataset (0.172%), **PR-AUC numbers reported below are NOT directly comparable to published literature evaluated on the full 284k dataset**.
 
 ```bash
 # Run on the included 20k sample:
@@ -155,6 +164,9 @@ For statistical guarantees, assumptions, and exchangeability limitations, see [S
 | **PCA Reconstruction** | 0.1528 | 0.8414 | 0.2035 | 0.3241 | 0.3000 | 0.01 |
 | **Gaussian Mixture Model** | 0.1510 | 0.8281 | 0.2360 | 0.3889 | 0.1500 | 0.75 |
 | **Local Outlier Factor (LOF)** | 0.0510 | 0.6743 | 0.0844 | 0.1852 | 0.1667 | 0.21 |
+
+> [!IMPORTANT]
+> **Ensemble Honesty Finding**: The Consensus Ensemble (Rank Borda) achieved a PR-AUC of **0.1634**, **failing to beat either HBOS (0.3765) or Isolation Forest (0.3108)**. Ensembling is not a magic bullet: indiscriminately averaging rank orders with under-performing density/distance estimators (e.g., LOF with PR-AUC 0.0510) severely degraded the final consensus ranking. In production, practitioners should prune low-performing algorithms before ensembling.
 
 > [!NOTE]
 > **Protocol Matters More Than the Model**: Under a naive stratified random split, the same Isolation Forest yields **PR-AUC 0.6471** and **ROC-AUC 0.9426**. Random splitting leaks future transaction patterns across identical days into the training set. SENTINEL defaults to strict time-aware splitting to reflect true production deployment performance.

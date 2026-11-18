@@ -146,7 +146,7 @@ def update_presentation(pptx_path: str):
             set_run_text(p, bullets3[i], "Segoe UI", Pt(11), CLR_WHITE)
 
     # Metrics tiles
-    set_shape_text(s3.shapes[39], "18", "Georgia", Pt(32), CLR_AMBER, bold=True)
+    set_shape_text(s3.shapes[39], "20", "Georgia", Pt(32), CLR_AMBER, bold=True)
     set_shape_text(s3.shapes[40], "DETECTOR ZOO (5 FAMILIES)", "Segoe UI", Pt(7.8), CLR_MUTED)
     
     set_shape_text(s3.shapes[43], "14,800+", "Georgia", Pt(32), CLR_AMBER, bold=True)
@@ -228,7 +228,7 @@ def update_presentation(pptx_path: str):
     # ==========================================
     s6 = prs.slides[5]
     set_shape_text(s6.shapes[3], "05 · DETECTOR ZOO", "Segoe UI", Pt(9.5), CLR_AMBER)
-    set_shape_text(s6.shapes[4], "Eighteen detectors across five families", "Georgia", Pt(28), CLR_WHITE)
+    set_shape_text(s6.shapes[4], "Twenty detectors across five families", "Georgia", Pt(28), CLR_WHITE)
     set_shape_text(s6.shapes[5], "src/models/ — a modular capability registry, not a hardcoded list", "Segoe UI", Pt(11.5), CLR_LAVENDER)
     
     tbl6 = s6.shapes[11].table
@@ -475,9 +475,15 @@ def update_presentation(pptx_path: str):
     # ==========================================
     # SLIDE 13: Add New Slide — Q&A / Viva Defense
     # ==========================================
-    # We add a new slide using the blank layout (layout 6)
-    blank_layout = prs.slide_layouts[6]
-    s13 = prs.slides.add_slide(blank_layout)
+    if len(prs.slides) >= 13:
+        s13 = prs.slides[12]
+        # clear any extra shapes on s13
+        for shp in list(s13.shapes):
+            sp_elem = shp._element
+            sp_elem.getparent().remove(sp_elem)
+    else:
+        blank_layout = prs.slide_layouts[6]
+        s13 = prs.slides.add_slide(blank_layout)
     
     # 1. Background dark card
     bg = s13.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), Inches(13.333), Inches(7.5))
