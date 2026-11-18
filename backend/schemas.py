@@ -793,4 +793,85 @@ class NarrativeResponse(_OpenModel):
     audit_provenance: dict[str, Any]
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# Time-Series & Streaming (SENTINEL Phase 5)
+# ──────────────────────────────────────────────────────────────────────────────
+
+class STLDecomposeRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    column: str | None = Field(None, description="Target column; if None, defaults to first numeric column")
+    period: int = Field(7, ge=2, le=365, description="Seasonal cycle period")
+    threshold: float = Field(3.0, ge=1.0, le=10.0, description="Robust Z-score residual threshold")
+
+
+class STLDecomposeResponse(_OpenModel):
+    period: int
+    n_samples: int
+    n_anomalies: int
+    anomaly_fraction: float
+    trend: list[float]
+    seasonal: list[float]
+    residual: list[float]
+    anomaly_scores: list[float]
+    anomaly_indices: list[int]
+
+
+class RollingFeaturesRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    target_columns: list[str] = Field(..., description="Columns to engineer causal rolling features on")
+    windows: list[int] = Field(default_factory=lambda: [5, 15])
+    lags: list[int] = Field(default_factory=lambda: [1, 2, 3])
+    include_ema: bool = True
+
+
+class RollingFeaturesResponse(_OpenModel):
+    original_columns: list[str]
+    engineered_columns: list[str]
+    n_rows: int
+    is_causal_verified: bool
+
+
+class ChangepointRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    column: str | None = Field(None, description="Target column; if None, defaults to first numeric column")
+    method: Literal["pelt", "bocpd"] = "pelt"
+    penalty: float | None = Field(None, description="Complexity penalty for PELT; if None, uses BIC (2*log(N))")
+    hazard_rate: float = Field(0.02, gt=0.0, lt=1.0, description="Expected changepoint frequency for BOCPD")
+
+
+class ChangepointResponse(_OpenModel):
+    method: str
+    n_changepoints: int
+    changepoints: list[int]
+    details: dict[str, Any]
+
+
+class StreamingIngestRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    values: list[float] = Field(..., description="Vector of feature values for incoming stream observation")
+
+
+class StreamingIngestResponse(_OpenModel):
+    anomaly_score: float
+    raw_mass: float
+    total_samples_processed: int
+    drift_status: str
+    overall_psi: float
+    drift_alarm: bool
+    has_recalibration_proposal: bool
+    recalibration_proposal: dict[str, Any] | None = None
+
+
+class RecalibrationApprovalRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    approved: bool = Field(..., description="True to recalibrate baseline to current stream; False to dismiss")
+
+
+class RecalibrationApprovalResponse(_OpenModel):
+    success: bool
+    action: str
+    proposal_id: str | None = None
+
+
+
 

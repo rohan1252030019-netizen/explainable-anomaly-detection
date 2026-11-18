@@ -33,6 +33,7 @@ from backend.routers import (
     models,
     reports,
     supervised,
+    timeseries_v2,
 )
 from backend.schemas import HealthResponse
 from backend.security import api_key_middleware
@@ -78,6 +79,7 @@ app.include_router(experiments.router)
 app.include_router(supervised.router)
 app.include_router(conformal.router)
 app.include_router(explainability_v2.router)
+app.include_router(timeseries_v2.router)
 
 
 @app.get("/")
