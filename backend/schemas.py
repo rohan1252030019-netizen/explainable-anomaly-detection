@@ -873,5 +873,99 @@ class RecalibrationApprovalResponse(_OpenModel):
     proposal_id: str | None = None
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# Active Learning & Root-Cause Audit (SENTINEL Phase 6)
+# ──────────────────────────────────────────────────────────────────────────────
+
+class FeedbackSubmitRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    record_id: int = Field(..., ge=0, description="Row index of anomaly to annotate")
+    user_label: int = Field(..., description="1 = Confirmed True Anomaly, 0 = False Positive / Normal")
+    analyst_id: str = Field("analyst_1", description="Analyst identifier")
+    notes: str = Field("", description="Optional justification note")
+
+
+class FeedbackSubmitResponse(_OpenModel):
+    success: bool
+    entry: dict[str, Any]
+    summary_metrics: dict[str, Any]
+
+
+class FeedbackSummaryResponse(_OpenModel):
+    total_reviewed: int
+    confirmed_anomalies: int
+    false_positives: int
+    alert_precision: float
+    is_ready_for_semi_supervised: bool
+
+
+class ActiveLearningQueueRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    batch_size: int = Field(10, ge=1, le=50)
+    strategy: Literal["hybrid", "uncertainty", "disagreement"] = "hybrid"
+
+
+class ActiveLearningQueueItem(_OpenModel):
+    index: int
+    score: float
+    uncertainty_score: float
+    disagreement_score: float
+    priority_score: float
+    query_reason: str
+
+
+class ActiveLearningQueueResponse(_OpenModel):
+    batch_size: int
+    strategy: str
+    candidates: list[ActiveLearningQueueItem]
+
+
+class SemiSupervisedRetrainRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    held_out_ratio: float = Field(0.25, gt=0.05, lt=0.5, description="Fraction of unlabelled pool strictly reserved for held-out evaluation")
+
+
+class SemiSupervisedRetrainResponse(_OpenModel):
+    success: bool
+    n_labeled_samples: int
+    n_held_out_unlabelled: int
+    metrics: dict[str, Any]
+    evaluation_policy: str
+
+
+class RootCauseClusterRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    min_cluster_size: int = Field(3, ge=2, le=50)
+
+
+class RootCauseClusterItem(_OpenModel):
+    cluster_id: int
+    cluster_name: str
+    size: int
+    fraction_of_anomalies: float
+    dominant_features: list[dict[str, Any]]
+    exemplar_record_index: int
+    member_record_indices: list[int]
+
+
+class RootCauseClusterResponse(_OpenModel):
+    n_clusters: int
+    unclustered_anomalies: int
+    clusters: list[RootCauseClusterItem]
+    summary: str
+
+
+class RobustnessAuditRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    group_column: str | None = Field(None, description="Sensitive attribute column to evaluate subgroup parity on")
+    test_noise: bool = Field(True, description="Evaluate Gaussian noise perturbation sensitivity")
+
+
+class RobustnessAuditResponse(_OpenModel):
+    fairness: dict[str, Any] | None = None
+    noise_robustness: dict[str, Any] | None = None
+
+
+
 
 

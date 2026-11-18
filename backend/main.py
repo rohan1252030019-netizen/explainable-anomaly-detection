@@ -18,6 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.config import ALLOWED_HEADERS, ALLOWED_METHODS, settings
 from backend.routers import (
+    active_learning_v2,
     analytics,
     anomalies,
     benchmarks,
@@ -80,6 +81,7 @@ app.include_router(supervised.router)
 app.include_router(conformal.router)
 app.include_router(explainability_v2.router)
 app.include_router(timeseries_v2.router)
+app.include_router(active_learning_v2.router)
 
 
 @app.get("/")
