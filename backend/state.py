@@ -112,6 +112,10 @@ class AppState(
         self.ensemble_report: dict[str, Any] | None = None
         self.drift_report: dict[str, Any] | None = None
         self.benchmark_report: dict[str, Any] | None = None
+        self.surrogate_detector: Any = None
+        self.supervised_classifier: Any = None
+        self.stacking_detector: Any = None
+        self.surrogate_fidelity: dict[str, Any] | None = None
         self.experiment_tracker: ExperimentTracker = ExperimentTracker(
             log_dir=os.path.join(PROJECT_ROOT, "outputs", "experiments")
         )

@@ -30,6 +30,7 @@ from backend.routers import (
     export,
     models,
     reports,
+    supervised,
 )
 from backend.schemas import HealthResponse
 from backend.security import api_key_middleware
@@ -72,6 +73,7 @@ app.include_router(evaluation.router)
 app.include_router(drift.router)
 app.include_router(benchmarks.router)
 app.include_router(experiments.router)
+app.include_router(supervised.router)
 
 
 @app.get("/")

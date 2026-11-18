@@ -32,6 +32,9 @@ from src.models.knn_detector import KNNDetector
 from src.models.local_outlier_factor import LOFDetector
 from src.models.one_class_svm import OneClassSVMDetector
 from src.models.pca_detector import PCADetector
+from src.models.supervised.classifier import SupervisedClassifierDetector
+from src.models.supervised.stacking import HybridStackingDetector
+from src.models.supervised.surrogate import SurrogateDetector
 
 # ── Registry ───────────────────────────────────────────────────────────────────
 
@@ -44,6 +47,12 @@ DETECTOR_REGISTRY: dict[str, type] = {
     "PCA Reconstruction": PCADetector,
     "Histogram-Based Outlier Score": HBOSDetector,
     "Gaussian Mixture Model": GMMDetector,
+}
+
+SUPERVISED_REGISTRY: dict[str, type] = {
+    "Pseudo-Label Surrogate": SurrogateDetector,
+    "Supervised XGBoost": SupervisedClassifierDetector,
+    "Hybrid Stacking Meta-Learner": HybridStackingDetector,
 }
 
 # Default hyperparameters for each model
@@ -218,6 +227,42 @@ MODEL_CAPABILITIES: dict[str, dict[str, Any]] = {
         "score_direction": "lower_is_anomalous",
         "strengths": "Captures multi-modal clustered densities with true likelihood scores.",
         "limitations": "EM algorithm can get stuck in local optima; needs adequate samples per cluster.",
+    },
+    "Pseudo-Label Surrogate": {
+        "family": "Gradient Boosted Trees (Surrogate)",
+        "provenance": "surrogate of ensemble",
+        "time_complexity": "O(T * n * d)",
+        "space_complexity": "O(T * 2^depth)",
+        "scaling_required": False,
+        "sensitive_to_dim": False,
+        "explanation_methods": ["TreeExplainer SHAP", "Global Importance"],
+        "score_direction": "higher_is_anomalous",
+        "strengths": "Exact millisecond TreeSHAP, distills 8-model ensemble into single fast estimator.",
+        "limitations": "Learns ensemble consensus, not ground truth; fidelity bounded by ensemble quality.",
+    },
+    "Supervised XGBoost": {
+        "family": "Supervised Gradient Boosted Trees",
+        "provenance": "ground_truth_supervised",
+        "time_complexity": "O(T * n * d)",
+        "space_complexity": "O(T * 2^depth)",
+        "scaling_required": False,
+        "sensitive_to_dim": False,
+        "explanation_methods": ["TreeExplainer SHAP", "Global Importance"],
+        "score_direction": "higher_is_anomalous",
+        "strengths": "Direct PR-AUC/ROC-AUC optimization, scale_pos_weight for severe imbalance, cost-matrix threshold tuning.",
+        "limitations": "Requires trustworthy ground truth labels; risks overfitting on small label sets.",
+    },
+    "Hybrid Stacking Meta-Learner": {
+        "family": "Stacking Ensemble Meta-Learner",
+        "provenance": "hybrid_stacking_ensemble",
+        "time_complexity": "O(K * n * (models + T * d))",
+        "space_complexity": "O(n * 8 + T * 2^depth)",
+        "scaling_required": False,
+        "sensitive_to_dim": False,
+        "explanation_methods": ["TreeExplainer SHAP (Meta-Attribution)"],
+        "score_direction": "higher_is_anomalous",
+        "strengths": "Fuses 8 algorithm families via out-of-fold meta-features into boosted decision boundary.",
+        "limitations": "Higher training cost due to out-of-fold multi-model cross-validation.",
     },
 }
 
@@ -452,6 +497,9 @@ class ModelManager:
 
     def get_available_models(self) -> list[str]:
         return list(DETECTOR_REGISTRY.keys())
+
+    def get_available_supervised_models(self) -> list[str]:
+        return list(SUPERVISED_REGISTRY.keys())
 
     def get_default_params(self, model_name: str) -> dict[str, Any]:
         return dict(DEFAULT_PARAMS.get(model_name, {}))

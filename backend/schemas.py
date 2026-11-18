@@ -503,3 +503,113 @@ class ErrorResponse(BaseModel):
     """Shape of FastAPI's ``HTTPException`` body, documented in OpenAPI."""
 
     detail: str
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Supervised & Surrogate Models (SENTINEL Phase 1)
+# ──────────────────────────────────────────────────────────────────────────────
+
+class FidelityReportResponse(_OpenModel):
+    provenance: str = "surrogate of ensemble"
+    is_ground_truth: bool = False
+    spearman_rank_corr: float
+    spearman_pvalue: float
+    top_k_overlaps: dict[str, float]
+    pseudo_label_accuracy: float
+    pseudo_label_f1: float
+    surrogate_mean_score: float
+    ensemble_mean_score: float
+    n_samples: int
+
+
+class SurrogateTrainRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    contamination: float = Field(0.05, ge=0.001, le=0.5, description="Top quantile cutoff for pseudo-labels")
+    n_estimators: int = Field(150, ge=10, le=1000)
+    max_depth: int = Field(4, ge=1, le=12)
+    learning_rate: float = Field(0.05, gt=0, le=1.0)
+    n_splits: int = Field(5, ge=2, le=20, description="K-fold out-of-fold cross-validation splits")
+    random_state: int = Field(42)
+
+
+class SurrogateTrainResponse(_OpenModel):
+    model_type: str = "surrogate_xgboost"
+    provenance: str = "surrogate of ensemble"
+    is_ground_truth: bool = False
+    fit_time_sec: float
+    n_samples: int
+    n_features: int
+    pseudo_anomaly_count: int
+    pseudo_anomaly_rate: float
+    pseudo_threshold: float | None = None
+    feature_names: list[str]
+    fidelity: FidelityReportResponse | None = None
+
+
+class SupervisedTrainRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    label_column: str = Field(..., description="Column containing binary 0=normal, 1=anomaly ground truth")
+    framework: Literal["xgboost", "lightgbm", "catboost"] = "xgboost"
+    n_estimators: int = Field(150, ge=10, le=1000)
+    max_depth: int = Field(4, ge=1, le=12)
+    learning_rate: float = Field(0.05, gt=0, le=1.0)
+    time_aware: bool = Field(False, description="Use TimeSeriesSplit to preserve temporal sequence")
+    cost_fp: float = Field(1.0, ge=0, description="Cost of false positive alarm")
+    cost_fn: float = Field(10.0, ge=0, description="Cost of false negative missed anomaly")
+    n_splits: int = Field(5, ge=2, le=20)
+    random_state: int = Field(42)
+
+
+class SupervisedTrainResponse(_OpenModel):
+    model_type: str = "supervised_xgboost"
+    provenance: str = "ground_truth_supervised"
+    is_ground_truth: bool = True
+    fit_time_sec: float
+    n_samples: int
+    n_features: int
+    n_positives: int
+    n_negatives: int
+    metrics: dict[str, Any]
+    cost_matrix: dict[str, Any]
+    calibration: dict[str, Any]
+    optimal_threshold: float
+
+
+class HybridStackingRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    passthrough: bool = Field(True, description="Concatenate original features with 8 unsupervised meta-features")
+    n_estimators: int = Field(150, ge=10, le=1000)
+    max_depth: int = Field(4, ge=1, le=12)
+    learning_rate: float = Field(0.05, gt=0, le=1.0)
+    n_splits: int = Field(5, ge=2, le=20)
+    random_state: int = Field(42)
+
+
+class HybridStackingResponse(_OpenModel):
+    model_type: str = "hybrid_stacking"
+    provenance: str = "hybrid_stacking_ensemble"
+    fit_time_sec: float
+    n_base_detectors: int
+    base_detectors: list[str]
+    passthrough: bool
+    meta_features_shape: list[int]
+
+
+class HyperparameterTuneRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    label_column: str | None = Field(None, description="Ground truth column; if None, tunes on ensemble pseudo-labels")
+    n_trials: int = Field(15, ge=2, le=100)
+    metric: Literal["pr_auc", "roc_auc"] = "pr_auc"
+    time_aware: bool = False
+    cv_splits: int = Field(3, ge=2, le=10)
+    random_state: int = Field(42)
+
+
+class HyperparameterTuneResponse(_OpenModel):
+    tuning_engine: str
+    best_params: dict[str, Any]
+    best_score: float
+    n_trials: int
+    metric: str
+    tuning_history: list[dict[str, Any]]
+

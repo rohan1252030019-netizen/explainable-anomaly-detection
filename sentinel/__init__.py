@@ -4,6 +4,7 @@ Compatibility shim exposing SENTINEL package namespace.
 """
 
 import sys
+
 import src
 
 __version__ = src.__version__
