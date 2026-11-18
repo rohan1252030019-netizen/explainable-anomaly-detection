@@ -3,7 +3,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ============================================================
-   XAUD Design System — "Data Lab"
+   SENTINEL Design System — "Data Lab"
    Semantic token layer. Every surface, border and ink colour in
    the app resolves through these variables, so the light/dark
    switch is a single variable swap with no duplicated utilities.

@@ -10,8 +10,8 @@ import { expect, test, type Page } from "@playwright/test";
 
 const HEALTH = {
   status: "healthy",
-  framework: "XAUD Autonomous Intelligence",
-  version: "2.1.0",
+  framework: "SENTINEL Autonomous Anomaly Intelligence",
+  version: "3.0.0",
   dataset_loaded: true,
   dataset_name: "sample_anomaly_data.csv",
   detection_ready: true,

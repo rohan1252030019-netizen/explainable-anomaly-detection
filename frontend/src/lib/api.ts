@@ -4,7 +4,7 @@
  */
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8001";
-// Matches XAUD_API_KEY on the server.  Empty means the API is open (the local
+// Matches SENTINEL_API_KEY on the server.  Empty means the API is open (the local
 // default), so nothing is sent and existing development setups are unchanged.
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY || "";
 
@@ -929,7 +929,7 @@ export const api = {
   exportAnomaliesUrl: `${API_BASE}/api/export/anomalies`,
   exportExplanationsUrl: `${API_BASE}/api/export/explanations`,
 
-  // XAUD 2.0 Endpoints
+  // SENTINEL 3.0 Extended Endpoints
   getDatasetProfile: (opts?: ApiOptions) =>
     request<DatasetProfileResponse>("/api/dataset/profile", opts),
 
