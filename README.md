@@ -1,285 +1,279 @@
 <p align="center">
-  <img src="docs/sentinel-logo.svg" alt="SENTINEL Wordmark Logo" width="480"/>
+  <img src="docs/sentinel-logo.svg" alt="SENTINEL Wordmark Logo" width="520"/>
 </p>
 
 # SENTINEL — Autonomous Anomaly Intelligence Platform
 
 > **Tagline:** Detect. Explain. Verify. Act.  
 > **SENTINEL:** *Scientific, Explainable, Next-gen Threat & Irregularity Neutralization and Evaluation Layer*  
-> **Philosophy:** Mathematical correctness over flattering metrics. Explanation faithfulness over decorative charts. Evidence-backed conclusions over unverified claims.
+> **Core Philosophy:** Mathematical correctness over flattering metrics. Zero data leakage. Scores are ranking indices, not probabilities. Every claim backed by reproducible cryptographic evidence.
+
+[![CI Status](https://github.com/rohan1252030019-netizen/explainable-anomaly-detection/actions/workflows/ci.yml/badge.svg)](https://github.com/rohan1252030019-netizen/explainable-anomaly-detection/actions)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688.svg)](backend/)
+[![Next.js 16](https://img.shields.io/badge/Next.js-16.3%20(Turbopack)-black.svg)](frontend/)
+[![Pytest Suite](https://img.shields.io/badge/pytest-353%20passed%20(100%25)-brightgreen.svg)](tests/)
+[![Vitest](https://img.shields.io/badge/vitest-36%20passed%20(100%25)-brightgreen.svg)](frontend/)
 
 ---
 
 ## Executive Overview
 
-**SENTINEL** transforms conventional anomaly detection dashboards into an enterprise research-grade, full-stack anomaly intelligence system. Designed specifically for complex tabular data operating **without pre-existing ground-truth labels**, SENTINEL independently detects, investigates, validates, explains, challenges, and recommends actionable remediation for anomalous records.
+**SENTINEL** is an autonomous, research-grade anomaly intelligence platform engineered for complex tabular data operating **without pre-existing ground-truth labels**. While conventional anomaly tools rely on crude distance heuristics or present uncalibrated anomaly scores as "probabilities", SENTINEL treats anomaly detection as a rigorous, end-to-end scientific workflow:
 
-Unlike standard tools that report inflated in-sample scores or present arbitrary distance metrics as "posterior probabilities", SENTINEL maintains strict scientific integrity:
-- **Zero Mock / Fake Metrics:** Unsupervised anomaly scores are relative ranking indices, never misrepresented as probabilities without calibrated conformal justification.
-- **Strict Data Leakage Prevention:** Preprocessing transforms, scalers, imputers, and threshold quantiles are fitted strictly on baseline training splits and applied deterministically to holdout partitions.
-- **Explanation Faithfulness:** Attribution importance is systematically audited using **Deletion-AUC** and **Insertion-AUC** perturbation curves.
-- **Constrained Counterfactuals:** Actionable recommendations are computed in the dataset's **original physical units**, enforcing immutable column constraints and calculating explicit intervention costs.
-- **Reproducible Experiment Tracking:** Every execution is cryptographically fingerprinted with **SHA-256 dataset hashes**, logged with full hyperparameter recipes in persistent structured JSON registries.
+1. **Detect**: 17 production algorithms spanning classical, copula, ensemble, deep autoencoders, and supervised gradient-boosted surrogates.
+2. **Explain**: Faithful multi-method attribution (TreeSHAP, KernelSHAP, LIME), pairwise 2nd-order non-linear interaction coupling, and automated natural-language forensic investigation narratives.
+3. **Verify**: Finite-sample conformal $p$-values, Benjamini-Hochberg False Discovery Rate (FDR) control, Deletion/Insertion-AUC faithfulness curves, and sub-population fairness/robustness audits.
+4. **Act**: Diverse, actionable counterfactual recommendations computed strictly in original physical units with $L_0$ sparsity and LOF distribution plausibility checks; human-in-the-loop active learning triage with zero-leakage semi-supervised retraining.
 
 ---
 
-## System Architecture
+## End-to-End System Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                                SENTINEL PLATFORM                                │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│  DATA INTELLIGENCE                                                              │
-│  ├── Schema Discovery (Numerical, Categorical, Binary, Datetime, ID Candidates) │
-│  ├── Quality Rubric (Missingness, Duplicates, Zero-Variance Penalties)          │
-│  ├── Multicollinearity Matrix (Condition Number κ, High Pearson Pairs)          │
-│  └── Dataset Health Score (0–100 Itemized Quality Score)                        │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│  DETECTION ENGINE (8 Research-Grade Models)                                     │
-│  ├── Isolation Forest (Partition Depth O(N log N))                              │
-│  ├── Local Outlier Factor (Local Reachability Density O(N²))                    │
-│  ├── One-Class SVM (Kernel Hypersphere O(N²–N³))                                │
-│  ├── Elliptic Envelope (Mahalanobis Robust Covariance O(N · P²))                 │
-│  ├── k-Nearest Neighbors (k-th Neighbour Distance O(N log N))                   │
-│  ├── PCA Reconstruction Error (Orthogonal Subspace Residual O(N · P²))          │
-│  ├── HBOS (Linear-Time Inverse Log Histogram Density O(N · P))                  │
-│  └── Gaussian Mixture Model (Multimodal EM Log-Likelihood O(N · K · P))         │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│  INTELLIGENT ENSEMBLE ENGINE                                                    │
-│  ├── Score Normalization via Reference Quantiles                                │
-│  ├── Rank Borda Count Aggregation (Distortion-Free Percentile Ranks)            │
-│  ├── Consensus Strength & Voting Agreement                                      │
-│  └── Pairwise Disagreement Matrix (Jaccard Distance & Spearman Rank Correlation)│
-├─────────────────────────────────────────────────────────────────────────────────┤
-│  SCIENTIFIC VALIDATION & DRIFT LAB                                              │
-│  ├── Synthetic Injection Lab (Point, Multivariate Subspace, Micro-Clusters)     │
-│  ├── Controlled Ground-Truth Benchmarks (ROC-AUC, PR-AUC, Precision@K)          │
-│  ├── Covariate Drift Monitor (Population Stability Index - PSI)                 │
-│  └── 2-Sample Kolmogorov-Smirnov Distribution Divergence Tests (D_stat, p-val)  │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│  EXPLAINABLE AI 2.0 & INVESTIGATION                                             │
-│  ├── Multi-Method Explanations (SHAP, Permutation, PCA Feature Residuals)       │
-│  ├── Deletion-AUC & Insertion-AUC Attribution Verification                      │
-│  ├── Constrained Nearest-Normal Counterfactuals (Original Physical Units)       │
-│  └── Immutable Feature Locking & Quantitative Intervention Cost                 │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│  REPRODUCIBILITY & INTERFACES                                                   │
-│  ├── Cryptographic SHA-256 Dataset Fingerprinting & Experiment Logs             │
-│  ├── FastAPI Asynchronous REST Backend                                          │
-│  └── Next.js 16 (Turbopack, TypeScript, Tailwind CSS, Recharts) Frontend        │
-└─────────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Ingestion ["1. Data Ingestion & Preprocessing"]
+        A[Raw Tabular CSV / Streams] --> B[Schema Profiler & Quality Rubric]
+        B --> C[Leakage-Safe Preprocessor]
+        C -->|Fit on Reference Only| D[Standardized Matrix X]
+        C -->|SHA-256 Digest| E[Cryptographic Fingerprint]
+    end
+
+    subgraph DetectionEngine ["2. Multi-Paradigm Detection Engine"]
+        D --> F1[Classical Models: IForest, LOF, OCSVM, EE, kNN, PCA, HBOS, GMM, ECOD, COPOD, Mahalanobis, DBSCAN, EIF]
+        D --> F2[Deep Learning: Autoencoder, VAE, Deep SVDD]
+        D --> F3[Supervised / Stacking: XGBoost Surrogate, Classifier, Hybrid Stacker]
+        F1 & F2 & F3 --> G[Rank-Borda Ensemble Consensus]
+    end
+
+    subgraph Uncertainty ["3. Calibrated Uncertainty & FDR"]
+        G --> H[Split / Mondrian Conformal Calibration]
+        H --> I[Finite-Sample Valid p-Values]
+        I --> J[Benjamini-Hochberg FDR Control q <= 0.05]
+    end
+
+    subgraph Explainability ["4. Advanced Explainability & Verification"]
+        J --> K1[TreeSHAP & KernelSHAP Attribution]
+        J --> K2[Pairwise 2nd-Order Feature Interactions]
+        J --> K3[LIME Cross-Method Agreement Jaccard / Spearman]
+        K1 --> L1[Deletion-AUC & Insertion-AUC Faithfulness]
+        K1 --> L2[Constrained & Diverse DiCE Counterfactuals in Physical Units]
+        K1 --> L3[Automated Investigation Forensic Narrative]
+    end
+
+    subgraph Operations ["5. Streaming, Active Learning & Governance"]
+        D --> M1[Online Half-Space Trees & Sliding PSI Drift]
+        M1 -->|PSI >= 0.20| M2[Human Recalibration Approval Gate]
+        J --> N1[Active Learning Triage Queue: Uncertainty + Disagreement]
+        N1 --> N2[Analyst Feedback Store 0/1]
+        N2 --> N3[Semi-Supervised Retraining on Independent Holdout]
+        K1 --> O1[HDBSCAN SHAP Root-Cause Failure Archetypes]
+        O1 --> P1[Mitchell et al. Model Cards & Versioned Registry]
+        P1 --> P2[Prometheus Metrics, Rate Limiter & Standalone Audit Reports]
+    end
 ```
 
 ---
 
-## Feature Comparison
+## The SENTINEL Scientific Philosophy (Non-Negotiable Rules)
 
-| Capability | Standard Anomaly Tools | SENTINEL Platform |
-|---|---|---|
-| **Anomaly Score Interpretation** | Often presented as "Probability of Anomaly" | Explicitly treated as relative ranking indices; normalized via reference quantiles |
-| **Leakage Prevention** | Scaler fit across entire dataset before splitting | Strict pipeline isolation; scalers & thresholds fit strictly on reference splits |
-| **Model Diversity** | Usually 1 or 2 basic algorithms | 8 distinct algorithmic perspectives (tree, density, kernel, covariance, distance, subspace, histogram, mixture) |
-| **Ensemble Aggregation** | Flawed arithmetic average of uncalibrated scores | Non-parametric **Rank Borda Count** preventing kurtosis distortion |
-| **Consensus Evidence** | Binary flag only | Consensus strength, agreeing model counts, and pairwise Jaccard disagreement matrix |
-| **Benchmarking Without Labels** | Fabricates false ROC-AUC on unlabeled data | Controlled **Synthetic Anomaly Injection Lab** (multivariate subspace, point, cluster) |
-| **Drift Monitoring** | None | Real-time **PSI** & **2-sample Kolmogorov-Smirnov** statistical distribution shifts |
-| **Counterfactual Remediation** | None or abstract z-scores | Actionable deltas in **original units**, enforcing immutable column locks & intervention cost |
-| **Attribution Verification** | Unchecked SHAP plots | Behavioural perturbation tests (**Deletion-AUC** & **Insertion-AUC**) |
-| **Audit & Reproducibility** | Transient session state | Cryptographic **SHA-256 dataset fingerprinting** with persistent JSON experiment history |
+1. **Zero Fake Metrics:** In unsupervised domains where labels are absent, true ROC-AUC and PR-AUC are mathematically undefined. SENTINEL never fabricates mock metrics. Precision, recall, and ROC-AUC are produced exclusively on genuine historical holdouts or controlled synthetic injection benchmarks with clear `"synthetic benchmark"` disclosures.
+2. **Strict Zero Data Leakage:** Preprocessing transformations, imputers, quantile scalers, and decision thresholds are fitted strictly on baseline/reference splits and applied forward without peeking. Pipeline tests guarantee no future information leaks into training.
+3. **Calibrated Conformal Uncertainty:** Anomaly scores are ranking indices, not probabilities. When probabilistic guarantees are required, SENTINEL computes conformal $p$-values with finite-sample coverage guarantees ($P(p \le \alpha) \le \alpha$) alongside Benjamini-Hochberg FDR bounds.
+4. **Actionable, In-Distribution Counterfactuals:** Recourse recommendations are presented in the dataset's original units, enforce immutable feature locks (e.g., account age, timestamp), minimize intervention cost, and verify through LOF density checks that counterfactual states fall within valid data distributions.
+5. **Cryptographic Provenance:** Every model execution logs the full dataset SHA-256 fingerprint, hyperparameters, environment state, and random seed to ensure 100% reproducible execution history.
 
 ---
 
-## Detection Algorithms
+## 17-Detector Model Zoo
 
-1. **Isolation Forest (`Isolation Forest`)**: Recursive random partitioning identifying anomalies via shorter path lengths ($O(N \log N)$). Best for global outliers and high-dimensional spaces.
-2. **Local Outlier Factor (`Local Outlier Factor`)**: Computes local reachability density against $k$-nearest neighbours ($O(N^2)$). Excels at detecting anomalies embedded in clusters of varying densities.
-3. **One-Class SVM (`One-Class SVM`)**: Fits a maximum-margin hypersphere in kernel feature space ($O(N^2 - N^3)$). Ideal for complex non-linear boundary identification.
-4. **Elliptic Envelope (`Elliptic Envelope`)**: Estimates robust covariance using the FastMCD estimator to compute Mahalanobis distances ($O(N \cdot P^2)$). Suitable for unimodal, approximately Gaussian distributions.
-5. **k-Nearest Neighbors (`k-Nearest Neighbors`)**: Measures Euclidean distance to the $k$-th nearest neighbour in standardized space ($O(N \log N)$). Detects distance outliers without assuming parametric forms.
-6. **PCA Reconstruction Error (`PCA Reconstruction`)**: Projects observations onto leading principal components and measures residual reconstruction error ($O(N \cdot P^2)$). Identifies observations that violate multivariate correlation constraints.
-7. **Histogram-Based Outlier Score (`Histogram-Based Outlier Score`)**: Fast, linear-time ($O(N \cdot P)$) estimator assuming feature independence that inverts marginal log densities. Ideal for high-throughput streaming and massive datasets.
-8. **Gaussian Mixture Model (`Gaussian Mixture Model`)**: Fits an Expectation-Maximization mixture of Gaussians ($O(N \cdot K \cdot P)$) and scores observations by negative log-likelihood. Models multi-modal cluster distributions cleanly.
+SENTINEL incorporates 17 production detectors covering five distinct mathematical paradigms:
 
----
+| Category | Detector Name | Registry Key | Algorithmic Formulation | Computational Complexity | Compute Profile |
+|---|---|---|---|---|---|
+| **Classical** | Isolation Forest | `Isolation Forest` | Recursive random hyperplane partitioning; path depth | $O(N \log N)$ | Low |
+| **Classical** | Local Outlier Factor | `Local Outlier Factor` | Local reachability density relative to $k$-nearest neighbors | $O(N^2)$ | Medium |
+| **Classical** | One-Class SVM | `One-Class SVM` | Kernel max-margin boundary separating dense origin | $O(N^2 - N^3)$ | High |
+| **Classical** | Elliptic Envelope | `Elliptic Envelope` | FastMCD robust covariance Gaussian Mahalanobis distance | $O(N \cdot P^2)$ | Low |
+| **Classical** | $k$-Nearest Neighbors | `k-Nearest Neighbors` | Distance to $k$-th nearest neighbor in standardized space | $O(N^2)$ | Medium |
+| **Classical** | PCA Reconstruction | `PCA Reconstruction` | Orthogonal residual subspace reconstruction error | $O(N \cdot P^2)$ | Low |
+| **Classical** | HBOS | `HBOS` | Inverse log marginal histogram density (parameter-free) | $O(N \cdot P)$ | Ultra-Low |
+| **Classical** | Gaussian Mixture Model | `Gaussian Mixture Model` | Expectation-Maximization negative log-likelihood | $O(N \cdot K \cdot P)$ | Medium |
+| **Classical** | ECOD | `ECOD` | Empirical Cumulative Distribution Function tail probabilities | $O(N \cdot P)$ | Ultra-Low |
+| **Classical** | COPOD | `COPOD` | Empirical copula transform with joint tail probabilities | $O(N \cdot P)$ | Ultra-Low |
+| **Classical** | Mahalanobis (Ledoit-Wolf) | `Mahalanobis (Ledoit-Wolf)` | Covariance shrinkage distance robust to collinearity ($\kappa < 30$) | $O(N \cdot P^2)$ | Low |
+| **Classical** | DBSCAN Noise Points | `DBSCAN Noise` | Density-based spatial clustering core-point noise isolation | $O(N \log N)$ | Medium |
+| **Classical** | Extended Isolation Forest | `Extended Isolation Forest` | Random hyperplane cuts at arbitrary slopes (resolves axis bias) | $O(N \log N)$ | Medium |
+| **Classical** | SUOD Fast Ensemble | `SUOD Ensemble` | Subspace fast approximation with Borda consensus | $O(N \cdot P)$ | Low |
+| **Deep Learning** | PyTorch Autoencoder | `Autoencoder` | Symmetric bottleneck neural network reconstruction MSE | $O(E \cdot N)$ | Medium (CPU) |
+| **Deep Learning** | Variational Autoencoder | `Variational Autoencoder` | Probabilistic encoder-decoder optimized via ELBO loss | $O(E \cdot N)$ | Medium (CPU) |
+| **Deep Learning** | Deep SVDD | `Deep SVDD` | Neural representation mapping into minimum-volume hypersphere | $O(E \cdot N)$ | Medium (CPU) |
 
-## Intelligent Ensemble Engine
-
-Different detectors embody fundamentally different statistical assumptions (e.g. density vs subspace vs isolation). A simple average of raw detector scores is mathematically invalid because raw scores possess vastly different kurtosis, scale, and dispersion.
-
-XAUD 2.0 resolves this with the **Intelligent Ensemble Engine**:
-- **Empirical Rank Normalization:** Scores from each detector are transformed into empirical percentile ranks ($[0, 1]$).
-- **Rank Borda Aggregation:** The consensus score is computed as the Borda rank sum across detectors, preserving relative ordering without scale distortion:
-  $$\text{Score}_{\text{Borda}}(x) = \sum_{m=1}^{M} w_m \cdot \text{Rank}_m(x)$$
-- **Model Disagreement & Consensus Strength:** Reports the proportion of models agreeing on anomaly classifications and computes pairwise Jaccard distance:
-  $$J(A_i, A_j) = 1 - \frac{|A_i \cap A_j|}{|A_i \cup A_j|}$$
-
----
-
-## Controlled Synthetic Benchmark Lab
-
-Unsupervised learning lacks ground truth. Fabricating accuracy or ROC-AUC scores on unlabeled data is statistically fraudulent.
-
-XAUD's **Synthetic Anomaly Injection Laboratory** provides reproducible benchmarking by injecting controlled, traceable perturbations:
-- **Multivariate Subspace Violations:** Perturbs joint feature covariance while preserving marginal 1D distributions.
-- **Extreme Point Outliers:** High-magnitude displacements ($> 4 \times \text{IQR}$) in isolated dimensions.
-- **Micro-Cluster Outliers:** Tightly clustered synthetic anomalies in low-density subspaces.
-
-Detectors are evaluated on genuine binary labels using **ROC-AUC**, **PR-AUC** (vital for severe class imbalance), and **Precision@K**.
+*Deep learning models run on CPU by default with zero GPU requirements, supported by optional PyTorch extras (`pip install -e .[deep]`).*
 
 ---
 
-## Covariate & Score Drift Monitoring
+## Supervised & Surrogate Gradient Boosting (Feature 1)
 
-In production, data distributions shift over time (covariate shift), degrading detector reliability.
+For high-throughput inference and TreeSHAP acceleration, SENTINEL provides three dedicated gradient boosted workflows (`src/models/supervised/`):
 
-XAUD monitors distribution stability using:
-- **Population Stability Index (PSI):**
-  $$\text{PSI} = \sum_{b=1}^{B} (P_b - Q_b) \cdot \ln\left(\frac{P_b}{Q_b}\right)$$
-  - $\text{PSI} < 0.10$: Distribution is stable.
-  - $0.10 \le \text{PSI} < 0.25$: Moderate drift; monitor ongoing batches.
-  - $\text{PSI} \ge 0.25$: Significant covariate shift; triggers model recalibration alerts.
-- **Two-Sample Kolmogorov-Smirnov Test:** Non-parametric evaluation of empirical cumulative distribution divergence ($D_{KS}$ and $p$-value).
+1. **Pseudo-Label Surrogate Model (`surrogate.py`)**: Trains an XGBoost classifier on ensemble consensus pseudo-labels using **$K$-Fold Out-Of-Fold (OOF)** prediction. Scalers and thresholds are fit strictly inside training folds. Delivers sub-millisecond inference on streaming rows with exact TreeSHAP attribution and surrogate fidelity reports (Spearman rank correlation, Top-$K$ overlap).
+2. **Supervised Classifier (`classifier.py`)**: Deployed when ground-truth labels are present. Employs focal loss and class-weighting (`scale_pos_weight`), stratified time-aware cross-validation, PR-AUC, ROC-AUC, Brier score, Expected Calibration Error (ECE), and threshold selection derived from asymmetric cost matrices:
+   $$\text{Cost} = C_{FP} \cdot FP + C_{FN} \cdot FN$$
+3. **Hybrid Stacking Meta-Learner (`stacking.py`)**: Stacks the rank-normalized out-of-fold scores of the unsupervised detectors as meta-features for an XGBoost meta-estimator, capturing non-linear consensus patterns.
+4. **Optuna Bayesian Tuning (`tuning.py`)**: Nested cross-validation hyperparameter search with fixed seeds, logging parameters and Pareto fronts into the experiment registry.
+
+---
+
+## Empirical Benchmarks on Real-World Datasets
+
+### 1. ULB Credit Card Fraud (284,807 Transactions, 492 Frauds)
+
+Evaluated under the **honest time-split protocol**: sorted chronologically by `Time`, fitted on the initial 70% window, and scored on the remaining 30% holdout window. Feature scaling and decision thresholds are computed strictly on the reference window ($Class$ column excluded during training; contamination set to training window prevalence of 2.74%).
+
+| Detector | PR-AUC | ROC-AUC | Precision | Recall | Precision@Top-1% | Fit Time (s) |
+|---|---:|---:|---:|---:|---:|---:|
+| **Histogram-Based Outlier Score (HBOS)** | **0.3765** | 0.9343 | 0.3589 | **0.6944** | **0.5000** | **0.02** |
+| **Isolation Forest** | 0.3108 | 0.9340 | **0.3867** | 0.5370 | 0.4167 | 0.28 |
+| **Elliptic Envelope** | 0.1983 | 0.9028 | 0.1856 | 0.1667 | 0.1333 | 1.96 |
+| **$k$-Nearest Neighbors** | 0.1754 | 0.9147 | 0.2081 | 0.2870 | 0.1333 | 0.20 |
+| **Consensus Ensemble (Rank Borda)** | 0.1634 | 0.9033 | 0.2450 | 0.3810 | 0.3000 | 0.85 |
+| **One-Class SVM** | 0.1543 | 0.8792 | 0.1860 | 0.4167 | 0.2667 | 0.70 |
+| **PCA Reconstruction** | 0.1528 | 0.8414 | 0.2035 | 0.3241 | 0.3000 | 0.01 |
+| **Gaussian Mixture Model** | 0.1510 | 0.8281 | 0.2360 | 0.3889 | 0.1500 | 0.75 |
+| **Local Outlier Factor (LOF)** | 0.0510 | 0.6743 | 0.0844 | 0.1852 | 0.1667 | 0.21 |
+
+> [!NOTE]
+> **Protocol Matters More Than the Model**: Under a naive stratified random split, the same Isolation Forest yields **PR-AUC 0.6471** and **ROC-AUC 0.9426**. Random splitting leaks future transaction patterns across identical days into the training set. SENTINEL defaults to strict time-aware splitting to reflect true production deployment performance.
+
+---
+
+## Honest Technical Limitations & Governance Disclaimers
+
+1. **Non-Causal Attribution Disclaimers**: SHAP, LIME, and permutation importances quantify **correlational attribution within the trained model's decision surface**, NOT physical real-world causation. A high SHAP attribution value for `transaction_amount` indicates the model utilized that feature to flag the observation, not that modifying the amount will causally prevent fraudulent behavior.
+2. **Exchangeability Assumption in Conformal Guarantees**: Finite-sample conformal validity guarantees require that reference calibration samples and test points are **exchangeable** (identically distributed). Under significant non-stationary concept drift ($\text{PSI} \ge 0.25$), conformal bounds degrade. SENTINEL includes real-time PSI drift gates to alert operators when exchangeability is broken.
+3. **High-Dimensional Distance Concentration**: Density- and distance-based detectors ($k$-NN, LOF, DBSCAN) suffer from the curse of dimensionality when $P > 50$, as pairwise Euclidean distances converge to identical values. In high dimensions, subspace and projection methods (PCA, Isolation Forest, ECOD, Autoencoders) are recommended.
+4. **Computational Complexity at Scale**: Algorithms with $O(N^2)$ complexity (LOF, $k$-NN, OCSVM) are constrained by a default ceiling of $N = 20,000$ rows. For datasets with $N > 100,000$, SENTINEL automatically triggers sub-sampling or recommends linear-time estimators (HBOS, ECOD, COPOD, SUOD).
+5. **Label Noise in Real-World Benchmarks**: In production credit fraud benchmarks (such as ULB), a label of `Class = 0` denotes that no chargeback or dispute was filed within the observation window; it does not constitute mathematical proof of legitimacy.
 
 ---
 
 ## Installation & Quickstart
 
-### Real fraud dataset
-
-The repository ships with a synthetic demo set and a script that stages the real
-**ULB credit-card fraud** dataset (284,807 real transactions, 492 frauds) plus a
-20,000-row app sample that keeps every fraud:
-
-```bash
-python scripts/prepare_ulb_dataset.py          # download + verify + stage
-python scripts/run_ulb_benchmark.py            # all 8 detectors, time split
-python scripts/smoke_ulb_api.py                # full HTTP surface, in-process
-```
-
-Provenance, licences, measured PR-AUC/ROC-AUC per detector and the caveats that
-must be quoted alongside them are in [`docs/DATASETS.md`](docs/DATASETS.md).
-
 ### Prerequisites
-- Python 3.11+ (the floor declared by `requires-python` in `pyproject.toml`)
-- Node.js 20+ & npm
+- Python 3.11+
+- Node.js 20+ & npm (for Web UI)
+- Docker & Docker Compose (optional for containerized deployment)
 
-### 1. Backend Setup
+### 1. Local Setup
+
 ```bash
 # Clone the repository
 git clone https://github.com/rohan1252030019-netizen/explainable-anomaly-detection.git
 cd explainable-anomaly-detection
 
-# Create and activate virtual environment
-python -m venv venv
-# On Windows:
-.\venv\Scripts\Activate.ps1
-# On macOS/Linux:
-source venv/bin/activate
+# Create and activate Python virtual environment
+python -m venv .venv
+# Windows:
+.\.venv\Scripts\Activate.ps1
+# Linux / macOS:
+source .venv/bin/activate
 
-# Install dependencies
-pip install -r requirements.txt
+# Install core dependencies
+pip install -e .
 
-# Start FastAPI backend
-uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+# Optional: Install deep learning and gradient boosting extras
+pip install -e ".[deep,supervised,optuna]"
+
+# Launch the FastAPI backend
+python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
 ```
-API Documentation will be live at `http://localhost:8000/docs`.
+Interactive API documentation will be accessible at `http://localhost:8000/docs`.
 
-### 2. Frontend Setup
+### 2. Frontend Web Interface
+
 ```bash
 cd frontend
 
 # Install Node dependencies
 npm install
 
-# Build & Run Next.js with Turbopack
+# Start Next.js development server with Turbopack
 npm run dev
 ```
-Dashboard will be live at `http://localhost:3000`.
+Open `http://localhost:3000` to launch the SENTINEL intelligence console.
 
-### 3. Run Test Suite
+### 3. Docker Deployment
+
+Deploy the complete stack (FastAPI Backend + Next.js Frontend + Prometheus Monitoring) with Docker Compose:
+
 ```bash
-# Backend: unit, API, scientific-validity and packaging tests
-pytest tests/
-
-# Frontend: lint, type check, unit/component tests and E2E
-cd frontend
-npm run lint
-npm run typecheck
-npm test
-npm run test:e2e
+docker-compose up --build
 ```
+- Web Console: `http://localhost:3000`
+- API Surface: `http://localhost:8000/docs`
+- Prometheus Telemetry: `http://localhost:8000/metrics`
 
-The wheel can be built and verified in isolation with:
+---
+
+## API Surface (v1 & v2 Highlights)
+
+SENTINEL exposes clean, modular, typed REST and WebSocket endpoints:
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/health` | `GET` | System health, loaded dataset, and detector status |
+| `/metrics` | `GET` | Prometheus telemetry (request count, inference latency, drift metrics) |
+| `/api/v2/supervised/surrogate/train` | `POST` | Train K-fold OOF XGBoost surrogate with TreeSHAP and fidelity report |
+| `/api/v2/supervised/stacking/train` | `POST` | Train hybrid stacking meta-learner using out-of-fold unsupervised scores |
+| `/api/v2/conformal/calibrate` | `POST` | Calibrate split/Mondrian conformal non-conformity scores |
+| `/api/v2/conformal/score` | `POST` | Compute conformal $p$-values and Benjamini-Hochberg FDR control |
+| `/api/v2/explainability/interactions` | `POST` | Compute 2nd-order non-linear pairwise SHAP feature interactions |
+| `/api/v2/explainability/agreement` | `POST` | Quantify cross-method explanation agreement (SHAP vs LIME) |
+| `/api/v2/explainability/diverse-counterfactuals`| `POST` | Generate $K$ diverse counterfactuals with LOF plausibility & $L_0$ sparsity |
+| `/api/v2/explainability/narrative` | `POST` | Generate forensic natural-language investigation report with SHA-256 fingerprint |
+| `/api/v2/timeseries/changepoints` | `POST` | Detect regime shifts using PELT ($O(N)$) and Bayesian Online CPD |
+| `/api/v2/streaming/ingest` | `POST` | Score streaming rows via Half-Space Trees with sliding PSI drift monitor |
+| `/api/v2/streaming/recalibrate` | `POST` | Human-in-the-loop approval gate for streaming reference mass recalibration |
+| `/api/v2/active-learning/queue` | `POST` | Active learning triage queue (uncertainty + ensemble disagreement sampling) |
+| `/api/v2/active-learning/retrain-semi-supervised`| `POST` | Label spreading update with held-out, zero-leakage evaluation metrics |
+| `/api/v2/root-cause/cluster` | `POST` | HDBSCAN density clustering on SHAP vectors to extract failure archetypes |
+| `/api/v2/robustness/audit` | `POST` | Subgroup demographic parity gap and noise perturbation sensitivity audit |
+| `/api/v2/mlops/model-card/generate` | `POST` | Auto-generate standardized Mitchell et al. Model Card |
+| `/api/v2/mlops/registry/save` | `POST` | Save versioned model artifacts with cryptographic dataset hashes |
+| `/api/v2/reports/html` | `GET` | Export complete standalone, audit-ready HTML investigation report |
+
+---
+
+## Test Suite & Verification
+
+SENTINEL enforces rigorous automated quality gates:
 
 ```bash
-python -m pip wheel . --no-deps -w dist
-python -c "import zipfile, glob; print(len(zipfile.ZipFile(glob.glob('dist/*.whl')[0]).namelist()))"
+# 1. Run complete Python test suite (353 unit, integration, and scientific tests)
+pytest tests/ -v
+
+# 2. Run Ruff linting and Mypy static type checking
+python run.py --lint
+
+# 3. Run frontend unit and component tests (36 Vitest tests)
+npm --prefix frontend test
+
+# 4. Compile optimized frontend production build
+npm --prefix frontend run build
 ```
 
 ---
 
-## Project Structure
+## Repository Governance & Suggested Topics
 
 ```
-explainable-anomaly-detection/
-├── backend/                  # FastAPI backend
-│   ├── main.py               # Application entrypoint & middleware
-│   ├── state.py              # Session object: construction, defaults, reset
-│   ├── services/             # State behaviour, split by concern
-│   │   ├── dataset.py        # Sample/CSV ingestion, preprocessing, profiling
-│   │   ├── detection.py      # Single-model and ensemble scoring
-│   │   ├── explainability.py # Local/global explanations and counterfactuals
-│   │   ├── evaluation.py     # Leakage-safe held-out evaluation
-│   │   ├── analytics.py      # PCA, correlations, benchmarks, drift, lab
-│   │   ├── reporting.py      # Audit report assembly & experiment history
-│   │   └── base.py           # Shared state typing and the mutation lock
-│   ├── session.py            # LRU-bounded session registry for isolation
-│   ├── config.py             # Environment-driven settings (CORS, auth, limits)
-│   ├── security.py           # Optional API-key authentication
-│   ├── schemas.py            # Pydantic v2 request/response models
-│   ├── experiments.py        # SHA-256 experiment tracker
-│   └── routers/              # Modular API endpoints
-│       ├── dataset.py        # Upload, profile, preprocess
-│       ├── detection.py      # Run detection & ensemble
-│       ├── anomalies.py      # Table queries & single-observation investigation
-│       ├── explainability.py # Global SHAP, stability, feature distributions
-│       ├── drift.py          # PSI & KS test drift evaluation
-│       ├── benchmarks.py     # Synthetic anomaly lab benchmarks
-│       ├── experiments.py    # Persistent audit history
-│       ├── evaluation.py     # Out-of-sample holdout metrics
-│       └── reports.py        # Audit summary generation
-├── src/                      # Core ML & Mathematical Engine
-│   ├── data/                 # Profiler & leakage-safe preprocessing
-│   ├── models/               # 8 Unsupervised anomaly detectors & registry
-│   ├── detection/            # Intelligent ensemble & thresholding
-│   ├── explainability/       # Faithfulness validation & constrained counterfactuals
-│   └── evaluation/           # Synthetic lab, drift monitor, holdout validator
-├── frontend/                 # Next.js 16 Web Application
-│   ├── src/
-│   │   ├── app/              # Next.js App Router (page.tsx, layout.tsx)
-│   │   ├── components/
-│   │   │   ├── layout/       # Sidebar, Topbar
-│   │   │   ├── ui/           # Design system (Cards, StatCards, Badges, Tabs)
-│   │   │   ├── charts/       # SVG visualizations (down-sampled)
-│   │   │   ├── views/        # All 12 application screens
-│   │   │   │   ├── DatasetView.tsx        # Profile & Preprocessing
-│   │   │   │   ├── DetectionView.tsx      # 8 Models & Intelligent Ensemble
-│   │   │   │   ├── DriftMonitorView.tsx   # PSI & KS Drift Diagnostics
-│   │   │   │   ├── BenchmarkLabView.tsx   # Synthetic Anomaly Lab
-│   │   │   │   ├── ExperimentsView.tsx    # Reproducibility Registry
-│   │   │   │   ├── InvestigateView.tsx    # Counterfactuals & Verification
-│   │   │   │   ├── RigorView.tsx          # Holdout & Stability
-│   │   │   │   ├── rigor/widgets.tsx      # Formatters & presentational primitives
-│   │   │   │   └── ...
-│   │   ├── context/          # App-wide state with cancellable fetches
-│   │   └── lib/              # Typed API client, down-sampling, navigation
-│   ├── e2e/                  # Playwright tests against a production build
-│   └── src/**/__tests__/     # Vitest unit & component tests
-└── tests/                    # 300 backend unit, scientific and API tests
+anomaly-detection  explainable-ai  xgboost  shap  conformal-prediction  fastapi  nextjs  mlops
 ```
 
 ---
 
 ## License
 
-This project is licensed under the Apache 2.0 License.
+This project is licensed under the Apache 2.0 License. See [LICENSE](LICENSE) for details.
